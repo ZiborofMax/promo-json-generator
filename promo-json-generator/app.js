@@ -395,7 +395,9 @@ function updateAll() {
   const data = buildJson();
   jsonOutput.textContent = JSON.stringify(data, null, 2);
   renderPreview(data);
-  statusBadge.textContent = data.switcherByPromoId.length ? "JSON готов" : "Нет Promo ID";
+  const hasPromoId = Boolean(data.switcherByPromoId.length);
+  statusBadge.textContent = hasPromoId ? "JSON готов" : "! Нет Promo ID";
+  statusBadge.classList.toggle("warning", !hasPromoId);
 }
 
 function getDownloadFileName(data) {
