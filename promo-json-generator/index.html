@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Генератор JSON акции</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="workspace">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Маркетинговые акции</p>
+            <h1>Генератор JSON раздела</h1>
+          </div>
+          <div class="topbar-actions">
+            <select id="templateSelect" aria-label="Шаблон">
+              <option value="offer">Оффер</option>
+              <option value="tasks">Задания</option>
+              <option value="welcome">Welcome offer</option>
+              <option value="blank">Пустой шаблон</option>
+            </select>
+            <button class="secondary" id="loadTemplateButton" type="button">Загрузить</button>
+          </div>
+        </header>
+
+        <div class="layout-grid">
+          <form class="editor" id="promoForm">
+            <section class="panel">
+              <div class="panel-heading">
+                <h2>Основное</h2>
+              </div>
+              <label>
+                Promo ID
+                <textarea id="promoIds" rows="2" placeholder="S_FBV_VGD500_2305, TESTDV"></textarea>
+              </label>
+              <div class="field-grid">
+                <label>
+                  Title
+                  <input id="title" type="text" placeholder="Акция" />
+                </label>
+                <label>
+                  Header
+                  <input id="header" type="text" placeholder="Фрибет 500" />
+                </label>
+              </div>
+              <label>
+                Image URL
+                <input id="imageUrl" type="url" placeholder="https://www.ligastavok.ru/files/file/.../image.webp" />
+              </label>
+              <label>
+                Intro content
+                <textarea id="content" rows="3" placeholder="Короткое описание под заголовком"></textarea>
+              </label>
+            </section>
+
+            <section class="panel">
+              <div class="panel-heading">
+                <h2>Разделы</h2>
+                <button class="secondary" id="addRuleButton" type="button">Добавить раздел</button>
+              </div>
+              <div class="rules-list" id="rulesList"></div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-heading">
+                <h2>Кнопки</h2>
+              </div>
+              <div class="field-grid">
+                <label>
+                  Primary text
+                  <input id="primaryButtonText" type="text" placeholder="За фрибетом" />
+                </label>
+                <label>
+                  Primary URL
+                  <input id="primaryButtonUrl" type="url" placeholder="https://www.ligastavok.ru/home" />
+                </label>
+              </div>
+              <div class="field-grid">
+                <label>
+                  Secondary text
+                  <input id="secondaryButtonText" type="text" placeholder="Полные правила акции" />
+                </label>
+                <label>
+                  Secondary URL
+                  <input id="secondaryButtonUrl" type="url" placeholder="https://www.ligastavok.ru/files/file/.../rules.pdf" />
+                </label>
+              </div>
+            </section>
+          </form>
+
+          <aside class="output-column">
+            <section class="preview-wrap">
+              <div class="preview-toolbar">
+                <h2>Превью</h2>
+                <span id="statusBadge">JSON готов</span>
+              </div>
+              <div class="phone">
+                <div class="phone-status">9:41</div>
+                <div class="phone-header">
+                  <button type="button" aria-label="Назад">‹</button>
+                  <strong id="previewTitle">Акция</strong>
+                  <span></span>
+                </div>
+                <div class="phone-content" id="preview"></div>
+              </div>
+            </section>
+
+            <section class="json-panel">
+              <div class="panel-heading">
+                <h2>JSON</h2>
+                <button id="copyButton" type="button">Скопировать</button>
+              </div>
+              <pre id="jsonOutput"></pre>
+            </section>
+          </aside>
+        </div>
+      </section>
+    </main>
+
+    <template id="ruleTemplate">
+      <article class="rule-card">
+        <div class="rule-card-head">
+          <h3></h3>
+          <button class="icon-button remove-rule" type="button" aria-label="Удалить раздел">×</button>
+        </div>
+        <label>
+          Заголовок раздела
+          <input class="rule-header" type="text" />
+        </label>
+        <label>
+          Текст раздела
+          <textarea class="rule-content" rows="5"></textarea>
+        </label>
+        <div class="toggles">
+          <label class="check-row">
+            <input class="rule-widget-enabled" type="checkbox" />
+            Прогресс-виджет
+          </label>
+          <label class="check-row">
+            <input class="rule-terms-enabled" type="checkbox" />
+            Плитки условий
+          </label>
+        </div>
+        <div class="widget-fields hidden">
+          <div class="field-grid">
+            <label>
+              Campaign ID
+              <input class="widget-campaign-id" type="text" />
+            </label>
+            <label>
+              Widget title
+              <input class="widget-title" type="text" />
+            </label>
+          </div>
+          <div class="field-grid">
+            <label>
+              Progress text
+              <input class="widget-progress-text" type="text" />
+            </label>
+            <label>
+              Widget image URL
+              <input class="widget-image-url" type="url" />
+            </label>
+          </div>
+        </div>
+        <label class="terms-fields hidden">
+          Terms
+          <textarea class="terms-raw" rows="4" placeholder="ЭТАП 2 | 1000 | https://...&#10;ЭТАП 3 | 1500 | https://..."></textarea>
+        </label>
+      </article>
+    </template>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
