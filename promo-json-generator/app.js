@@ -396,7 +396,7 @@ function updateAll() {
   jsonOutput.textContent = JSON.stringify(data, null, 2);
   renderPreview(data);
   const hasPromoId = Boolean(data.switcherByPromoId.length);
-  statusBadge.textContent = hasPromoId ? "JSON готов" : "! Нет Promo ID";
+  statusBadge.textContent = hasPromoId ? "JSON готов" : "! Укажите Promo ID";
   statusBadge.classList.toggle("warning", !hasPromoId);
 }
 
