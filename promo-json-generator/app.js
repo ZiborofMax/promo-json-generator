@@ -1,5 +1,6 @@
 const DEFAULT_WIDGET_IMAGE = "https://www.ligastavok.ru/files/file/16326/Marketing_widgetProgressBar_Bg.webp";
 const DEFAULT_TERM_IMAGE = "https://www.ligastavok.ru/files/file/11160/Freebet_3x.webp";
+const CONFETTI_ANIMATION_URL = "./confetti.json";
 
 const templates = {
   offer: {
@@ -410,6 +411,92 @@ function getDownloadFileName(data) {
   return `${safePromoId || "promo-action"}.json`;
 }
 
+function triggerConfetti(sourceElement) {
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    return;
+  }
+
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d");
+  const pixelRatio = window.devicePixelRatio || 1;
+  const sourceRect = sourceElement.getBoundingClientRect();
+  const origin = {
+    x: sourceRect.left + sourceRect.width / 2,
+    y: sourceRect.top + sourceRect.height / 2
+  };
+  const colors = ["#25d75a", "#7c5ce5", "#64c8f6", "#ffc107", "#ff5e8a", "#ffffff"];
+  const particles = Array.from({ length: 84 }, () => {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 5 + Math.random() * 8;
+    return {
+      x: origin.x,
+      y: origin.y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 4,
+      size: 5 + Math.random() * 7,
+      rotation: Math.random() * Math.PI,
+      rotationSpeed: -0.22 + Math.random() * 0.44,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      shape: Math.random() > 0.45 ? "rect" : "circle"
+    };
+  });
+  let startTime = 0;
+
+  canvas.className = "confetti-canvas";
+  document.body.append(canvas);
+
+  function resizeCanvas() {
+    canvas.width = Math.floor(window.innerWidth * pixelRatio);
+    canvas.height = Math.floor(window.innerHeight * pixelRatio);
+    canvas.style.width = `${window.innerWidth}px`;
+    canvas.style.height = `${window.innerHeight}px`;
+    context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+  }
+
+  function drawFrame(timestamp) {
+    if (!startTime) {
+      startTime = timestamp;
+    }
+    const progress = Math.min((timestamp - startTime) / 1250, 1);
+    context.clearRect(0, 0, window.innerWidth, window.innerHeight);
+
+    particles.forEach((particle) => {
+      particle.x += particle.vx;
+      particle.y += particle.vy;
+      particle.vy += 0.24;
+      particle.vx *= 0.985;
+      particle.rotation += particle.rotationSpeed;
+
+      context.save();
+      context.globalAlpha = Math.max(1 - progress, 0);
+      context.translate(particle.x, particle.y);
+      context.rotate(particle.rotation);
+      context.fillStyle = particle.color;
+
+      if (particle.shape === "circle") {
+        context.beginPath();
+        context.arc(0, 0, particle.size / 2, 0, Math.PI * 2);
+        context.fill();
+      } else {
+        context.fillRect(-particle.size / 2, -particle.size / 3, particle.size, particle.size * 0.66);
+      }
+
+      context.restore();
+    });
+
+    if (progress < 1) {
+      requestAnimationFrame(drawFrame);
+    } else {
+      canvas.remove();
+    }
+  }
+
+  resizeCanvas();
+  requestAnimationFrame(drawFrame);
+}
+
+fetch(CONFETTI_ANIMATION_URL).catch(() => {});
+
 form.addEventListener("input", updateAll);
 document.querySelector("#addRuleButton").addEventListener("click", () => {
   addRule();
@@ -431,6 +518,7 @@ document.querySelector("#copyButton").addEventListener("click", async () => {
     selection.removeAllRanges();
   }
   const button = document.querySelector("#copyButton");
+  triggerConfetti(button);
   button.textContent = "Скопировано";
   setTimeout(() => {
     button.textContent = "Скопировать";
@@ -447,6 +535,7 @@ document.querySelector("#downloadButton").addEventListener("click", () => {
   link.click();
   link.remove();
   URL.revokeObjectURL(url);
+  triggerConfetti(document.querySelector("#downloadButton"));
 });
 
 document.querySelector("#templateSelect").value = "offer";
