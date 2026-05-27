@@ -194,9 +194,11 @@ function addRule(rule = { header: "", content: "" }) {
     updateAll();
   });
   node.querySelector(".remove-rule").addEventListener("click", () => {
-    node.remove();
-    renumberRules();
-    updateAll();
+    animateRuleRemoval(node, () => {
+      node.remove();
+      renumberRules();
+      updateAll();
+    });
   });
 
   rulesList.append(node);
@@ -496,6 +498,78 @@ function triggerConfetti(sourceElement) {
 }
 
 fetch(CONFETTI_ANIMATION_URL).catch(() => {});
+
+function animateRuleRemoval(ruleNode, onComplete) {
+  if (ruleNode.classList.contains("rule-card-collapsing")) {
+    return;
+  }
+
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    onComplete();
+    return;
+  }
+
+  const rect = ruleNode.getBoundingClientRect();
+  const computedStyle = window.getComputedStyle(ruleNode);
+  const ghost = document.createElement("div");
+  const stripCount = Math.max(10, Math.min(18, Math.round(rect.height / 42)));
+  const stripHeight = rect.height / stripCount;
+  const formControls = ruleNode.querySelectorAll("input, textarea, select");
+
+  ghost.className = "snap-ghost";
+  ghost.style.left = `${rect.left}px`;
+  ghost.style.top = `${rect.top}px`;
+  ghost.style.width = `${rect.width}px`;
+  ghost.style.height = `${rect.height}px`;
+
+  Array.from({ length: stripCount }, (_, index) => {
+    const strip = document.createElement("div");
+    const clone = ruleNode.cloneNode(true);
+    const cloneControls = clone.querySelectorAll("input, textarea, select");
+    const offset = Math.round(index * stripHeight);
+    const direction = index % 2 ? 1 : -1;
+
+    formControls.forEach((control, controlIndex) => {
+      const cloneControl = cloneControls[controlIndex];
+      if (!cloneControl) {
+        return;
+      }
+      if (control.type === "checkbox") {
+        cloneControl.checked = control.checked;
+      } else {
+        cloneControl.value = control.value;
+      }
+    });
+
+    strip.className = "snap-strip";
+    strip.style.top = `${offset}px`;
+    strip.style.height = `${Math.ceil(stripHeight) + 1}px`;
+    strip.style.setProperty("--delay", `${index * 13}ms`);
+    strip.style.setProperty("--tx", `${26 + Math.random() * 34}px`);
+    strip.style.setProperty("--ty", `${direction * (2 + Math.random() * 14)}px`);
+
+    clone.classList.remove("rule-card-collapsing");
+    clone.classList.add("snap-strip-inner");
+    clone.style.setProperty("--strip-offset", offset);
+    clone.style.setProperty("--snap-width", `${rect.width}px`);
+    clone.style.margin = "0";
+
+    strip.append(clone);
+    ghost.append(strip);
+  });
+
+  document.body.append(ghost);
+
+  ruleNode.style.setProperty("--collapse-height", `${rect.height}px`);
+  ruleNode.style.setProperty("--collapse-margin", computedStyle.marginBottom);
+  ruleNode.style.height = `${rect.height}px`;
+  ruleNode.classList.add("rule-card-collapsing");
+
+  window.setTimeout(() => {
+    ghost.remove();
+  }, 920);
+  window.setTimeout(onComplete, 620);
+}
 
 form.addEventListener("input", updateAll);
 document.querySelector("#addRuleButton").addEventListener("click", () => {
