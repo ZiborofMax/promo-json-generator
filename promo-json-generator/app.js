@@ -36,8 +36,7 @@ const templates = {
         },
         {
           header: "Когда начислят фрибет",
-          content: "Фрибет будет начислен после расчёта всех ставок. Фрибет действует 7 дней с момента начисления для пари вида «одинар»",
-          terms: []
+          content: "Фрибет будет начислен после расчёта всех ставок. Фрибет действует 7 дней с момента начисления для пари вида «одинар»"
         }
       ],
       primaryButtonText: "За фрибетом",
@@ -140,7 +139,7 @@ function cloneData(value) {
 
 function loadTemplate(name) {
   const data = cloneData(templates[name]);
-  fields.promoIds.value = data.switcherByPromoId.join(", ");
+  fields.promoIds.value = "";
   fields.title.value = data.common.title || "";
   fields.header.value = data.common.header || "";
   fields.imageUrl.value = data.common.imageUrl || "";
