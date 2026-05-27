@@ -513,16 +513,23 @@ function animateRuleRemoval(ruleNode, onComplete) {
   const canvas = document.createElement("canvas");
   const context = canvas.getContext("2d");
   const pixelRatio = window.devicePixelRatio || 1;
-  const colors = ["#ced8ef", "#7c5ce5", "#64c8f6", "#f7f9ff", "#25d75a", "#ffc107"];
+  const colors = [
+    "rgba(48, 56, 86, 0.22)",
+    "rgba(123, 134, 167, 0.26)",
+    "rgba(206, 216, 239, 0.38)",
+    "rgba(247, 249, 255, 0.62)",
+    "rgba(255, 255, 255, 0.72)"
+  ];
   const particles = Array.from({ length: 140 }, () => ({
     x: rect.left + Math.random() * rect.width,
     y: rect.top + Math.random() * rect.height,
-    vx: 1.5 + Math.random() * 6,
-    vy: -2.8 + Math.random() * 5.6,
-    size: 2 + Math.random() * 6,
+    vx: 0.8 + Math.random() * 4.6,
+    vy: -1.8 + Math.random() * 3.8,
+    size: 1 + Math.random() * 3.6,
     rotation: Math.random() * Math.PI,
-    rotationSpeed: -0.18 + Math.random() * 0.36,
-    color: colors[Math.floor(Math.random() * colors.length)]
+    rotationSpeed: -0.08 + Math.random() * 0.16,
+    color: colors[Math.floor(Math.random() * colors.length)],
+    drift: 0.06 + Math.random() * 0.16
   }));
   let startTime = 0;
 
@@ -549,15 +556,18 @@ function animateRuleRemoval(ruleNode, onComplete) {
       particle.x += particle.vx;
       particle.y += particle.vy;
       particle.vx *= 0.988;
-      particle.vy += 0.025;
+      particle.vy += particle.drift;
       particle.rotation += particle.rotationSpeed;
 
       context.save();
-      context.globalAlpha = Math.max(1 - progress, 0);
+      context.globalAlpha = Math.max((1 - progress) * 0.82, 0);
+      context.filter = `blur(${progress * 2.4}px)`;
       context.translate(particle.x, particle.y);
       context.rotate(particle.rotation);
       context.fillStyle = particle.color;
-      context.fillRect(-particle.size / 2, -particle.size / 2, particle.size, particle.size);
+      context.beginPath();
+      context.arc(0, 0, particle.size, 0, Math.PI * 2);
+      context.fill();
       context.restore();
     });
 
