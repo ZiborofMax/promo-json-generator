@@ -448,4 +448,5 @@ document.querySelector("#downloadButton").addEventListener("click", () => {
   URL.revokeObjectURL(url);
 });
 
+document.querySelector("#templateSelect").value = "offer";
 loadTemplate("offer");
