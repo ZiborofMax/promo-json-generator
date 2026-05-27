@@ -194,9 +194,11 @@ function addRule(rule = { header: "", content: "" }) {
     updateAll();
   });
   node.querySelector(".remove-rule").addEventListener("click", () => {
-    node.remove();
-    renumberRules();
-    updateAll();
+    animateRuleRemoval(node, () => {
+      node.remove();
+      renumberRules();
+      updateAll();
+    });
   });
 
   rulesList.append(node);
@@ -496,6 +498,80 @@ function triggerConfetti(sourceElement) {
 }
 
 fetch(CONFETTI_ANIMATION_URL).catch(() => {});
+
+function animateRuleRemoval(ruleNode, onComplete) {
+  if (ruleNode.classList.contains("rule-card-deleting")) {
+    return;
+  }
+
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    onComplete();
+    return;
+  }
+
+  const rect = ruleNode.getBoundingClientRect();
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d");
+  const pixelRatio = window.devicePixelRatio || 1;
+  const colors = ["#ced8ef", "#7c5ce5", "#64c8f6", "#f7f9ff", "#25d75a", "#ffc107"];
+  const particles = Array.from({ length: 140 }, () => ({
+    x: rect.left + Math.random() * rect.width,
+    y: rect.top + Math.random() * rect.height,
+    vx: 1.5 + Math.random() * 6,
+    vy: -2.8 + Math.random() * 5.6,
+    size: 2 + Math.random() * 6,
+    rotation: Math.random() * Math.PI,
+    rotationSpeed: -0.18 + Math.random() * 0.36,
+    color: colors[Math.floor(Math.random() * colors.length)]
+  }));
+  let startTime = 0;
+
+  canvas.className = "dust-canvas";
+  document.body.append(canvas);
+  ruleNode.classList.add("rule-card-deleting");
+
+  function resizeCanvas() {
+    canvas.width = Math.floor(window.innerWidth * pixelRatio);
+    canvas.height = Math.floor(window.innerHeight * pixelRatio);
+    canvas.style.width = `${window.innerWidth}px`;
+    canvas.style.height = `${window.innerHeight}px`;
+    context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+  }
+
+  function drawFrame(timestamp) {
+    if (!startTime) {
+      startTime = timestamp;
+    }
+    const progress = Math.min((timestamp - startTime) / 760, 1);
+    context.clearRect(0, 0, window.innerWidth, window.innerHeight);
+
+    particles.forEach((particle) => {
+      particle.x += particle.vx;
+      particle.y += particle.vy;
+      particle.vx *= 0.988;
+      particle.vy += 0.025;
+      particle.rotation += particle.rotationSpeed;
+
+      context.save();
+      context.globalAlpha = Math.max(1 - progress, 0);
+      context.translate(particle.x, particle.y);
+      context.rotate(particle.rotation);
+      context.fillStyle = particle.color;
+      context.fillRect(-particle.size / 2, -particle.size / 2, particle.size, particle.size);
+      context.restore();
+    });
+
+    if (progress < 1) {
+      requestAnimationFrame(drawFrame);
+    } else {
+      canvas.remove();
+    }
+  }
+
+  resizeCanvas();
+  requestAnimationFrame(drawFrame);
+  window.setTimeout(onComplete, 720);
+}
 
 form.addEventListener("input", updateAll);
 document.querySelector("#addRuleButton").addEventListener("click", () => {
