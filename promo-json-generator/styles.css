@@ -206,6 +206,16 @@ select {
   font-weight: 700;
 }
 
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  background:
+    linear-gradient(45deg, transparent 50%, var(--text) 50%) calc(100% - 22px) 50% / 7px 7px no-repeat,
+    linear-gradient(135deg, var(--text) 50%, transparent 50%) calc(100% - 17px) 50% / 7px 7px no-repeat,
+    rgba(255, 255, 255, 0.82);
+  padding-right: 44px;
+}
+
 textarea {
   resize: vertical;
   line-height: 1.45;
