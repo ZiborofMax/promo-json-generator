@@ -58,9 +58,11 @@
             <section class="panel">
               <div class="panel-heading">
                 <h2>Разделы</h2>
-                <button class="secondary" id="addRuleButton" type="button">Добавить раздел</button>
               </div>
               <div class="rules-list" id="rulesList"></div>
+              <div class="section-footer">
+                <button class="secondary" id="addRuleButton" type="button">Добавить раздел</button>
+              </div>
             </section>
 
             <section class="panel">
@@ -110,7 +112,10 @@
             <section class="json-panel">
               <div class="panel-heading">
                 <h2>JSON</h2>
-                <button id="copyButton" type="button">Скопировать</button>
+                <div class="json-actions">
+                  <button class="secondary" id="downloadButton" type="button">Скачать .json</button>
+                  <button id="copyButton" type="button">Скопировать</button>
+                </div>
               </div>
               <pre id="jsonOutput"></pre>
             </section>
@@ -165,10 +170,39 @@
             </label>
           </div>
         </div>
-        <label class="terms-fields hidden">
-          Terms
-          <textarea class="terms-raw" rows="4" placeholder="ЭТАП 2 | 1000 | https://...&#10;ЭТАП 3 | 1500 | https://..."></textarea>
-        </label>
+        <div class="terms-fields hidden">
+          <div class="terms-heading">
+            <div>
+              <h4>Плитки условий</h4>
+              <p>Одна строка ниже формирует одну плитку в JSON</p>
+            </div>
+            <button class="secondary add-term" type="button">Добавить плитку</button>
+          </div>
+          <div class="terms-list"></div>
+        </div>
+      </article>
+    </template>
+
+    <template id="termTemplate">
+      <article class="term-editor">
+        <div class="term-editor-head">
+          <strong></strong>
+          <button class="icon-button remove-term" type="button" aria-label="Удалить плитку">×</button>
+        </div>
+        <div class="term-field-grid">
+          <label>
+            Заголовок
+            <input class="term-header" type="text" placeholder="ЭТАП 2" />
+          </label>
+          <label>
+            Текст / сумма
+            <input class="term-content" type="text" placeholder="1000" />
+          </label>
+          <label>
+            Иконка URL
+            <input class="term-image-url" type="url" placeholder="https://www.ligastavok.ru/files/file/.../icon.webp" />
+          </label>
+        </div>
       </article>
     </template>
 

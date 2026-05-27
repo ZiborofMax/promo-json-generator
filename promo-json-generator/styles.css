@@ -17,6 +17,12 @@
   box-sizing: border-box;
 }
 
+html,
+body {
+  width: 100%;
+  overflow-x: hidden;
+}
+
 body {
   margin: 0;
   background: var(--bg);
@@ -28,6 +34,7 @@ input,
 textarea,
 select {
   font: inherit;
+  min-width: 0;
 }
 
 button {
@@ -49,6 +56,7 @@ button:hover {
 }
 
 .workspace {
+  width: 100%;
   max-width: 1440px;
   margin: 0 auto;
 }
@@ -90,15 +98,25 @@ h2 {
 .topbar-actions {
   display: flex;
   gap: 10px;
+  flex: 0 1 430px;
+  min-width: 0;
 }
 
 .topbar-actions select {
-  min-width: 190px;
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.topbar-actions button {
+  flex: 0 0 auto;
+  min-width: max-content;
+  padding: 0 14px;
+  white-space: nowrap;
 }
 
 .layout-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 520px;
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 420px);
   gap: 20px;
   align-items: start;
 }
@@ -107,11 +125,13 @@ h2 {
 .output-column {
   display: grid;
   gap: 16px;
+  min-width: 0;
 }
 
 .panel,
 .preview-wrap,
 .json-panel {
+  min-width: 0;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -134,6 +154,7 @@ h2 {
 label {
   display: grid;
   gap: 7px;
+  min-width: 0;
   margin-bottom: 14px;
   color: var(--muted);
   font-size: 13px;
@@ -179,6 +200,17 @@ select:focus {
 .rules-list {
   display: grid;
   gap: 12px;
+}
+
+.section-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 14px;
+}
+
+.section-footer button {
+  padding: 9px 14px;
+  white-space: nowrap;
 }
 
 .rule-card {
@@ -235,7 +267,75 @@ select:focus {
   display: none;
 }
 
+.terms-fields {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  padding: 12px;
+}
+
+.terms-heading,
+.term-editor-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.terms-heading {
+  margin-bottom: 10px;
+}
+
+.terms-heading h4 {
+  margin: 0 0 4px;
+  font-size: 15px;
+}
+
+.terms-heading p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.terms-heading button {
+  flex: 0 0 auto;
+  padding: 8px 12px;
+  white-space: nowrap;
+}
+
+.terms-list {
+  display: grid;
+  gap: 10px;
+}
+
+.term-editor {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfd;
+  padding: 12px;
+}
+
+.term-editor-head {
+  margin-bottom: 10px;
+}
+
+.term-editor-head strong {
+  font-size: 14px;
+}
+
+.term-field-grid {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.8fr) minmax(120px, 0.8fr) minmax(220px, 1.6fr);
+  gap: 10px;
+}
+
+.term-field-grid label {
+  margin-bottom: 0;
+}
+
 .preview-wrap {
+  overflow: hidden;
   padding: 16px;
 }
 
@@ -253,7 +353,7 @@ select:focus {
 }
 
 .phone {
-  width: 360px;
+  width: min(360px, 100%);
   max-width: 100%;
   height: 760px;
   margin: 0 auto;
@@ -378,11 +478,30 @@ select:focus {
 }
 
 .term-card {
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  gap: 8px;
+  align-items: center;
   min-height: 78px;
   border-radius: 9px;
   background: #eef0f5;
   padding: 10px;
   color: #222936;
+}
+
+.term-card img,
+.term-card .term-icon-fallback {
+  width: 22px;
+  height: 22px;
+}
+
+.term-card img {
+  object-fit: contain;
+}
+
+.term-card .term-icon-fallback {
+  border-radius: 6px;
+  background: #dfe4ec;
 }
 
 .term-card small {
@@ -422,8 +541,18 @@ select:focus {
   padding: 16px;
 }
 
-.json-panel button {
+.json-actions {
+  display: flex;
+  gap: 8px;
+  min-width: 0;
+}
+
+.json-actions button {
   padding: 9px 14px;
+  white-space: nowrap;
+}
+
+.json-panel button:not(.secondary) {
   background: var(--green);
   color: #07140b;
 }
@@ -446,7 +575,7 @@ pre {
   }
 
   .output-column {
-    grid-template-columns: minmax(0, 420px) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 390px) minmax(0, 1fr);
     align-items: start;
   }
 }
@@ -457,12 +586,17 @@ pre {
   }
 
   .topbar,
-  .topbar-actions,
   .output-column,
   .field-grid {
     grid-template-columns: 1fr;
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .topbar-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    width: 100%;
   }
 
   .output-column {
@@ -475,5 +609,53 @@ pre {
 
   .phone-content {
     height: 584px;
+  }
+}
+
+@media (max-width: 720px) {
+  .topbar-actions,
+  .output-column,
+  .field-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .panel-heading,
+  .preview-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .json-actions {
+    width: 100%;
+  }
+
+  .json-actions button {
+    flex: 1 1 0;
+  }
+
+  .section-footer {
+    justify-content: stretch;
+  }
+
+  .section-footer button {
+    width: 100%;
+  }
+
+  .terms-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .term-field-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .phone {
+    height: 620px;
+  }
+
+  .phone-content {
+    height: 524px;
   }
 }

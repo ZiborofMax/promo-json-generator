@@ -144,6 +144,7 @@ const fields = {
 };
 const rulesList = document.querySelector("#rulesList");
 const ruleTemplate = document.querySelector("#ruleTemplate");
+const termTemplate = document.querySelector("#termTemplate");
 const jsonOutput = document.querySelector("#jsonOutput");
 const preview = document.querySelector("#preview");
 const previewTitle = document.querySelector("#previewTitle");
@@ -207,9 +208,10 @@ function addRule(rule = { header: "", content: "" }) {
 
   const termsEnabled = node.querySelector(".rule-terms-enabled");
   const termsFields = node.querySelector(".terms-fields");
+  const termsList = node.querySelector(".terms-list");
   termsEnabled.checked = Array.isArray(rule.terms);
   termsFields.classList.toggle("hidden", !Array.isArray(rule.terms));
-  node.querySelector(".terms-raw").value = serializeTerms(rule.terms || []);
+  (rule.terms || []).forEach((term) => addTermCard(termsList, term));
 
   widgetEnabled.addEventListener("change", () => {
     widgetFields.classList.toggle("hidden", !widgetEnabled.checked);
@@ -217,6 +219,13 @@ function addRule(rule = { header: "", content: "" }) {
   });
   termsEnabled.addEventListener("change", () => {
     termsFields.classList.toggle("hidden", !termsEnabled.checked);
+    if (termsEnabled.checked && !termsList.children.length) {
+      addTermCard(termsList);
+    }
+    updateAll();
+  });
+  node.querySelector(".add-term").addEventListener("click", () => {
+    addTermCard(termsList);
     updateAll();
   });
   node.querySelector(".remove-rule").addEventListener("click", () => {
@@ -227,6 +236,26 @@ function addRule(rule = { header: "", content: "" }) {
 
   rulesList.append(node);
   renumberRules();
+}
+
+function addTermCard(termsList, term = { header: "", content: "", imageUrl: DEFAULT_TERM_IMAGE }) {
+  const node = termTemplate.content.firstElementChild.cloneNode(true);
+  node.querySelector(".term-header").value = term.header || "";
+  node.querySelector(".term-content").value = term.content || "";
+  node.querySelector(".term-image-url").value = term.imageUrl || DEFAULT_TERM_IMAGE;
+  node.querySelector(".remove-term").addEventListener("click", () => {
+    node.remove();
+    renumberTerms(termsList);
+    updateAll();
+  });
+  termsList.append(node);
+  renumberTerms(termsList);
+}
+
+function renumberTerms(termsList) {
+  [...termsList.children].forEach((node, index) => {
+    node.querySelector(".term-editor-head strong").textContent = `Плитка ${index + 1}`;
+  });
 }
 
 function renumberRules() {
@@ -242,19 +271,19 @@ function parsePromoIds(value) {
     .filter(Boolean);
 }
 
-function parseTerms(raw) {
-  return raw
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line) => {
-      const [header = "", content = "", imageUrl = DEFAULT_TERM_IMAGE] = line.split("|").map((part) => part.trim());
-      return { header, content, imageUrl };
-    });
-}
-
-function serializeTerms(terms) {
-  return terms.map((term) => `${term.header || ""} | ${term.content || ""} | ${term.imageUrl || DEFAULT_TERM_IMAGE}`).join("\n");
+function collectTerms(node) {
+  return [...node.querySelectorAll(".term-editor")]
+    .map((termNode) => {
+      const imageUrl = termNode.querySelector(".term-image-url").value.trim();
+      return {
+        header: termNode.querySelector(".term-header").value.trim(),
+        content: termNode.querySelector(".term-content").value.trim(),
+        imageUrl: imageUrl || DEFAULT_TERM_IMAGE,
+        hasCustomImage: Boolean(imageUrl)
+      };
+    })
+    .filter((term) => term.header || term.content || term.hasCustomImage)
+    .map(({ hasCustomImage, ...term }) => term);
 }
 
 function collectRules() {
@@ -280,7 +309,7 @@ function collectRules() {
     }
 
     if (node.querySelector(".rule-terms-enabled").checked) {
-      rule.terms = parseTerms(node.querySelector(".terms-raw").value);
+      rule.terms = collectTerms(node);
     }
 
     return rule;
@@ -385,8 +414,11 @@ function renderTerms(terms) {
         .map(
           (term) => `
           <div class="term-card">
-            <small>${escapeHtml(term.header)}</small>
-            <strong>${escapeHtml(term.content)}</strong>
+            ${term.imageUrl ? `<img src="${escapeHtml(term.imageUrl)}" alt="">` : `<span class="term-icon-fallback"></span>`}
+            <div>
+              <small>${escapeHtml(term.header)}</small>
+              <strong>${escapeHtml(term.content)}</strong>
+            </div>
           </div>
         `
         )
@@ -400,6 +432,16 @@ function updateAll() {
   jsonOutput.textContent = JSON.stringify(data, null, 2);
   renderPreview(data);
   statusBadge.textContent = data.switcherByPromoId.length ? "JSON готов" : "Нет Promo ID";
+}
+
+function getDownloadFileName(data) {
+  const promoId = data.switcherByPromoId[0] || "promo-action";
+  const safePromoId = promoId
+    .toLowerCase()
+    .replace(/[^a-z0-9а-яё_-]+/gi, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+  return `${safePromoId || "promo-action"}.json`;
 }
 
 form.addEventListener("input", updateAll);
@@ -427,6 +469,18 @@ document.querySelector("#copyButton").addEventListener("click", async () => {
   setTimeout(() => {
     button.textContent = "Скопировать";
   }, 1200);
+});
+document.querySelector("#downloadButton").addEventListener("click", () => {
+  const data = buildJson();
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = getDownloadFileName(data);
+  document.body.append(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
 });
 
 loadTemplate("offer");
