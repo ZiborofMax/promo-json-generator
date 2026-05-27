@@ -500,7 +500,7 @@ function triggerConfetti(sourceElement) {
 fetch(CONFETTI_ANIMATION_URL).catch(() => {});
 
 function animateRuleRemoval(ruleNode, onComplete) {
-  if (ruleNode.classList.contains("rule-card-deleting")) {
+  if (ruleNode.classList.contains("rule-card-collapsing")) {
     return;
   }
 
@@ -510,77 +510,65 @@ function animateRuleRemoval(ruleNode, onComplete) {
   }
 
   const rect = ruleNode.getBoundingClientRect();
-  const canvas = document.createElement("canvas");
-  const context = canvas.getContext("2d");
-  const pixelRatio = window.devicePixelRatio || 1;
-  const colors = [
-    "rgba(48, 56, 86, 0.22)",
-    "rgba(123, 134, 167, 0.26)",
-    "rgba(206, 216, 239, 0.38)",
-    "rgba(247, 249, 255, 0.62)",
-    "rgba(255, 255, 255, 0.72)"
-  ];
-  const particles = Array.from({ length: 140 }, () => ({
-    x: rect.left + Math.random() * rect.width,
-    y: rect.top + Math.random() * rect.height,
-    vx: 0.8 + Math.random() * 4.6,
-    vy: -1.8 + Math.random() * 3.8,
-    size: 1 + Math.random() * 3.6,
-    rotation: Math.random() * Math.PI,
-    rotationSpeed: -0.08 + Math.random() * 0.16,
-    color: colors[Math.floor(Math.random() * colors.length)],
-    drift: 0.06 + Math.random() * 0.16
-  }));
-  let startTime = 0;
+  const computedStyle = window.getComputedStyle(ruleNode);
+  const ghost = document.createElement("div");
+  const stripCount = Math.max(10, Math.min(18, Math.round(rect.height / 42)));
+  const stripHeight = rect.height / stripCount;
+  const formControls = ruleNode.querySelectorAll("input, textarea, select");
 
-  canvas.className = "dust-canvas";
-  document.body.append(canvas);
-  ruleNode.classList.add("rule-card-deleting");
+  ghost.className = "snap-ghost";
+  ghost.style.left = `${rect.left}px`;
+  ghost.style.top = `${rect.top}px`;
+  ghost.style.width = `${rect.width}px`;
+  ghost.style.height = `${rect.height}px`;
 
-  function resizeCanvas() {
-    canvas.width = Math.floor(window.innerWidth * pixelRatio);
-    canvas.height = Math.floor(window.innerHeight * pixelRatio);
-    canvas.style.width = `${window.innerWidth}px`;
-    canvas.style.height = `${window.innerHeight}px`;
-    context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
-  }
+  Array.from({ length: stripCount }, (_, index) => {
+    const strip = document.createElement("div");
+    const clone = ruleNode.cloneNode(true);
+    const cloneControls = clone.querySelectorAll("input, textarea, select");
+    const offset = Math.round(index * stripHeight);
+    const direction = index % 2 ? 1 : -1;
 
-  function drawFrame(timestamp) {
-    if (!startTime) {
-      startTime = timestamp;
-    }
-    const progress = Math.min((timestamp - startTime) / 760, 1);
-    context.clearRect(0, 0, window.innerWidth, window.innerHeight);
-
-    particles.forEach((particle) => {
-      particle.x += particle.vx;
-      particle.y += particle.vy;
-      particle.vx *= 0.988;
-      particle.vy += particle.drift;
-      particle.rotation += particle.rotationSpeed;
-
-      context.save();
-      context.globalAlpha = Math.max((1 - progress) * 0.82, 0);
-      context.filter = `blur(${progress * 2.4}px)`;
-      context.translate(particle.x, particle.y);
-      context.rotate(particle.rotation);
-      context.fillStyle = particle.color;
-      context.beginPath();
-      context.arc(0, 0, particle.size, 0, Math.PI * 2);
-      context.fill();
-      context.restore();
+    formControls.forEach((control, controlIndex) => {
+      const cloneControl = cloneControls[controlIndex];
+      if (!cloneControl) {
+        return;
+      }
+      if (control.type === "checkbox") {
+        cloneControl.checked = control.checked;
+      } else {
+        cloneControl.value = control.value;
+      }
     });
 
-    if (progress < 1) {
-      requestAnimationFrame(drawFrame);
-    } else {
-      canvas.remove();
-    }
-  }
+    strip.className = "snap-strip";
+    strip.style.top = `${offset}px`;
+    strip.style.height = `${Math.ceil(stripHeight) + 1}px`;
+    strip.style.setProperty("--delay", `${index * 13}ms`);
+    strip.style.setProperty("--tx", `${26 + Math.random() * 34}px`);
+    strip.style.setProperty("--ty", `${direction * (2 + Math.random() * 14)}px`);
 
-  resizeCanvas();
-  requestAnimationFrame(drawFrame);
-  window.setTimeout(onComplete, 720);
+    clone.classList.remove("rule-card-collapsing");
+    clone.classList.add("snap-strip-inner");
+    clone.style.setProperty("--strip-offset", offset);
+    clone.style.setProperty("--snap-width", `${rect.width}px`);
+    clone.style.margin = "0";
+
+    strip.append(clone);
+    ghost.append(strip);
+  });
+
+  document.body.append(ghost);
+
+  ruleNode.style.setProperty("--collapse-height", `${rect.height}px`);
+  ruleNode.style.setProperty("--collapse-margin", computedStyle.marginBottom);
+  ruleNode.style.height = `${rect.height}px`;
+  ruleNode.classList.add("rule-card-collapsing");
+
+  window.setTimeout(() => {
+    ghost.remove();
+  }, 920);
+  window.setTimeout(onComplete, 620);
 }
 
 form.addEventListener("input", updateAll);
