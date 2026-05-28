@@ -114,6 +114,8 @@ const jsonOutput = document.querySelector("#jsonOutput");
 const preview = document.querySelector("#preview");
 const previewTitle = document.querySelector("#previewTitle");
 const statusBadge = document.querySelector("#statusBadge");
+const jsonModeButtons = document.querySelectorAll("[data-json-mode]");
+let jsonMode = "app";
 
 function makeWidgetRule(header, content, campaignId, progressText, title = "Твой прогресс", imageUrl = DEFAULT_WIDGET_IMAGE) {
   return {
@@ -238,6 +240,26 @@ function parsePromoIds(value) {
     .filter(Boolean);
 }
 
+function normalizeNumericSpaces(value) {
+  return value.replace(/(\d)[ \u00a0](?=\d)/g, "$1\u00a0");
+}
+
+function normalizeJsonText(value) {
+  if (typeof value === "string") {
+    return normalizeNumericSpaces(value);
+  }
+
+  if (Array.isArray(value)) {
+    return value.map(normalizeJsonText);
+  }
+
+  if (value && typeof value === "object") {
+    return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, normalizeJsonText(item)]));
+  }
+
+  return value;
+}
+
 function collectTerms(node) {
   return [...node.querySelectorAll(".term-editor")]
     .map((termNode) => {
@@ -300,7 +322,7 @@ function buildJson() {
   common.secondaryButtonText = fields.secondaryButtonText.value.trim();
   common.secondaryButtonUrl = fields.secondaryButtonUrl.value.trim();
 
-  return {
+  return normalizeJsonText({
     switcherByPromoId: parsePromoIds(fields.promoIds.value),
     common,
     failures: [
@@ -316,7 +338,7 @@ function buildJson() {
         content: "Вы можете обратиться в службу<br>поддержки для выяснения причин"
       }
     ]
-  };
+  });
 }
 
 function toWebLineBreaks(value) {
@@ -336,6 +358,14 @@ function buildWebJson() {
   }));
 
   return data;
+}
+
+function getCurrentJsonData() {
+  return jsonMode === "web" ? buildWebJson() : buildJson();
+}
+
+function getCurrentJsonText() {
+  return JSON.stringify(getCurrentJsonData(), null, 2);
 }
 
 async function copyText(value) {
@@ -432,7 +462,7 @@ function renderTerms(terms) {
 
 function updateAll() {
   const data = buildJson();
-  jsonOutput.textContent = JSON.stringify(data, null, 2);
+  jsonOutput.textContent = getCurrentJsonText();
   renderPreview(data);
   const hasPromoId = Boolean(data.switcherByPromoId.length);
   statusBadge.textContent = hasPromoId ? "JSON готов" : "Укажите Promo ID";
@@ -615,26 +645,26 @@ document.querySelector("#addRuleButton").addEventListener("click", () => {
 document.querySelector("#loadTemplateButton").addEventListener("click", () => {
   loadTemplate(document.querySelector("#templateSelect").value);
 });
+jsonModeButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    jsonMode = button.dataset.jsonMode;
+    jsonModeButtons.forEach((modeButton) => {
+      modeButton.classList.toggle("active", modeButton === button);
+    });
+    updateAll();
+  });
+});
 document.querySelector("#copyButton").addEventListener("click", async () => {
   const button = document.querySelector("#copyButton");
-  await copyText(jsonOutput.textContent);
+  await copyText(getCurrentJsonText());
   triggerConfetti(button);
   button.textContent = "Скопировано";
   setTimeout(() => {
     button.textContent = "Скопировать";
   }, 1200);
 });
-document.querySelector("#copyWebButton").addEventListener("click", async () => {
-  const button = document.querySelector("#copyWebButton");
-  await copyText(JSON.stringify(buildWebJson(), null, 2));
-  triggerConfetti(button);
-  button.textContent = "WEB скопирован";
-  setTimeout(() => {
-    button.textContent = "Скопировать WEB";
-  }, 1200);
-});
 document.querySelector("#downloadButton").addEventListener("click", () => {
-  const data = buildJson();
+  const data = getCurrentJsonData();
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
