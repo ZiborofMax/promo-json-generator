@@ -112,9 +112,12 @@
               <div class="panel-heading">
                 <h2>JSON</h2>
                 <div class="json-actions">
+                  <div class="json-mode-switch" role="group" aria-label="Формат JSON">
+                    <button class="active" type="button" data-json-mode="app">APP</button>
+                    <button type="button" data-json-mode="web">WEB</button>
+                  </div>
                   <button class="secondary" id="downloadButton" type="button">Скачать .json</button>
-                  <button class="secondary" id="copyWebButton" type="button">Скопировать WEB</button>
-                  <button id="copyButton" type="button">Скопировать</button>
+                  <button class="secondary" id="copyButton" type="button">Скопировать</button>
                 </div>
               </div>
               <pre id="jsonOutput"></pre>
