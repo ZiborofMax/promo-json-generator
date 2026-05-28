@@ -240,6 +240,26 @@ function parsePromoIds(value) {
     .filter(Boolean);
 }
 
+function normalizeNumericSpaces(value) {
+  return value.replace(/(\d)[ \u00a0](?=\d)/g, "$1\u00a0");
+}
+
+function normalizeJsonText(value) {
+  if (typeof value === "string") {
+    return normalizeNumericSpaces(value);
+  }
+
+  if (Array.isArray(value)) {
+    return value.map(normalizeJsonText);
+  }
+
+  if (value && typeof value === "object") {
+    return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, normalizeJsonText(item)]));
+  }
+
+  return value;
+}
+
 function collectTerms(node) {
   return [...node.querySelectorAll(".term-editor")]
     .map((termNode) => {
@@ -302,7 +322,7 @@ function buildJson() {
   common.secondaryButtonText = fields.secondaryButtonText.value.trim();
   common.secondaryButtonUrl = fields.secondaryButtonUrl.value.trim();
 
-  return {
+  return normalizeJsonText({
     switcherByPromoId: parsePromoIds(fields.promoIds.value),
     common,
     failures: [
@@ -318,7 +338,7 @@ function buildJson() {
         content: "Вы можете обратиться в службу<br>поддержки для выяснения причин"
       }
     ]
-  };
+  });
 }
 
 function toWebLineBreaks(value) {
