@@ -319,6 +319,42 @@ function buildJson() {
   };
 }
 
+function toWebLineBreaks(value) {
+  return String(value).replace(/\r\n/g, "\n").replace(/\r/g, "\n").replace(/\n/g, "<br>");
+}
+
+function buildWebJson() {
+  const data = cloneData(buildJson());
+
+  if (typeof data.common.content === "string") {
+    data.common.content = toWebLineBreaks(data.common.content);
+  }
+
+  data.common.rules = data.common.rules.map((rule) => ({
+    ...rule,
+    content: toWebLineBreaks(rule.content || "")
+  }));
+
+  return data;
+}
+
+async function copyText(value) {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(value);
+    return;
+  }
+
+  const textarea = document.createElement("textarea");
+  textarea.value = value;
+  textarea.setAttribute("readonly", "");
+  textarea.style.position = "fixed";
+  textarea.style.opacity = "0";
+  document.body.append(textarea);
+  textarea.select();
+  document.execCommand("copy");
+  textarea.remove();
+}
+
 function escapeHtml(value) {
   return String(value ?? "")
     .replaceAll("&", "&amp;")
@@ -580,22 +616,21 @@ document.querySelector("#loadTemplateButton").addEventListener("click", () => {
   loadTemplate(document.querySelector("#templateSelect").value);
 });
 document.querySelector("#copyButton").addEventListener("click", async () => {
-  if (navigator.clipboard?.writeText) {
-    await navigator.clipboard.writeText(jsonOutput.textContent);
-  } else {
-    const selection = window.getSelection();
-    const range = document.createRange();
-    range.selectNodeContents(jsonOutput);
-    selection.removeAllRanges();
-    selection.addRange(range);
-    document.execCommand("copy");
-    selection.removeAllRanges();
-  }
   const button = document.querySelector("#copyButton");
+  await copyText(jsonOutput.textContent);
   triggerConfetti(button);
   button.textContent = "Скопировано";
   setTimeout(() => {
     button.textContent = "Скопировать";
+  }, 1200);
+});
+document.querySelector("#copyWebButton").addEventListener("click", async () => {
+  const button = document.querySelector("#copyWebButton");
+  await copyText(JSON.stringify(buildWebJson(), null, 2));
+  triggerConfetti(button);
+  button.textContent = "WEB скопирован";
+  setTimeout(() => {
+    button.textContent = "Скопировать WEB";
   }, 1200);
 });
 document.querySelector("#downloadButton").addEventListener("click", () => {

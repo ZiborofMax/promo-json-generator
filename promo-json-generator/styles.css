@@ -722,11 +722,14 @@ select:focus {
 
 .json-actions {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   min-width: 0;
   gap: 9px;
 }
 
 .json-actions button {
+  flex: 0 1 auto;
   padding: 0 16px;
   white-space: nowrap;
 }
@@ -836,7 +839,7 @@ pre {
   }
 
   .json-actions button {
-    flex: 1 1 0;
+    flex: 1 1 150px;
     padding-inline: 10px;
   }
 
