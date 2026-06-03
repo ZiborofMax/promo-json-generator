@@ -589,12 +589,12 @@ function downloadJsonFile(data, suffix) {
 }
 
 async function copyJsonFromButton(button, data, doneText) {
-  const originalText = button.textContent;
+  const originalHtml = button.innerHTML;
   await copyText(getJsonText(data));
   triggerConfetti(button);
   button.textContent = doneText;
   setTimeout(() => {
-    button.textContent = originalText;
+    button.innerHTML = originalHtml;
   }, 1200);
 }
 
