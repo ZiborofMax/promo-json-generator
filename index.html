@@ -18,6 +18,7 @@
             <select id="templateSelect" aria-label="Шаблон">
               <option value="offer">Оффер</option>
               <option value="tasks">Задания</option>
+              <option value="json">Заполнить через JSON</option>
               <option value="blank">Пустой шаблон</option>
             </select>
             <button class="secondary" id="loadTemplateButton" type="button">Загрузить</button>
@@ -26,6 +27,24 @@
 
         <div class="layout-grid">
           <form class="editor" id="promoForm">
+            <section class="panel json-import-panel hidden" id="jsonImportPanel">
+              <div class="panel-heading">
+                <h2>Заполнить через JSON</h2>
+                <button class="secondary" id="applyJsonButton" type="button">Заполнить поля</button>
+              </div>
+              <label>
+                JSON
+                <textarea id="jsonImportInput" rows="8" placeholder="Вставьте JSON акции сюда или выберите файл ниже"></textarea>
+              </label>
+              <div class="json-import-actions">
+                <label class="file-import-label">
+                  Файл JSON
+                  <input id="jsonFileInput" type="file" accept=".json,application/json" />
+                </label>
+                <p class="json-import-status" id="jsonImportStatus"></p>
+              </div>
+            </section>
+
             <section class="panel">
               <div class="panel-heading">
                 <h2>Основное</h2>
