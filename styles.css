@@ -796,7 +796,8 @@ select:focus {
   color: #07140b;
 }
 
-#downloadButton:hover {
+#downloadButton:hover,
+#copyButton:hover {
   border-color: transparent;
   background: var(--green);
   color: #07140b;
