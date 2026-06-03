@@ -118,8 +118,6 @@ const jsonFileInput = document.querySelector("#jsonFileInput");
 const preview = document.querySelector("#preview");
 const previewTitle = document.querySelector("#previewTitle");
 const statusBadge = document.querySelector("#statusBadge");
-const jsonModeButtons = document.querySelectorAll("[data-json-mode]");
-let jsonMode = "app";
 let jsonImportTimer = 0;
 
 function makeWidgetRule(header, content, campaignId, progressText, title = "Твой прогресс", imageUrl = DEFAULT_WIDGET_IMAGE) {
@@ -463,12 +461,8 @@ function buildWebJson() {
   return data;
 }
 
-function getCurrentJsonData() {
-  return jsonMode === "web" ? buildWebJson() : buildJson();
-}
-
-function getCurrentJsonText() {
-  return JSON.stringify(getCurrentJsonData(), null, 2);
+function getJsonText(data) {
+  return JSON.stringify(data, null, 2);
 }
 
 async function copyText(value) {
@@ -565,21 +559,43 @@ function renderTerms(terms) {
 
 function updateAll() {
   const data = buildJson();
-  jsonOutput.textContent = getCurrentJsonText();
+  jsonOutput.textContent = getJsonText(data);
   renderPreview(data);
   const hasPromoId = Boolean(data.switcherByPromoId.length);
   statusBadge.textContent = hasPromoId ? "JSON готов" : "Укажите Promo ID";
   statusBadge.classList.toggle("warning", !hasPromoId);
 }
 
-function getDownloadFileName(data) {
+function getDownloadFileName(data, suffix = "") {
   const promoId = data.switcherByPromoId[0] || "promo-action";
   const safePromoId = promoId
     .toLowerCase()
     .replace(/[^a-z0-9а-яё_-]+/gi, "-")
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "");
-  return `${safePromoId || "promo-action"}.json`;
+  return `${safePromoId || "promo-action"}${suffix}.json`;
+}
+
+function downloadJsonFile(data, suffix) {
+  const blob = new Blob([getJsonText(data)], { type: "application/json;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = getDownloadFileName(data, suffix);
+  document.body.append(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+async function copyJsonFromButton(button, data, doneText) {
+  const originalText = button.textContent;
+  await copyText(getJsonText(data));
+  triggerConfetti(button);
+  button.textContent = doneText;
+  setTimeout(() => {
+    button.textContent = originalText;
+  }, 1200);
 }
 
 function triggerConfetti(sourceElement) {
@@ -764,35 +780,16 @@ jsonFileInput.addEventListener("change", async () => {
   jsonImportInput.value = await file.text();
   importJsonText(jsonImportInput.value);
 });
-jsonModeButtons.forEach((button) => {
-  button.addEventListener("click", () => {
-    jsonMode = button.dataset.jsonMode;
-    jsonModeButtons.forEach((modeButton) => {
-      modeButton.classList.toggle("active", modeButton === button);
-    });
-    updateAll();
-  });
+document.querySelector("#copyAppButton").addEventListener("click", async () => {
+  await copyJsonFromButton(document.querySelector("#copyAppButton"), buildJson(), "APP скопирован");
 });
-document.querySelector("#copyButton").addEventListener("click", async () => {
-  const button = document.querySelector("#copyButton");
-  await copyText(getCurrentJsonText());
-  triggerConfetti(button);
-  button.textContent = "Скопировано";
-  setTimeout(() => {
-    button.textContent = "Скопировать";
-  }, 1200);
+document.querySelector("#copyWebButton").addEventListener("click", async () => {
+  await copyJsonFromButton(document.querySelector("#copyWebButton"), buildWebJson(), "WEB скопирован");
 });
 document.querySelector("#downloadButton").addEventListener("click", () => {
-  const data = getCurrentJsonData();
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = getDownloadFileName(data);
-  document.body.append(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(url);
+  const appData = buildJson();
+  downloadJsonFile(appData, "-app");
+  downloadJsonFile(buildWebJson(), "-web");
   triggerConfetti(document.querySelector("#downloadButton"));
 });
 
