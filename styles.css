@@ -759,45 +759,14 @@ select:focus {
 }
 
 .json-actions button {
-  flex: 0 1 auto;
+  flex: 1 1 150px;
   padding: 0 16px;
   white-space: nowrap;
 }
 
-.json-mode-switch {
-  display: inline-flex;
-  overflow: hidden;
-  flex: 0 0 auto;
-  min-height: 46px;
-  border: 1px solid var(--line-strong);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.82);
-  box-shadow: var(--shadow-soft);
-}
-
-.json-mode-switch button {
-  min-height: 44px;
-  border-radius: 0;
-  background: transparent;
-  color: var(--muted);
-  padding: 0 13px;
-  box-shadow: none;
-  font-size: 13px;
-  font-weight: 900;
-}
-
-.json-mode-switch button:hover {
-  filter: none;
-  transform: none;
-}
-
-.json-mode-switch button.active {
-  background: var(--green);
-  color: #07140b;
-}
-
 #downloadButton:hover,
-#copyButton:hover {
+#copyAppButton:hover,
+#copyWebButton:hover {
   border-color: transparent;
   background: var(--green);
   color: #07140b;
@@ -904,14 +873,6 @@ pre {
   .json-actions button {
     flex: 1 1 150px;
     padding-inline: 10px;
-  }
-
-  .json-mode-switch {
-    width: 100%;
-  }
-
-  .json-mode-switch button {
-    flex: 1 1 0;
   }
 
   .section-footer {
