@@ -78,6 +78,42 @@ const templates = {
       secondaryButtonUrl: "https://www.ligastavok.ru/files/file/16671/FREEBETVSEM.pdf"
     }
   },
+  bigGame: {
+    switcherByPromoId: ["VERYVIPGRAND1"],
+    common: {
+      title: "Очень большая игра",
+      imageUrl: "https://www.ligastavok.ru/files/file/17495/mail_1080_500.webp",
+      header: "До 350 000 фрибетами",
+      content:
+        "Получи 35 фрибетов по 10 000, последовательно выполняя шаги в течение 30 дней. <br>После выполнения очередного шага заходи в раздел, чтобы отслеживать свой прогресс.<br>Подробности в правилах акции или в сторис. ",
+      rules: [
+        {
+          header: "Шаг второй",
+          content: "Заключи пари на общую сумму от 500 000 ₽ и получи 3 фрибета по 10 000.",
+          widgets: [
+            {
+              type: "progressBar",
+              position: "bottom",
+              enabled: true,
+              campaignId: "VERYVIPGRAND1",
+              title: "Твой прогресс",
+              progressText: "Ставок сделано на сумму, ₽:",
+              imageUrl: DEFAULT_WIDGET_IMAGE,
+              remainingTime: { dateLabel: "Осталось дней", timeLabel: "Осталось:" }
+            }
+          ]
+        },
+        {
+          header: "Какие ставки учитываются",
+          content: "Учитываются все рассчитанные пари, кроме «систем», ставок на фрибет, а также ставок со статусом «Отмена», «Выкуп» и «Возврат»."
+        }
+      ],
+      primaryButtonText: "Заключить пари",
+      primaryButtonUrl: "https://www.ligastavok.ru/home",
+      secondaryButtonText: "Полные правила акции",
+      secondaryButtonUrl: "https://www.ligastavok.ru/files/file/16671/FREEBETVSEM.pdf"
+    }
+  },
   blank: {
     switcherByPromoId: [""],
     common: {
