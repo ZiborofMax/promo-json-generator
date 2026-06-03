@@ -110,6 +110,11 @@ const rulesList = document.querySelector("#rulesList");
 const ruleTemplate = document.querySelector("#ruleTemplate");
 const termTemplate = document.querySelector("#termTemplate");
 const jsonOutput = document.querySelector("#jsonOutput");
+const templateSelect = document.querySelector("#templateSelect");
+const jsonImportPanel = document.querySelector("#jsonImportPanel");
+const jsonImportInput = document.querySelector("#jsonImportInput");
+const jsonImportStatus = document.querySelector("#jsonImportStatus");
+const jsonFileInput = document.querySelector("#jsonFileInput");
 const preview = document.querySelector("#preview");
 const previewTitle = document.querySelector("#previewTitle");
 const statusBadge = document.querySelector("#statusBadge");
@@ -139,19 +144,58 @@ function cloneData(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
+function createEmptyData() {
+  return {
+    switcherByPromoId: [],
+    common: {
+      title: "",
+      imageUrl: "",
+      header: "",
+      content: "",
+      rules: [],
+      primaryButtonText: "",
+      primaryButtonUrl: "",
+      secondaryButtonText: "",
+      secondaryButtonUrl: ""
+    }
+  };
+}
+
 function loadTemplate(name) {
+  if (name === "json") {
+    applyDataToForm(createEmptyData());
+    jsonImportPanel.classList.remove("hidden");
+    jsonImportStatus.textContent = "";
+    jsonImportInput.focus();
+    return;
+  }
+
+  jsonImportPanel.classList.add("hidden");
   const data = cloneData(templates[name]);
-  fields.promoIds.value = "";
-  fields.title.value = data.common.title || "";
-  fields.header.value = data.common.header || "";
-  fields.imageUrl.value = data.common.imageUrl || "";
-  fields.content.value = data.common.content || "";
-  fields.primaryButtonText.value = data.common.primaryButtonText || "";
-  fields.primaryButtonUrl.value = data.common.primaryButtonUrl || "";
-  fields.secondaryButtonText.value = data.common.secondaryButtonText || "";
-  fields.secondaryButtonUrl.value = data.common.secondaryButtonUrl || "";
+  applyDataToForm(data, { clearPromoIds: true });
+}
+
+function applyDataToForm(data, options = {}) {
+  const common = data.common || {};
+  const promoIds = Array.isArray(data.switcherByPromoId) ? data.switcherByPromoId : [];
+
+  fields.promoIds.value = options.clearPromoIds ? "" : promoIds.join(", ");
+  fields.title.value = common.title || "";
+  fields.header.value = common.header || "";
+  fields.imageUrl.value = common.imageUrl || "";
+  fields.content.value = htmlBreaksToText(common.content || "");
+  fields.primaryButtonText.value = common.primaryButtonText || "";
+  fields.primaryButtonUrl.value = common.primaryButtonUrl || "";
+  fields.secondaryButtonText.value = common.secondaryButtonText || "";
+  fields.secondaryButtonUrl.value = common.secondaryButtonUrl || "";
   rulesList.innerHTML = "";
-  data.common.rules.forEach(addRule);
+  (Array.isArray(common.rules) ? common.rules : []).forEach((rule) => {
+    const safeRule = rule && typeof rule === "object" ? rule : {};
+    addRule({
+      ...safeRule,
+      content: htmlBreaksToText(safeRule.content || "")
+    });
+  });
   updateAll();
 }
 
@@ -237,6 +281,49 @@ function parsePromoIds(value) {
     .split(/[\n,]+/)
     .map((item) => item.trim())
     .filter(Boolean);
+}
+
+function htmlBreaksToText(value) {
+  return String(value ?? "")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/\u00a0/g, " ");
+}
+
+function normalizeImportedJsonData(value) {
+  const source = value && typeof value === "object" ? value : {};
+  const common = source.common && typeof source.common === "object" ? source.common : source;
+  const switcherByPromoId = Array.isArray(source.switcherByPromoId)
+    ? source.switcherByPromoId.map(String).filter(Boolean)
+    : typeof source.switcherByPromoId === "string"
+      ? parsePromoIds(source.switcherByPromoId)
+      : [];
+
+  return {
+    switcherByPromoId,
+    common: {
+      title: common.title || "",
+      imageUrl: common.imageUrl || "",
+      header: common.header || "",
+      content: common.content || "",
+      rules: Array.isArray(common.rules) ? common.rules : [],
+      primaryButtonText: common.primaryButtonText || "",
+      primaryButtonUrl: common.primaryButtonUrl || "",
+      secondaryButtonText: common.secondaryButtonText || "",
+      secondaryButtonUrl: common.secondaryButtonUrl || ""
+    }
+  };
+}
+
+function importJsonText(value) {
+  try {
+    const data = normalizeImportedJsonData(JSON.parse(value));
+    applyDataToForm(data);
+    jsonImportStatus.textContent = "Поля заполнены из JSON";
+    jsonImportStatus.classList.remove("error");
+  } catch (error) {
+    jsonImportStatus.textContent = "Не удалось прочитать JSON";
+    jsonImportStatus.classList.add("error");
+  }
 }
 
 function normalizeNumericSpaces(value) {
@@ -640,7 +727,19 @@ document.querySelector("#addRuleButton").addEventListener("click", () => {
   updateAll();
 });
 document.querySelector("#loadTemplateButton").addEventListener("click", () => {
-  loadTemplate(document.querySelector("#templateSelect").value);
+  loadTemplate(templateSelect.value);
+});
+document.querySelector("#applyJsonButton").addEventListener("click", () => {
+  importJsonText(jsonImportInput.value);
+});
+jsonFileInput.addEventListener("change", async () => {
+  const [file] = jsonFileInput.files;
+  if (!file) {
+    return;
+  }
+
+  jsonImportInput.value = await file.text();
+  importJsonText(jsonImportInput.value);
 });
 jsonModeButtons.forEach((button) => {
   button.addEventListener("click", () => {
@@ -674,5 +773,5 @@ document.querySelector("#downloadButton").addEventListener("click", () => {
   triggerConfetti(document.querySelector("#downloadButton"));
 });
 
-document.querySelector("#templateSelect").value = "offer";
+templateSelect.value = "offer";
 loadTemplate("offer");

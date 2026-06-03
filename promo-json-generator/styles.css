@@ -234,6 +234,36 @@ select:focus {
   gap: 14px;
 }
 
+.json-import-panel textarea {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.json-import-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 14px;
+}
+
+.file-import-label {
+  margin-bottom: 0;
+}
+
+.json-import-status {
+  min-width: 180px;
+  margin: 0 0 15px;
+  color: var(--green-dark);
+  font-size: 13px;
+  font-weight: 900;
+  text-align: right;
+}
+
+.json-import-status.error {
+  color: var(--danger);
+}
+
 .secondary {
   border: 1px solid var(--line-strong);
   background: rgba(255, 255, 255, 0.82);
@@ -849,9 +879,15 @@ pre {
 @media (max-width: 720px) {
   .topbar-actions,
   .output-column,
-  .field-grid {
+  .field-grid,
+  .json-import-actions {
     display: grid;
     grid-template-columns: 1fr;
+  }
+
+  .json-import-status {
+    min-width: 0;
+    text-align: left;
   }
 
   .panel-heading,
