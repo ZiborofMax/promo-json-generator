@@ -120,6 +120,7 @@ const previewTitle = document.querySelector("#previewTitle");
 const statusBadge = document.querySelector("#statusBadge");
 const jsonModeButtons = document.querySelectorAll("[data-json-mode]");
 let jsonMode = "app";
+let jsonImportTimer = 0;
 
 function makeWidgetRule(header, content, campaignId, progressText, title = "Твой прогресс", imageUrl = DEFAULT_WIDGET_IMAGE) {
   return {
@@ -166,6 +167,9 @@ function loadTemplate(name) {
     applyDataToForm(createEmptyData());
     jsonImportPanel.classList.remove("hidden");
     jsonImportStatus.textContent = "";
+    jsonImportStatus.classList.remove("error");
+    jsonImportInput.value = "";
+    jsonFileInput.value = "";
     jsonImportInput.focus();
     return;
   }
@@ -315,6 +319,12 @@ function normalizeImportedJsonData(value) {
 }
 
 function importJsonText(value) {
+  if (!value.trim()) {
+    jsonImportStatus.textContent = "";
+    jsonImportStatus.classList.remove("error");
+    return;
+  }
+
   try {
     const data = normalizeImportedJsonData(JSON.parse(value));
     applyDataToForm(data);
@@ -324,6 +334,13 @@ function importJsonText(value) {
     jsonImportStatus.textContent = "Не удалось прочитать JSON";
     jsonImportStatus.classList.add("error");
   }
+}
+
+function scheduleJsonImport() {
+  window.clearTimeout(jsonImportTimer);
+  jsonImportTimer = window.setTimeout(() => {
+    importJsonText(jsonImportInput.value);
+  }, 250);
 }
 
 function normalizeNumericSpaces(value) {
@@ -729,9 +746,15 @@ document.querySelector("#addRuleButton").addEventListener("click", () => {
 document.querySelector("#loadTemplateButton").addEventListener("click", () => {
   loadTemplate(templateSelect.value);
 });
+templateSelect.addEventListener("change", () => {
+  if (templateSelect.value === "json") {
+    loadTemplate("json");
+  }
+});
 document.querySelector("#applyJsonButton").addEventListener("click", () => {
   importJsonText(jsonImportInput.value);
 });
+jsonImportInput.addEventListener("input", scheduleJsonImport);
 jsonFileInput.addEventListener("change", async () => {
   const [file] = jsonFileInput.files;
   if (!file) {
