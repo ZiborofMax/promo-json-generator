@@ -567,13 +567,14 @@ function updateAll() {
 }
 
 function getDownloadFileName(data, suffix = "") {
-  const promoId = data.switcherByPromoId[0] || "promo-action";
-  const safePromoId = promoId
-    .toLowerCase()
-    .replace(/[^a-z0-9а-яё_-]+/gi, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
-  return `${safePromoId || "promo-action"}${suffix}.json`;
+  const rawName = data.common?.header || "promo-action";
+  const safeName = rawName
+    .trim()
+    .replace(/\s+/g, "_")
+    .replace(/[^\wа-яё-]+/gi, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_|_$/g, "");
+  return `${safeName || "promo-action"}${suffix}.json`;
 }
 
 function downloadJsonFile(data, suffix) {
@@ -788,8 +789,8 @@ document.querySelector("#copyWebButton").addEventListener("click", async () => {
 });
 document.querySelector("#downloadButton").addEventListener("click", () => {
   const appData = buildJson();
-  downloadJsonFile(appData, "-app");
-  downloadJsonFile(buildWebJson(), "-web");
+  downloadJsonFile(appData, "_MOB");
+  downloadJsonFile(buildWebJson(), "_WEB");
   triggerConfetti(document.querySelector("#downloadButton"));
 });
 
