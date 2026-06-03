@@ -1,6 +1,5 @@
 const DEFAULT_WIDGET_IMAGE = "https://www.ligastavok.ru/files/file/16326/Marketing_widgetProgressBar_Bg.webp";
 const DEFAULT_TERM_IMAGE = "https://www.ligastavok.ru/files/file/11160/Freebet_3x.webp";
-const CONFETTI_ANIMATION_URL = "./confetti.json";
 
 const templates = {
   offer: {
@@ -562,8 +561,6 @@ function triggerConfetti(sourceElement) {
   resizeCanvas();
   requestAnimationFrame(drawFrame);
 }
-
-fetch(CONFETTI_ANIMATION_URL).catch(() => {});
 
 function animateRuleRemoval(ruleNode, onComplete) {
   if (ruleNode.classList.contains("rule-card-collapsing")) {
