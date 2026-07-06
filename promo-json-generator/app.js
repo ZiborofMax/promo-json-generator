@@ -155,6 +155,187 @@ const preview = document.querySelector("#preview");
 const previewTitle = document.querySelector("#previewTitle");
 const statusBadge = document.querySelector("#statusBadge");
 let jsonImportTimer = 0;
+let tournamentJsonImportTimer = 0;
+let activeView = "promo";
+
+const viewTabs = document.querySelectorAll(".view-tab");
+const topbarEyebrow = document.querySelector("#topbarEyebrow");
+const topbarTitle = document.querySelector("#topbarTitle");
+const promoTemplateActions = document.querySelector("#promoTemplateActions");
+const tournamentForm = document.querySelector("#tournamentForm");
+const tournamentFields = {
+  secondaryButtonText: document.querySelector("#tournamentSecondaryButtonText")
+};
+const tournamentList = document.querySelector("#tournamentList");
+const tournamentTemplate = document.querySelector("#tournamentTemplate");
+const tournamentJsonImportInput = document.querySelector("#tournamentJsonImportInput");
+const tournamentWebJsonImportInput = document.querySelector("#tournamentWebJsonImportInput");
+const tournamentJsonImportStatus = document.querySelector("#tournamentJsonImportStatus");
+const tournamentJsonFileInput = document.querySelector("#tournamentJsonFileInput");
+const tournamentTemplateSelect = document.querySelector("#tournamentTemplateSelect");
+
+const currentTournamentTemplates = window.TOURNAMENT_TEMPLATES || [
+  {
+    label: "ID 402 — ЧМ-2026, лайв",
+    data: {
+      id: 402,
+      events: { values: { d: "Чемпионат мира по Футболу 2026, сделанные в лайве." } },
+      bets: { values: { d: "одинар и экспресс", c: "1,25", b: "100" } },
+      score: {
+        values: {
+          d: "чистому выигрышу игрока, то есть сумме выигрыша за минусом суммы ставки.<br>Пример:<br>зашла ставка на 1000 рублей с коэффициентом 1,8. Игрок получит 1000*1,8-1000 = 800 очков"
+        }
+      },
+      boosters: {
+        values: {
+          d: "&bull; бустер 1,25 при коэффициенте от 3 <br> &bull; бустер 1,5 при коэффициенте от 5 <br> &bull; бустер 2 при коэффициенте от 7 <br> &bull; бустер 2,5 при коэффициенте от 10 "
+        }
+      },
+      places: {
+        values: {
+          d: "&bull; 1 место - 150 000<br> &bull; 2 место - 120 000<br> &bull; 3 место - 90 000<br> &bull; 4 место - 75 000<br> &bull; 5 место - 60 000<br> &bull; 6 место - 50 000<br> &bull; 7 место - 30 000<br> &bull; 8 место - 20 000<br> &bull; 9 место - 10 000<br> &bull; 10 место - 5 000<br> &bull; 11-25 места - 3 500<br> &bull; 26-50 места - 2 000<br> &bull; 51-100 места - 1 000<br> &bull; 101-250 места - 750<br> &bull; 251-500 места - 500"
+        }
+      },
+      dates: { values: { d: "12:00 28.06.2026", c: "12:00 07.07.2026" } },
+      fullRulesUrl: "https://www.ligastavok.ru/files/file/14296/Правила турниры .pdf",
+      appMakeBetUrl: "https://www.ligastavok.ru/championships/chm-2026-ssha-kanada-meksika-id-30659",
+      webMakeBetUrl: "https://www.ligastavok.ru/championships/chm-2026-ssha-kanada-meksika-id-30659"
+    }
+  },
+  {
+    label: "ID 403 — ЧМ-2026, прематч",
+    data: {
+      id: 403,
+      events: { values: { d: "Чемпионат мира по Футболу 2026, сделанные в прематче." } },
+      bets: { values: { d: "одинар и экспресс", c: "1,25", b: "100" } },
+      score: {
+        values: {
+          d: "чистому выигрышу игрока, то есть сумме выигрыша за минусом суммы ставки.<br>Пример:<br>зашла ставка на 1000 рублей с коэффициентом 1,8. Игрок получит 1000*1,8-1000 = 800 очков"
+        }
+      },
+      boosters: {
+        values: {
+          d: "&bull; бустер 1,25 при коэффициенте от 3 <br> &bull; бустер 1,5 при коэффициенте от 5 <br> &bull; бустер 2 при коэффициенте от 7 <br> &bull; бустер 2,5 при коэффициенте от 10 "
+        }
+      },
+      places: {
+        values: {
+          d: "&bull; 1 место - 150 000<br> &bull; 2 место - 120 000<br> &bull; 3 место - 90 000<br> &bull; 4 место - 75 000<br> &bull; 5 место - 60 000<br> &bull; 6 место - 50 000<br> &bull; 7 место - 30 000<br> &bull; 8 место - 20 000<br> &bull; 9 место - 10 000<br> &bull; 10 место - 5 000<br> &bull; 11-25 места - 3 500<br> &bull; 26-50 места - 2 000<br> &bull; 51-100 места - 1 000<br> &bull; 101-250 места - 750<br> &bull; 251-500 места - 500"
+        }
+      },
+      dates: { values: { d: "12:00 28.06.2026", c: "12:00 07.07.2026" } },
+      fullRulesUrl: "https://www.ligastavok.ru/files/file/14296/Правила турниры .pdf",
+      appMakeBetUrl: "https://www.ligastavok.ru/championships/chm-2026-ssha-kanada-meksika-id-30659",
+      webMakeBetUrl: "https://www.ligastavok.ru/championships/chm-2026-ssha-kanada-meksika-id-30659"
+    }
+  },
+  {
+    label: "ID 404 — ЧМ-2026, турбо",
+    data: {
+      id: 404,
+      events: { values: { d: "турбо на Чемпионат мира по Футболу 2026 только в мобильном приложении." } },
+      bets: { values: { d: "одинар и экспресс", c: "1", b: "100" } },
+      score: {
+        values: {
+          d: "сумме ставки.<br>Пример:<br>ставка на 1000 рублей дает 1000 очков."
+        }
+      },
+      boosters: { values: { d: "&bull; по данному турниру бустеры не предусмотрены" } },
+      places: {
+        values: {
+          d: "&bull; 1 место - 20 000<br> &bull; 2 место - 15 000<br> &bull; 3 место - 12 000<br> &bull; 4 место - 10 000<br> &bull; 5 место - 8 000<br> &bull; 6 место - 7 000<br> &bull; 7 место - 6 000<br> &bull; 8 место - 5 000<br> &bull; 9 место - 4 000<br> &bull; 10 место - 3 000<br> &bull; 11-20 места - 2 000<br> &bull; 21-40 места - 1 500<br> &bull; 41-60 места - 1 300<br> &bull; 61-80 места - 1 000<br> &bull; 81-100 места - 700"
+        }
+      },
+      dates: { values: { d: "16:00 28.06.2026", c: "12:00 07.07.2026" } },
+      fullRulesUrl: "https://www.ligastavok.ru/files/file/14296/Правила турниры .pdf",
+      appMakeBetUrl: "https://www.ligastavok.ru/microbetting/soccer",
+      webMakeBetUrl: "https://www.ligastavok.ru/promos/37"
+    }
+  },
+  {
+    label: "ID 405 — экспрессы",
+    data: {
+      id: 405,
+      events: { values: { d: "экспрессы с любыми видами спорта и чемпионатами." } },
+      bets: { values: { d: "экспресс", c: "1,25", b: "100" } },
+      score: {
+        values: {
+          d: "чистому выигрышу игрока, то есть сумме выигрыша за минусом суммы ставки.<br>Пример:<br>зашла ставка на 1000 рублей с коэффициентом 1,8. Игрок получит 1000*1,8-1000 = 800 очков"
+        }
+      },
+      boosters: {
+        values: {
+          d: "&bull; бустер 1,25 при коэффициенте от 3 <br> &bull; бустер 1,5 при коэффициенте от 5 <br> &bull; бустер 2 при коэффициенте от 7 <br> &bull; бустер 2,5 при коэффициенте от 10 "
+        }
+      },
+      places: {
+        values: {
+          d: "&bull; 1 место - 150 000<br> &bull; 2 место - 120 000<br> &bull; 3 место - 90 000<br> &bull; 4 место - 75 000<br> &bull; 5 место - 60 000<br> &bull; 6 место - 50 000<br> &bull; 7 место - 30 000<br> &bull; 8 место - 20 000<br> &bull; 9 место - 10 000<br> &bull; 10 место - 5 000<br> &bull; 11-25 места - 3 500<br> &bull; 26-50 места - 2 000<br> &bull; 51-100 места - 1 000<br> &bull; 101-250 места - 750<br> &bull; 251-500 места - 500"
+        }
+      },
+      dates: { values: { d: "12:00 28.06.2026", c: "12:00 07.07.2026" } },
+      fullRulesUrl: "https://www.ligastavok.ru/files/file/14296/Правила турниры .pdf",
+      appMakeBetUrl: "https://ligastavok.ru/bets/my-line",
+      webMakeBetUrl: ""
+    }
+  },
+  {
+    label: "ID 412 — Уимблдон",
+    data: {
+      id: 412,
+      events: { values: { d: "Уимблдон." } },
+      bets: { values: { d: "одинар и экспресс", c: "1,25", b: "100" } },
+      score: {
+        values: {
+          d: "чистому выигрышу игрока, то есть сумме выигрыша за минусом суммы ставки.<br>Пример:<br>зашла ставка на 1000 рублей с коэффициентом 1,8. Игрок получит 1000*1,8-1000 = 800 очков"
+        }
+      },
+      boosters: {
+        values: {
+          d: "&bull; бустер 1,25 при коэффициенте от 3 <br> &bull; бустер 1,5 при коэффициенте от 5 <br> &bull; бустер 2 при коэффициенте от 7 <br> &bull; бустер 2,5 при коэффициенте от 10 "
+        }
+      },
+      places: {
+        values: {
+          d: "&bull; 1 место - 150 000<br> &bull; 2 место - 120 000<br> &bull; 3 место - 90 000<br> &bull; 4 место - 75 000<br> &bull; 5 место - 60 000<br> &bull; 6 место - 50 000<br> &bull; 7 место - 30 000<br> &bull; 8 место - 20 000<br> &bull; 9 место - 10 000<br> &bull; 10 место - 5 000<br> &bull; 11-25 места - 3 500<br> &bull; 26-50 места - 2 000<br> &bull; 51-100 места - 1 000<br> &bull; 101-250 места - 750<br> &bull; 251-500 места - 500"
+        }
+      },
+      dates: { values: { d: "12:00 28.06.2026", c: "12:00 12.07.2026" } },
+      fullRulesUrl: "https://www.ligastavok.ru/files/file/14296/Правила турниры .pdf",
+      appMakeBetUrl: "https://www.ligastavok.ru/wimbledon-2026",
+      webMakeBetUrl: "https://www.ligastavok.ru/wimbledon-2026"
+    }
+  }
+];
+
+const tournamentTemplateData = {
+  secondaryButtonText: "Полные правила",
+  tournamentParameters: [
+    {
+      id: 24,
+      events: { values: { d: "матчи Чемпионата мира по футболу 2026, сделанные в лайве." } },
+      bets: { values: { d: "одинар и экспресс", c: "1,25", b: "100" } },
+      score: {
+        values: {
+          d: "сумме выигрыша за минусом суммы ставки.<br>Пример:<br>зашла ставка на 1000 рублей с коэффициентом 1,8. Игрок получит 1000*1,8-1000 = 800 очков"
+        }
+      },
+      boosters: {
+        values: {
+          d: "&bull; бустер 1,25 при коэффициенте от 3<br>&bull; бустер 1,5 при коэффициенте от 5<br>&bull; бустер 2 при коэффициенте от 7<br>&bull; бустер 2,5 при коэффициенте от 10"
+        }
+      },
+      places: {
+        values: {
+          d: "&bull; 1 место - 150 000<br>&bull; 2 место - 120 000<br>&bull; 3 место - 90 000<br>&bull; 4 место - 75 000<br>&bull; 5 место - 60 000<br>&bull; 6 место - 50 000<br>&bull; 7 место - 30 000<br>&bull; 8 место - 20 000<br>&bull; 9 место - 10 000<br>&bull; 10 место - 5 000<br>&bull; 11-25 места - 3 500<br>&bull; 26-50 места - 2 000<br>&bull; 51-100 места - 1 000<br>&bull; 101-250 места - 750<br>&bull; 251-500 места - 500"
+        }
+      },
+      dates: { values: { d: "12:00 28.06.2026", c: "12:00 07.07.2026" } },
+      fullRulesUrl: "",
+      makeBetUrl: ""
+    }
+  ]
+};
 
 function makeWidgetRule(header, content, campaignId, progressText, title = "Твой прогресс", imageUrl = DEFAULT_WIDGET_IMAGE) {
   return {
@@ -302,6 +483,38 @@ function addTermCard(termsList, term = { header: "", content: "", imageUrl: DEFA
   renumberTerms(termsList);
 }
 
+function addTournamentCard(tournament = {}) {
+  const node = tournamentTemplate.content.firstElementChild.cloneNode(true);
+  const events = getNestedValue(tournament, "events");
+  const bets = getNestedValue(tournament, "bets");
+  const score = getNestedValue(tournament, "score");
+  const boosters = getNestedValue(tournament, "boosters");
+  const places = getNestedValue(tournament, "places");
+  const dates = getNestedValue(tournament, "dates");
+
+  node.querySelector(".tournament-id").value = tournament.id ?? "";
+  node.querySelector(".tournament-events").value = htmlListTextToEditor(events.d || "");
+  node.querySelector(".tournament-bet-types").value = bets.d || "";
+  node.querySelector(".tournament-min-coef").value = bets.c || "";
+  node.querySelector(".tournament-min-bet").value = bets.b || "";
+  node.querySelector(".tournament-score").value = htmlListTextToEditor(score.d || "");
+  node.querySelector(".tournament-boosters").value = htmlListTextToEditor(boosters.d || "");
+  node.querySelector(".tournament-places").value = htmlListTextToEditor(places.d || "");
+  node.querySelector(".tournament-start-date").value = dates.d || "";
+  node.querySelector(".tournament-end-date").value = dates.c || "";
+  node.querySelector(".tournament-full-rules-url").value = tournament.fullRulesUrl || "";
+  node.querySelector(".tournament-app-bet-url").value = tournament.appMakeBetUrl || "";
+  node.querySelector(".tournament-web-bet-url").value = tournament.webMakeBetUrl || "";
+  node.querySelector(".remove-tournament").addEventListener("click", () => {
+    node.remove();
+    renumberTournaments();
+    updateAll();
+  });
+
+  tournamentList.append(node);
+  renumberTournaments();
+}
+
 function renumberTerms(termsList) {
   [...termsList.children].forEach((node, index) => {
     node.querySelector(".term-editor-head strong").textContent = `Плитка ${index + 1}`;
@@ -311,6 +524,13 @@ function renumberTerms(termsList) {
 function renumberRules() {
   [...rulesList.children].forEach((node, index) => {
     node.querySelector("h3").textContent = `Раздел ${index + 1}`;
+  });
+}
+
+function renumberTournaments() {
+  [...tournamentList.children].forEach((node, index) => {
+    const id = node.querySelector(".tournament-id").value.trim();
+    node.querySelector("h3").textContent = id ? `Турнир ID ${id}` : `Турнир ${index + 1}`;
   });
 }
 
@@ -325,6 +545,141 @@ function htmlBreaksToText(value) {
   return String(value ?? "")
     .replace(/<br\s*\/?>/gi, "\n")
     .replace(/\u00a0/g, " ");
+}
+
+function htmlListTextToEditor(value) {
+  return htmlBreaksToText(value)
+    .replace(/&bull;/gi, "•")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/^\s+/gm, "");
+}
+
+function textToTournamentHtml(value) {
+  return String(value ?? "")
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n")
+    .split("\n")
+    .map((line) => line.trimStart().replace(/^•\s*/, "&bull; "))
+    .join("<br>");
+}
+
+function getNestedValue(source, key) {
+  return source?.[key]?.values || {};
+}
+
+function normalizeTournamentData(value) {
+  const source = value && typeof value === "object" ? value : {};
+  const tournaments = Array.isArray(source.tournamentParameters) ? source.tournamentParameters : [];
+
+  return {
+    secondaryButtonText: source.secondaryButtonText || "Полные правила",
+    tournamentParameters: tournaments.map((item) => {
+      const makeBetUrl = item.makeBetUrl || "";
+      return {
+        id: item.id ?? "",
+        events: { values: { d: getNestedValue(item, "events").d || "" } },
+        bets: {
+          values: {
+            d: getNestedValue(item, "bets").d || "",
+            c: getNestedValue(item, "bets").c || "",
+            b: getNestedValue(item, "bets").b || ""
+          }
+        },
+        score: { values: { d: getNestedValue(item, "score").d || "" } },
+        boosters: { values: { d: getNestedValue(item, "boosters").d || "" } },
+        places: { values: { d: getNestedValue(item, "places").d || "" } },
+        dates: {
+          values: {
+            d: getNestedValue(item, "dates").d || "",
+            c: getNestedValue(item, "dates").c || ""
+          }
+        },
+        fullRulesUrl: item.fullRulesUrl || "",
+        appMakeBetUrl: item.appMakeBetUrl || (/^https?:\/\//i.test(makeBetUrl) ? makeBetUrl : ""),
+        webMakeBetUrl: item.webMakeBetUrl || (makeBetUrl && !/^https?:\/\//i.test(makeBetUrl) ? makeBetUrl : "")
+      };
+    })
+  };
+}
+
+function mergeTournamentWebLinks(appData, webData) {
+  const merged = normalizeTournamentData(appData);
+  const web = normalizeTournamentData(webData);
+  const webLinksById = new Map(
+    web.tournamentParameters.map((item) => [String(item.id), item.webMakeBetUrl || item.appMakeBetUrl || ""])
+  );
+
+  merged.tournamentParameters = merged.tournamentParameters.map((item) => ({
+    ...item,
+    webMakeBetUrl: webLinksById.get(String(item.id)) || item.webMakeBetUrl
+  }));
+
+  return merged;
+}
+
+function applyTournamentDataToForm(data) {
+  const normalized = normalizeTournamentData(data);
+  tournamentFields.secondaryButtonText.value = normalized.secondaryButtonText;
+  tournamentList.innerHTML = "";
+  normalized.tournamentParameters.forEach(addTournamentCard);
+  if (!tournamentList.children.length) {
+    addTournamentCard(tournamentTemplateData.tournamentParameters[0]);
+  }
+  updateAll();
+}
+
+function getSelectedTournamentTemplate() {
+  return currentTournamentTemplates.find((template) => template.data.id === Number(tournamentTemplateSelect.value));
+}
+
+function fillTournamentTemplateSelect() {
+  tournamentTemplateSelect.innerHTML = currentTournamentTemplates
+    .map((template) => `<option value="${template.data.id}">${escapeHtml(template.label)}</option>`)
+    .join("");
+}
+
+function loadSelectedTournamentTemplate({ append = false } = {}) {
+  const template = getSelectedTournamentTemplate();
+  if (!template) {
+    return;
+  }
+
+  if (!append) {
+    applyTournamentDataToForm({
+      secondaryButtonText: tournamentFields.secondaryButtonText.value.trim() || "Полные правила",
+      tournamentParameters: [cloneData(template.data)]
+    });
+    return;
+  }
+
+  addTournamentCard(cloneData(template.data));
+  updateAll();
+}
+
+function importTournamentJsonText(value) {
+  if (!value.trim()) {
+    tournamentJsonImportStatus.textContent = "";
+    tournamentJsonImportStatus.classList.remove("error");
+    return;
+  }
+
+  try {
+    const appData = JSON.parse(value);
+    const webData = tournamentWebJsonImportInput.value.trim() ? JSON.parse(tournamentWebJsonImportInput.value) : null;
+    applyTournamentDataToForm(webData ? mergeTournamentWebLinks(appData, webData) : appData);
+    tournamentJsonImportStatus.textContent = "Поля заполнены из JSON";
+    tournamentJsonImportStatus.classList.remove("error");
+  } catch (error) {
+    tournamentJsonImportStatus.textContent = "Не удалось прочитать JSON";
+    tournamentJsonImportStatus.classList.add("error");
+  }
+}
+
+function scheduleTournamentJsonImport() {
+  window.clearTimeout(tournamentJsonImportTimer);
+  tournamentJsonImportTimer = window.setTimeout(() => {
+    importTournamentJsonText(tournamentJsonImportInput.value);
+  }, 250);
 }
 
 function normalizeImportedJsonData(value) {
@@ -497,8 +852,153 @@ function buildWebJson() {
   return data;
 }
 
+function collectTournamentCards() {
+  return [...tournamentList.children].map((node) => ({
+    id: node.querySelector(".tournament-id").value.trim(),
+    events: node.querySelector(".tournament-events").value,
+    betTypes: node.querySelector(".tournament-bet-types").value.trim(),
+    minCoef: node.querySelector(".tournament-min-coef").value.trim(),
+    minBet: node.querySelector(".tournament-min-bet").value.trim(),
+    score: node.querySelector(".tournament-score").value,
+    boosters: node.querySelector(".tournament-boosters").value,
+    places: node.querySelector(".tournament-places").value,
+    startDate: node.querySelector(".tournament-start-date").value.trim(),
+    endDate: node.querySelector(".tournament-end-date").value.trim(),
+    fullRulesUrl: node.querySelector(".tournament-full-rules-url").value.trim(),
+    appMakeBetUrl: node.querySelector(".tournament-app-bet-url").value.trim(),
+    webMakeBetUrl: node.querySelector(".tournament-web-bet-url").value.trim()
+  }));
+}
+
+function buildTournamentParameter(card, target) {
+  const idNumber = Number(card.id);
+  return {
+    id: Number.isFinite(idNumber) && card.id !== "" ? idNumber : card.id,
+    events: { values: { d: textToTournamentHtml(card.events) } },
+    bets: { values: { d: card.betTypes, c: card.minCoef, b: card.minBet } },
+    score: { values: { d: textToTournamentHtml(card.score) } },
+    boosters: { values: { d: textToTournamentHtml(card.boosters) } },
+    places: { values: { d: textToTournamentHtml(card.places) } },
+    dates: { values: { d: card.startDate, c: card.endDate } },
+    fullRulesUrl: card.fullRulesUrl,
+    makeBetUrl: target === "web" ? card.webMakeBetUrl : card.appMakeBetUrl
+  };
+}
+
+function buildTournamentJson(target = "app") {
+  return normalizeJsonText({
+    secondaryButtonText: tournamentFields.secondaryButtonText.value.trim() || "Полные правила",
+    tournamentParameters: collectTournamentCards().map((card) => buildTournamentParameter(card, target))
+  });
+}
+
 function getJsonText(data) {
   return JSON.stringify(data, null, 2);
+}
+
+const crcTable = (() => {
+  const table = new Uint32Array(256);
+  for (let i = 0; i < 256; i += 1) {
+    let value = i;
+    for (let bit = 0; bit < 8; bit += 1) {
+      value = value & 1 ? 0xedb88320 ^ (value >>> 1) : value >>> 1;
+    }
+    table[i] = value >>> 0;
+  }
+  return table;
+})();
+
+function getCrc32(bytes) {
+  let crc = 0xffffffff;
+  bytes.forEach((byte) => {
+    crc = crcTable[(crc ^ byte) & 0xff] ^ (crc >>> 8);
+  });
+  return (crc ^ 0xffffffff) >>> 0;
+}
+
+function getDosDateTime(date = new Date()) {
+  const year = Math.max(date.getFullYear(), 1980);
+  const dosTime = (date.getHours() << 11) | (date.getMinutes() << 5) | Math.floor(date.getSeconds() / 2);
+  const dosDate = ((year - 1980) << 9) | ((date.getMonth() + 1) << 5) | date.getDate();
+  return { dosDate, dosTime };
+}
+
+function writeUint16(view, offset, value) {
+  view.setUint16(offset, value, true);
+}
+
+function writeUint32(view, offset, value) {
+  view.setUint32(offset, value, true);
+}
+
+function makeZipFile(files) {
+  const encoder = new TextEncoder();
+  const chunks = [];
+  const centralDirectory = [];
+  let offset = 0;
+  const { dosDate, dosTime } = getDosDateTime();
+
+  files.forEach((file) => {
+    const nameBytes = encoder.encode(file.name);
+    const contentBytes = encoder.encode(file.content);
+    const crc = getCrc32(contentBytes);
+    const localHeader = new Uint8Array(30 + nameBytes.length);
+    const localView = new DataView(localHeader.buffer);
+
+    writeUint32(localView, 0, 0x04034b50);
+    writeUint16(localView, 4, 20);
+    writeUint16(localView, 6, 0x0800);
+    writeUint16(localView, 8, 0);
+    writeUint16(localView, 10, dosTime);
+    writeUint16(localView, 12, dosDate);
+    writeUint32(localView, 14, crc);
+    writeUint32(localView, 18, contentBytes.length);
+    writeUint32(localView, 22, contentBytes.length);
+    writeUint16(localView, 26, nameBytes.length);
+    writeUint16(localView, 28, 0);
+    localHeader.set(nameBytes, 30);
+
+    chunks.push(localHeader, contentBytes);
+
+    const centralHeader = new Uint8Array(46 + nameBytes.length);
+    const centralView = new DataView(centralHeader.buffer);
+    writeUint32(centralView, 0, 0x02014b50);
+    writeUint16(centralView, 4, 20);
+    writeUint16(centralView, 6, 20);
+    writeUint16(centralView, 8, 0x0800);
+    writeUint16(centralView, 10, 0);
+    writeUint16(centralView, 12, dosTime);
+    writeUint16(centralView, 14, dosDate);
+    writeUint32(centralView, 16, crc);
+    writeUint32(centralView, 20, contentBytes.length);
+    writeUint32(centralView, 24, contentBytes.length);
+    writeUint16(centralView, 28, nameBytes.length);
+    writeUint16(centralView, 30, 0);
+    writeUint16(centralView, 32, 0);
+    writeUint16(centralView, 34, 0);
+    writeUint16(centralView, 36, 0);
+    writeUint32(centralView, 38, 0);
+    writeUint32(centralView, 42, offset);
+    centralHeader.set(nameBytes, 46);
+    centralDirectory.push(centralHeader);
+
+    offset += localHeader.length + contentBytes.length;
+  });
+
+  const centralOffset = offset;
+  const centralSize = centralDirectory.reduce((sum, chunk) => sum + chunk.length, 0);
+  const endHeader = new Uint8Array(22);
+  const endView = new DataView(endHeader.buffer);
+  writeUint32(endView, 0, 0x06054b50);
+  writeUint16(endView, 4, 0);
+  writeUint16(endView, 6, 0);
+  writeUint16(endView, 8, files.length);
+  writeUint16(endView, 10, files.length);
+  writeUint32(endView, 12, centralSize);
+  writeUint32(endView, 16, centralOffset);
+  writeUint16(endView, 20, 0);
+
+  return new Blob([...chunks, ...centralDirectory, endHeader], { type: "application/zip" });
 }
 
 async function copyText(value) {
@@ -593,7 +1093,67 @@ function renderTerms(terms) {
   `;
 }
 
+function tournamentHtmlToPreviewText(value) {
+  return htmlListTextToEditor(value).trim();
+}
+
+function renderTournamentPreview(data) {
+  const [tournament] = data.tournamentParameters;
+  previewTitle.textContent = "Основная информация";
+
+  if (!tournament) {
+    preview.innerHTML = `<section class="rule-preview"><p class="rule-content-preview">Добавьте турнир, чтобы увидеть превью правил.</p></section>`;
+    return;
+  }
+
+  const events = tournamentHtmlToPreviewText(tournament.events?.values?.d || "");
+  const bets = tournament.bets?.values || {};
+  const score = tournamentHtmlToPreviewText(tournament.score?.values?.d || "");
+  const boosters = tournamentHtmlToPreviewText(tournament.boosters?.values?.d || "");
+  const places = tournamentHtmlToPreviewText(tournament.places?.values?.d || "");
+  const dates = tournament.dates?.values || {};
+
+  preview.innerHTML = `
+    <section class="tournament-preview">
+      <p>Делайте подходящие ставки, увеличивайте количество очков и продвигайтесь в турнирной таблице. Войдите в число лидеров и получите фрибет.</p>
+      ${renderTournamentPreviewBlock("Какие ставки учитываются", events)}
+      ${renderTournamentPreviewBlock(
+        "Как засчитываются ставки",
+        `Учитываются только рассчитанные или выкупленные ставки внутри периода проведения турнира после нажатия на кнопку “Участвовать”.\n• ставки типа ${bets.d || "одинар и экспресс"}\n• коэффициент ставки от ${bets.c || "1,25"}\n• сумма минимальной ставки - ${bets.b || "100"} рублей\n\nЕсли ставка типа экспресс включает несколько событий, то очки начисляются, если хотя бы одно из событий соответствует условиям турнира.\n\nПри расчете очков учитывается итоговый коэффициент экспресса.\n\nПри выкупе ставки очки рассчитываются только в случае, если сумма ставки при выкупе больше изначальной суммы ставки.\n\nНе учитываются\n• ставки на фрибет\n• системы\n• ставки, сделанные за рамками проведения турнира.`
+      )}
+      ${renderTournamentPreviewBlock("Расчет очков", score)}
+      ${renderTournamentPreviewBlock("Бустеры", `Бустеры увеличивают количество очков, получаемых за выигранную ставку. Очки, начисленные за ставку, умножаются на значение бустера.\n${boosters}`)}
+      ${renderTournamentPreviewBlock("Начисление и распределение призов", `Фрибет начисляется в день завершения турнира до 18:00.\nСрок действия фрибета - 7 дней с момента зачисления.\nФрибет может быть использован для заключения пари только вида «одинар».\n\nВы можете выиграть один из призов, войдя в призовые места:\n${places}`)}
+      ${renderTournamentPreviewBlock("Даты проведения турнира", `Начало турнира в ${dates.d || "12:00 28.06.2026"} по МСК.\nОкончание турнира в ${dates.c || "12:00 07.07.2026"} по МСК.`)}
+      ${data.secondaryButtonText ? `<a class="primary-preview outline-preview" href="${escapeHtml(tournament.fullRulesUrl || "#")}">${escapeHtml(data.secondaryButtonText)}</a>` : ""}
+    </section>
+  `;
+}
+
+function renderTournamentPreviewBlock(title, content) {
+  if (!content.trim()) {
+    return "";
+  }
+
+  return `
+    <section class="tournament-rule-block">
+      <h3>${escapeHtml(title)}</h3>
+      <p>${escapeHtml(content)}</p>
+    </section>
+  `;
+}
+
 function updateAll() {
+  if (activeView === "tournaments") {
+    const data = buildTournamentJson("app");
+    jsonOutput.textContent = getJsonText(data);
+    renderTournamentPreview(data);
+    const hasTournament = Boolean(data.tournamentParameters.length);
+    statusBadge.textContent = hasTournament ? "JSON готов" : "Добавьте турнир";
+    statusBadge.classList.toggle("warning", !hasTournament);
+    return;
+  }
+
   const data = buildJson();
   jsonOutput.textContent = getJsonText(data);
   renderPreview(data);
@@ -602,27 +1162,51 @@ function updateAll() {
   statusBadge.classList.toggle("warning", !hasPromoId);
 }
 
-function getDownloadFileName(data, suffix = "") {
+function getSafeFileBaseName(data) {
+  if (Array.isArray(data.tournamentParameters)) {
+    const firstId = data.tournamentParameters[0]?.id;
+    return firstId ? `tournament_${firstId}` : "tournaments";
+  }
+
   const rawName = data.common?.header || "promo-action";
-  const safeName = rawName
+  return rawName
     .trim()
     .replace(/\s+/g, "_")
     .replace(/[^\wа-яё-]+/gi, "_")
     .replace(/_+/g, "_")
     .replace(/^_|_$/g, "");
+}
+
+function getDownloadFileName(data, suffix = "") {
+  const safeName = getSafeFileBaseName(data);
   return `${safeName || "promo-action"}${suffix}.json`;
 }
 
-function downloadJsonFile(data, suffix) {
-  const blob = new Blob([getJsonText(data)], { type: "application/json;charset=utf-8" });
+function getZipFileName(data) {
+  return `${getSafeFileBaseName(data) || "promo-action"}.zip`;
+}
+
+function downloadBlob(blob, fileName) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = getDownloadFileName(data, suffix);
+  link.download = fileName;
   document.body.append(link);
   link.click();
   link.remove();
   URL.revokeObjectURL(url);
+}
+
+function downloadJsonFile(data, suffix) {
+  downloadBlob(new Blob([getJsonText(data)], { type: "application/json;charset=utf-8" }), getDownloadFileName(data, suffix));
+}
+
+function downloadZipFile(appData, webData) {
+  const blob = makeZipFile([
+    { name: getDownloadFileName(appData, "_MOB"), content: getJsonText(appData) },
+    { name: getDownloadFileName(webData, "_WEB"), content: getJsonText(webData) }
+  ]);
+  downloadBlob(blob, getZipFileName(appData));
 }
 
 async function copyJsonFromButton(button, data, doneText) {
@@ -633,6 +1217,32 @@ async function copyJsonFromButton(button, data, doneText) {
   setTimeout(() => {
     button.innerHTML = originalHtml;
   }, 1200);
+}
+
+function setActiveView(view) {
+  activeView = view;
+  const isTournamentView = view === "tournaments";
+
+  viewTabs.forEach((tab) => {
+    const isActive = tab.dataset.view === view;
+    tab.classList.toggle("active", isActive);
+    tab.setAttribute("aria-pressed", String(isActive));
+  });
+
+  form.classList.toggle("hidden", isTournamentView);
+  tournamentForm.classList.toggle("hidden", !isTournamentView);
+  promoTemplateActions.classList.toggle("hidden", isTournamentView);
+  topbarEyebrow.textContent = isTournamentView ? "Турниры" : "Маркетинговые акции";
+  topbarTitle.textContent = isTournamentView ? "Генератор JSON турниров" : "Генератор JSON";
+  updateAll();
+}
+
+function getCurrentAppJson() {
+  return activeView === "tournaments" ? buildTournamentJson("app") : buildJson();
+}
+
+function getCurrentWebJson() {
+  return activeView === "tournaments" ? buildTournamentJson("web") : buildWebJson();
 }
 
 function triggerConfetti(sourceElement) {
@@ -792,9 +1402,28 @@ function animateRuleRemoval(ruleNode, onComplete) {
 }
 
 form.addEventListener("input", updateAll);
+tournamentForm.addEventListener("input", () => {
+  renumberTournaments();
+  updateAll();
+});
+viewTabs.forEach((tab) => {
+  tab.addEventListener("click", () => {
+    setActiveView(tab.dataset.view);
+  });
+});
 document.querySelector("#addRuleButton").addEventListener("click", () => {
   addRule();
   updateAll();
+});
+document.querySelector("#addTournamentButton").addEventListener("click", () => {
+  addTournamentCard();
+  updateAll();
+});
+document.querySelector("#loadTournamentTemplateButton").addEventListener("click", () => {
+  loadSelectedTournamentTemplate();
+});
+document.querySelector("#appendTournamentTemplateButton").addEventListener("click", () => {
+  loadSelectedTournamentTemplate({ append: true });
 });
 document.querySelector("#loadTemplateButton").addEventListener("click", () => {
   loadTemplate(templateSelect.value);
@@ -807,7 +1436,12 @@ templateSelect.addEventListener("change", () => {
 document.querySelector("#applyJsonButton").addEventListener("click", () => {
   importJsonText(jsonImportInput.value);
 });
+document.querySelector("#applyTournamentJsonButton").addEventListener("click", () => {
+  importTournamentJsonText(tournamentJsonImportInput.value);
+});
 jsonImportInput.addEventListener("input", scheduleJsonImport);
+tournamentJsonImportInput.addEventListener("input", scheduleTournamentJsonImport);
+tournamentWebJsonImportInput.addEventListener("input", scheduleTournamentJsonImport);
 jsonFileInput.addEventListener("change", async () => {
   const [file] = jsonFileInput.files;
   if (!file) {
@@ -817,18 +1451,29 @@ jsonFileInput.addEventListener("change", async () => {
   jsonImportInput.value = await file.text();
   importJsonText(jsonImportInput.value);
 });
+tournamentJsonFileInput.addEventListener("change", async () => {
+  const [file] = tournamentJsonFileInput.files;
+  if (!file) {
+    return;
+  }
+
+  tournamentJsonImportInput.value = await file.text();
+  importTournamentJsonText(tournamentJsonImportInput.value);
+});
 document.querySelector("#copyAppButton").addEventListener("click", async () => {
-  await copyJsonFromButton(document.querySelector("#copyAppButton"), buildJson(), "APP скопирован");
+  await copyJsonFromButton(document.querySelector("#copyAppButton"), getCurrentAppJson(), "APP скопирован");
 });
 document.querySelector("#copyWebButton").addEventListener("click", async () => {
-  await copyJsonFromButton(document.querySelector("#copyWebButton"), buildWebJson(), "WEB скопирован");
+  await copyJsonFromButton(document.querySelector("#copyWebButton"), getCurrentWebJson(), "WEB скопирован");
 });
 document.querySelector("#downloadButton").addEventListener("click", () => {
-  const appData = buildJson();
-  downloadJsonFile(appData, "_MOB");
-  downloadJsonFile(buildWebJson(), "_WEB");
+  const appData = getCurrentAppJson();
+  downloadZipFile(appData, getCurrentWebJson());
   triggerConfetti(document.querySelector("#downloadButton"));
 });
 
 templateSelect.value = "offer";
 loadTemplate("offer");
+fillTournamentTemplateSelect();
+applyTournamentDataToForm(tournamentTemplateData);
+setActiveView("promo");
