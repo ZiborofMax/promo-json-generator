@@ -9,12 +9,17 @@
   <body>
     <main class="app-shell">
       <section class="workspace">
+        <nav class="view-switch" aria-label="Раздел генератора">
+          <button class="view-tab active" type="button" data-view="promo">Акции</button>
+          <button class="view-tab" type="button" data-view="tournaments">Турниры</button>
+        </nav>
+
         <header class="topbar">
           <div>
-            <p class="eyebrow">Маркетинговые акции</p>
-            <h1>Генератор JSON</h1>
+            <p class="eyebrow" id="topbarEyebrow">Маркетинговые акции</p>
+            <h1 id="topbarTitle">Генератор JSON</h1>
           </div>
-          <div class="topbar-actions">
+          <div class="topbar-actions" id="promoTemplateActions">
             <select id="templateSelect" aria-label="Шаблон">
               <option value="offer">Оффер</option>
               <option value="tasks">Задания</option>
@@ -111,6 +116,56 @@
             </section>
           </form>
 
+          <form class="editor hidden" id="tournamentForm">
+            <section class="panel json-import-panel">
+              <div class="panel-heading">
+                <h2>Заполнить через JSON</h2>
+                <button class="secondary" id="applyTournamentJsonButton" type="button">Заполнить поля</button>
+              </div>
+              <label>
+                APP JSON турниров
+                <textarea id="tournamentJsonImportInput" rows="7" placeholder="Вставьте APP JSON турниров сюда или выберите файл ниже"></textarea>
+              </label>
+              <label>
+                WEB JSON для ссылок
+                <textarea id="tournamentWebJsonImportInput" rows="5" placeholder="Необязательно: вставьте WEB JSON, чтобы подтянуть makeBetUrl для сайта по ID турнира"></textarea>
+              </label>
+              <div class="json-import-actions">
+                <label class="file-import-label">
+                  Файл JSON
+                  <input id="tournamentJsonFileInput" type="file" accept=".json,application/json,.txt,text/plain" />
+                </label>
+                <p class="json-import-status" id="tournamentJsonImportStatus"></p>
+              </div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-heading">
+                <h2>Общее</h2>
+              </div>
+              <div class="template-row">
+                <label>
+                  Шаблон текущего турнира
+                  <select id="tournamentTemplateSelect"></select>
+                </label>
+                <button class="secondary" id="loadTournamentTemplateButton" type="button">Загрузить</button>
+                <button class="secondary" id="appendTournamentTemplateButton" type="button">Добавить</button>
+              </div>
+              <label>
+                Текст кнопки полных правил
+                <input id="tournamentSecondaryButtonText" type="text" placeholder="Полные правила" />
+              </label>
+            </section>
+
+            <section class="panel">
+              <div class="panel-heading">
+                <h2>Турниры</h2>
+                <button class="secondary" id="addTournamentButton" type="button">Добавить турнир</button>
+              </div>
+              <div class="tournament-list" id="tournamentList"></div>
+            </section>
+          </form>
+
           <aside class="output-column">
             <section class="preview-wrap">
               <div class="preview-toolbar">
@@ -130,7 +185,7 @@
 
             <section class="json-panel">
               <div class="json-actions">
-                <button class="secondary wide-action" id="downloadButton" type="button"><span class="button-icon" aria-hidden="true">↓</span>Скачать .json</button>
+                <button class="secondary wide-action" id="downloadButton" type="button"><span class="button-icon" aria-hidden="true">↓</span>Скачать ZIP</button>
                 <button class="secondary" id="copyAppButton" type="button"><span class="button-icon" aria-hidden="true">⧉</span>Скопировать APP</button>
                 <button class="secondary" id="copyWebButton" type="button"><span class="button-icon" aria-hidden="true">⧉</span>Скопировать WEB</button>
               </div>
@@ -223,6 +278,76 @@
       </article>
     </template>
 
+    <template id="tournamentTemplate">
+      <article class="rule-card tournament-card">
+        <div class="rule-card-head">
+          <h3></h3>
+          <button class="icon-button remove-tournament" type="button" aria-label="Удалить турнир">×</button>
+        </div>
+        <div class="field-grid compact-grid">
+          <label>
+            ID турнира
+            <input class="tournament-id" type="number" min="0" placeholder="17" />
+          </label>
+          <label>
+            Полные правила URL
+            <input class="tournament-full-rules-url" type="url" placeholder="https://www.ligastavok.ru/files/file/.../rules.pdf" />
+          </label>
+        </div>
+        <label>
+          Какие ставки учитываются
+          <textarea class="tournament-events" rows="2" placeholder="матчи Чемпионата мира по футболу 2026, сделанные в лайве."></textarea>
+        </label>
+        <div class="field-grid compact-grid">
+          <label>
+            Виды ставок
+            <input class="tournament-bet-types" type="text" placeholder="одинар и экспресс" />
+          </label>
+          <label>
+            Минимальный коэффициент
+            <input class="tournament-min-coef" type="text" placeholder="1,25" />
+          </label>
+          <label>
+            Минимальная ставка
+            <input class="tournament-min-bet" type="text" placeholder="100" />
+          </label>
+        </div>
+        <label>
+          Расчет очков
+          <textarea class="tournament-score" rows="4" placeholder="сумме выигрыша за минусом суммы ставки.&#10;Пример: ..."></textarea>
+        </label>
+        <label>
+          Бустеры
+          <textarea class="tournament-boosters" rows="4" placeholder="• бустер 1,25 при коэффициенте от 3"></textarea>
+        </label>
+        <label>
+          Призовые места
+          <textarea class="tournament-places" rows="7" placeholder="• 1 место - 150 000&#10;• 2 место - 120 000"></textarea>
+        </label>
+        <div class="field-grid compact-grid">
+          <label>
+            Начало турнира
+            <input class="tournament-start-date" type="text" placeholder="12:00 28.06.2026" />
+          </label>
+          <label>
+            Окончание турнира
+            <input class="tournament-end-date" type="text" placeholder="12:00 07.07.2026" />
+          </label>
+        </div>
+        <div class="field-grid compact-grid">
+          <label>
+            APP makeBetUrl
+            <input class="tournament-app-bet-url" type="text" placeholder="https://ligastavok.ru/bets/my-line/football" />
+          </label>
+          <label>
+            WEB makeBetUrl
+            <input class="tournament-web-bet-url" type="text" placeholder="/prematch/football" />
+          </label>
+        </div>
+      </article>
+    </template>
+
+    <script src="./tournament-templates.js"></script>
     <script src="./app.js"></script>
   </body>
 </html>
