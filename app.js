@@ -1,5 +1,6 @@
 const DEFAULT_WIDGET_IMAGE = "https://www.ligastavok.ru/files/file/16326/Marketing_widgetProgressBar_Bg.webp";
 const DEFAULT_TERM_IMAGE = "https://www.ligastavok.ru/files/file/11160/Freebet_3x.webp";
+const TOURNAMENT_SECONDARY_BUTTON_TEXT = "Полные правила";
 
 const templates = {
   offer: {
@@ -163,18 +164,14 @@ const topbarEyebrow = document.querySelector("#topbarEyebrow");
 const topbarTitle = document.querySelector("#topbarTitle");
 const promoTemplateActions = document.querySelector("#promoTemplateActions");
 const tournamentForm = document.querySelector("#tournamentForm");
-const tournamentFields = {
-  secondaryButtonText: document.querySelector("#tournamentSecondaryButtonText")
-};
 const tournamentList = document.querySelector("#tournamentList");
 const tournamentTemplate = document.querySelector("#tournamentTemplate");
 const tournamentJsonImportInput = document.querySelector("#tournamentJsonImportInput");
-const tournamentWebJsonImportInput = document.querySelector("#tournamentWebJsonImportInput");
 const tournamentJsonImportStatus = document.querySelector("#tournamentJsonImportStatus");
 const tournamentJsonFileInput = document.querySelector("#tournamentJsonFileInput");
 const tournamentTemplateSelect = document.querySelector("#tournamentTemplateSelect");
 let baseTournamentData = {
-  secondaryButtonText: "Полные правила",
+  secondaryButtonText: TOURNAMENT_SECONDARY_BUTTON_TEXT,
   tournamentParameters: []
 };
 
@@ -571,12 +568,62 @@ function getNestedValue(source, key) {
   return source?.[key]?.values || {};
 }
 
+function normalizeBetPath(value) {
+  return String(value || "").trim().replace(/^https?:\/\/(?:www\.)?ligastavok\.ru/i, "");
+}
+
+function makeAppBetUrl(value) {
+  const raw = String(value || "").trim();
+  if (!raw) {
+    return "";
+  }
+
+  if (/^https?:\/\//i.test(raw)) {
+    return raw;
+  }
+
+  const path = normalizeBetPath(raw).replace(/^\/+/, "");
+  if (!path) {
+    return "";
+  }
+
+  if (path === "quick-games") {
+    return "https://www.ligastavok.ru/quick-games";
+  }
+
+  if (path.startsWith("prematch/")) {
+    return `https://ligastavok.ru/bets/my-line/${path.replace(/^prematch\/+/, "")}`;
+  }
+
+  return `https://www.ligastavok.ru/${path}`;
+}
+
+function makeWebBetUrl(value) {
+  const raw = String(value || "").trim();
+  if (!raw || !/^https?:\/\//i.test(raw)) {
+    return raw;
+  }
+
+  const path = normalizeBetPath(raw);
+  const myLineMatch = path.match(/^\/bets\/my-line\/(.+)$/);
+
+  if (path === "/quick-games") {
+    return "/quick-games";
+  }
+
+  if (myLineMatch?.[1]) {
+    return `/prematch/${myLineMatch[1]}`;
+  }
+
+  return raw;
+}
+
 function normalizeTournamentData(value) {
   const source = value && typeof value === "object" ? value : {};
   const tournaments = Array.isArray(source.tournamentParameters) ? source.tournamentParameters : [];
 
   return {
-    secondaryButtonText: source.secondaryButtonText || "Полные правила",
+    secondaryButtonText: TOURNAMENT_SECONDARY_BUTTON_TEXT,
     tournamentParameters: tournaments.map((item) => {
       const makeBetUrl = item.makeBetUrl || "";
       return {
@@ -599,8 +646,8 @@ function normalizeTournamentData(value) {
           }
         },
         fullRulesUrl: item.fullRulesUrl || "",
-        appMakeBetUrl: item.appMakeBetUrl || (/^https?:\/\//i.test(makeBetUrl) ? makeBetUrl : ""),
-        webMakeBetUrl: item.webMakeBetUrl || (makeBetUrl && !/^https?:\/\//i.test(makeBetUrl) ? makeBetUrl : "")
+        appMakeBetUrl: item.appMakeBetUrl || makeAppBetUrl(makeBetUrl),
+        webMakeBetUrl: item.webMakeBetUrl || makeWebBetUrl(makeBetUrl)
       };
     })
   };
@@ -623,7 +670,6 @@ function mergeTournamentWebLinks(appData, webData) {
 
 function applyTournamentDataToForm(data) {
   const normalized = normalizeTournamentData(data);
-  tournamentFields.secondaryButtonText.value = normalized.secondaryButtonText;
   tournamentList.innerHTML = "";
   normalized.tournamentParameters.forEach(addTournamentCard);
   if (!tournamentList.children.length) {
@@ -635,7 +681,6 @@ function applyTournamentDataToForm(data) {
 function applyTournamentBaseData(data) {
   const normalized = normalizeTournamentData(data);
   baseTournamentData = normalized;
-  tournamentFields.secondaryButtonText.value = normalized.secondaryButtonText;
   tournamentJsonImportStatus.textContent = `Основа принята: ${normalized.tournamentParameters.length} турниров`;
   tournamentJsonImportStatus.classList.remove("error");
   updateAll();
@@ -657,20 +702,32 @@ function fillTournamentTemplateSelect() {
     .join("");
 }
 
+function getNextTournamentId() {
+  const baseIds = baseTournamentData.tournamentParameters.map((item) => Number(item.id));
+  const newIds = collectTournamentCards().map((item) => Number(item.id));
+  const maxId = [...baseIds, ...newIds]
+    .filter((id) => Number.isFinite(id))
+    .reduce((max, id) => Math.max(max, id), 0);
+
+  return maxId + 1;
+}
+
 function addSelectedTournamentTemplate() {
   const template = getSelectedTournamentTemplate();
   if (!template) {
     return;
   }
 
-  addTournamentCard(cloneData(template.data));
+  const tournament = cloneData(template.data);
+  tournament.id = getNextTournamentId();
+  addTournamentCard(tournament);
   updateAll();
 }
 
 function importTournamentJsonText(value) {
   if (!value.trim()) {
     baseTournamentData = {
-      secondaryButtonText: tournamentFields.secondaryButtonText.value.trim() || "Полные правила",
+      secondaryButtonText: TOURNAMENT_SECONDARY_BUTTON_TEXT,
       tournamentParameters: []
     };
     tournamentJsonImportStatus.textContent = "";
@@ -681,8 +738,7 @@ function importTournamentJsonText(value) {
 
   try {
     const appData = JSON.parse(value);
-    const webData = tournamentWebJsonImportInput.value.trim() ? JSON.parse(tournamentWebJsonImportInput.value) : null;
-    applyTournamentBaseData(webData ? mergeTournamentWebLinks(appData, webData) : appData);
+    applyTournamentBaseData(appData);
   } catch (error) {
     tournamentJsonImportStatus.textContent = "Не удалось прочитать JSON";
     tournamentJsonImportStatus.classList.add("error");
@@ -920,7 +976,7 @@ function buildTournamentJson(target = "app") {
   const newTournaments = collectTournamentCards().map((card) => buildTournamentParameter(card, target));
 
   return normalizeJsonText({
-    secondaryButtonText: tournamentFields.secondaryButtonText.value.trim() || "Полные правила",
+    secondaryButtonText: TOURNAMENT_SECONDARY_BUTTON_TEXT,
     tournamentParameters: [...baseTournaments, ...newTournaments]
   });
 }
@@ -1467,7 +1523,6 @@ document.querySelector("#applyTournamentJsonButton").addEventListener("click", (
 });
 jsonImportInput.addEventListener("input", scheduleJsonImport);
 tournamentJsonImportInput.addEventListener("input", scheduleTournamentJsonImport);
-tournamentWebJsonImportInput.addEventListener("input", scheduleTournamentJsonImport);
 jsonFileInput.addEventListener("change", async () => {
   const [file] = jsonFileInput.files;
   if (!file) {
