@@ -119,12 +119,12 @@
           <form class="editor hidden" id="tournamentForm">
             <section class="panel json-import-panel">
               <div class="panel-heading">
-                <h2>Заполнить через JSON</h2>
-                <button class="secondary" id="applyTournamentJsonButton" type="button">Заполнить поля</button>
+                <h2>Текущий JSON</h2>
+                <button class="secondary" id="applyTournamentJsonButton" type="button">Применить как основу</button>
               </div>
               <label>
-                APP JSON турниров
-                <textarea id="tournamentJsonImportInput" rows="7" placeholder="Вставьте APP JSON турниров сюда или выберите файл ниже"></textarea>
+                Полный APP JSON турниров
+                <textarea id="tournamentJsonImportInput" rows="8" placeholder="Вставьте текущий полный JSON турниров. В итоговом окне он сохранится и дополнится новыми турнирами"></textarea>
               </label>
               <label>
                 WEB JSON для ссылок
@@ -143,14 +143,6 @@
               <div class="panel-heading">
                 <h2>Общее</h2>
               </div>
-              <div class="template-row">
-                <label>
-                  Шаблон текущего турнира
-                  <select id="tournamentTemplateSelect"></select>
-                </label>
-                <button class="secondary" id="loadTournamentTemplateButton" type="button">Загрузить</button>
-                <button class="secondary" id="appendTournamentTemplateButton" type="button">Добавить</button>
-              </div>
               <label>
                 Текст кнопки полных правил
                 <input id="tournamentSecondaryButtonText" type="text" placeholder="Полные правила" />
@@ -159,8 +151,14 @@
 
             <section class="panel">
               <div class="panel-heading">
-                <h2>Турниры</h2>
-                <button class="secondary" id="addTournamentButton" type="button">Добавить турнир</button>
+                <h2>Новые турниры</h2>
+                <div class="tournament-add-row">
+                  <label>
+                    Шаблон
+                    <select id="tournamentTemplateSelect"></select>
+                  </label>
+                  <button class="secondary" id="addTournamentButton" type="button">Добавить турнир</button>
+                </div>
               </div>
               <div class="tournament-list" id="tournamentList"></div>
             </section>

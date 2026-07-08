@@ -276,6 +276,23 @@ select:focus {
   white-space: nowrap;
 }
 
+.tournament-add-row {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) auto;
+  align-items: end;
+  gap: 12px;
+  width: min(100%, 620px);
+}
+
+.tournament-add-row label {
+  margin-bottom: 0;
+}
+
+.tournament-add-row button {
+  padding: 0 16px;
+  white-space: nowrap;
+}
+
 .compact-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
@@ -958,6 +975,7 @@ pre {
   .output-column,
   .field-grid,
   .template-row,
+  .tournament-add-row,
   .json-import-actions {
     display: grid;
     grid-template-columns: 1fr;

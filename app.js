@@ -173,6 +173,10 @@ const tournamentWebJsonImportInput = document.querySelector("#tournamentWebJsonI
 const tournamentJsonImportStatus = document.querySelector("#tournamentJsonImportStatus");
 const tournamentJsonFileInput = document.querySelector("#tournamentJsonFileInput");
 const tournamentTemplateSelect = document.querySelector("#tournamentTemplateSelect");
+let baseTournamentData = {
+  secondaryButtonText: "Полные правила",
+  tournamentParameters: []
+};
 
 const currentTournamentTemplates = window.TOURNAMENT_TEMPLATES || [
   {
@@ -628,27 +632,34 @@ function applyTournamentDataToForm(data) {
   updateAll();
 }
 
+function applyTournamentBaseData(data) {
+  const normalized = normalizeTournamentData(data);
+  baseTournamentData = normalized;
+  tournamentFields.secondaryButtonText.value = normalized.secondaryButtonText;
+  tournamentJsonImportStatus.textContent = `Основа принята: ${normalized.tournamentParameters.length} турниров`;
+  tournamentJsonImportStatus.classList.remove("error");
+  updateAll();
+}
+
 function getSelectedTournamentTemplate() {
+  if (tournamentTemplateSelect.value === "__blank") {
+    return { data: {} };
+  }
+
   return currentTournamentTemplates.find((template) => template.data.id === Number(tournamentTemplateSelect.value));
 }
 
 function fillTournamentTemplateSelect() {
-  tournamentTemplateSelect.innerHTML = currentTournamentTemplates
-    .map((template) => `<option value="${template.data.id}">${escapeHtml(template.label)}</option>`)
+  tournamentTemplateSelect.innerHTML = [
+    `<option value="__blank">Пустой турнир</option>`,
+    ...currentTournamentTemplates.map((template) => `<option value="${template.data.id}">${escapeHtml(template.label)}</option>`)
+  ]
     .join("");
 }
 
-function loadSelectedTournamentTemplate({ append = false } = {}) {
+function addSelectedTournamentTemplate() {
   const template = getSelectedTournamentTemplate();
   if (!template) {
-    return;
-  }
-
-  if (!append) {
-    applyTournamentDataToForm({
-      secondaryButtonText: tournamentFields.secondaryButtonText.value.trim() || "Полные правила",
-      tournamentParameters: [cloneData(template.data)]
-    });
     return;
   }
 
@@ -658,17 +669,20 @@ function loadSelectedTournamentTemplate({ append = false } = {}) {
 
 function importTournamentJsonText(value) {
   if (!value.trim()) {
+    baseTournamentData = {
+      secondaryButtonText: tournamentFields.secondaryButtonText.value.trim() || "Полные правила",
+      tournamentParameters: []
+    };
     tournamentJsonImportStatus.textContent = "";
     tournamentJsonImportStatus.classList.remove("error");
+    updateAll();
     return;
   }
 
   try {
     const appData = JSON.parse(value);
     const webData = tournamentWebJsonImportInput.value.trim() ? JSON.parse(tournamentWebJsonImportInput.value) : null;
-    applyTournamentDataToForm(webData ? mergeTournamentWebLinks(appData, webData) : appData);
-    tournamentJsonImportStatus.textContent = "Поля заполнены из JSON";
-    tournamentJsonImportStatus.classList.remove("error");
+    applyTournamentBaseData(webData ? mergeTournamentWebLinks(appData, webData) : appData);
   } catch (error) {
     tournamentJsonImportStatus.textContent = "Не удалось прочитать JSON";
     tournamentJsonImportStatus.classList.add("error");
@@ -885,10 +899,29 @@ function buildTournamentParameter(card, target) {
   };
 }
 
+function buildStoredTournamentParameter(tournament, target) {
+  return {
+    id: tournament.id,
+    events: cloneData(tournament.events || { values: { d: "" } }),
+    bets: cloneData(tournament.bets || { values: { d: "", c: "", b: "" } }),
+    score: cloneData(tournament.score || { values: { d: "" } }),
+    boosters: cloneData(tournament.boosters || { values: { d: "" } }),
+    places: cloneData(tournament.places || { values: { d: "" } }),
+    dates: cloneData(tournament.dates || { values: { d: "", c: "" } }),
+    fullRulesUrl: tournament.fullRulesUrl || "",
+    makeBetUrl: target === "web" ? tournament.webMakeBetUrl || "" : tournament.appMakeBetUrl || ""
+  };
+}
+
 function buildTournamentJson(target = "app") {
+  const baseTournaments = baseTournamentData.tournamentParameters.map((tournament) =>
+    buildStoredTournamentParameter(tournament, target)
+  );
+  const newTournaments = collectTournamentCards().map((card) => buildTournamentParameter(card, target));
+
   return normalizeJsonText({
     secondaryButtonText: tournamentFields.secondaryButtonText.value.trim() || "Полные правила",
-    tournamentParameters: collectTournamentCards().map((card) => buildTournamentParameter(card, target))
+    tournamentParameters: [...baseTournaments, ...newTournaments]
   });
 }
 
@@ -1098,7 +1131,7 @@ function tournamentHtmlToPreviewText(value) {
 }
 
 function renderTournamentPreview(data) {
-  const [tournament] = data.tournamentParameters;
+  const tournament = data.tournamentParameters[data.tournamentParameters.length - 1];
   previewTitle.textContent = "Основная информация";
 
   if (!tournament) {
@@ -1416,14 +1449,7 @@ document.querySelector("#addRuleButton").addEventListener("click", () => {
   updateAll();
 });
 document.querySelector("#addTournamentButton").addEventListener("click", () => {
-  addTournamentCard();
-  updateAll();
-});
-document.querySelector("#loadTournamentTemplateButton").addEventListener("click", () => {
-  loadSelectedTournamentTemplate();
-});
-document.querySelector("#appendTournamentTemplateButton").addEventListener("click", () => {
-  loadSelectedTournamentTemplate({ append: true });
+  addSelectedTournamentTemplate();
 });
 document.querySelector("#loadTemplateButton").addEventListener("click", () => {
   loadTemplate(templateSelect.value);
@@ -1475,5 +1501,5 @@ document.querySelector("#downloadButton").addEventListener("click", () => {
 templateSelect.value = "offer";
 loadTemplate("offer");
 fillTournamentTemplateSelect();
-applyTournamentDataToForm(tournamentTemplateData);
+updateAll();
 setActiveView("promo");
