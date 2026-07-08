@@ -1518,9 +1518,6 @@ templateSelect.addEventListener("change", () => {
 document.querySelector("#applyJsonButton").addEventListener("click", () => {
   importJsonText(jsonImportInput.value);
 });
-document.querySelector("#applyTournamentJsonButton").addEventListener("click", () => {
-  importTournamentJsonText(tournamentJsonImportInput.value);
-});
 jsonImportInput.addEventListener("input", scheduleJsonImport);
 tournamentJsonImportInput.addEventListener("input", scheduleTournamentJsonImport);
 jsonFileInput.addEventListener("change", async () => {
