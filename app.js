@@ -504,8 +504,11 @@ function addTournamentCard(tournament = {}) {
   node.querySelector(".tournament-start-date").value = dates.d || "";
   node.querySelector(".tournament-end-date").value = dates.c || "";
   node.querySelector(".tournament-full-rules-url").value = tournament.fullRulesUrl || "";
-  node.querySelector(".tournament-app-bet-url").value = tournament.appMakeBetUrl || "";
-  node.querySelector(".tournament-web-bet-url").value = tournament.webMakeBetUrl || "";
+  node.querySelector(".tournament-app-bet-url").value =
+    tournament.appMakeBetUrl || makeAppBetUrl(tournament.webMakeBetUrl || tournament.makeBetUrl || "");
+  node.querySelector(".tournament-web-bet-url").value = tournament.webMakeBetUrl
+    ? makeWebBetUrl(tournament.webMakeBetUrl)
+    : makeWebBetUrl(tournament.appMakeBetUrl || tournament.makeBetUrl || "");
   node.querySelector(".remove-tournament").addEventListener("click", () => {
     node.remove();
     renumberTournaments();
@@ -568,21 +571,70 @@ function getNestedValue(source, key) {
   return source?.[key]?.values || {};
 }
 
-function normalizeBetPath(value) {
-  return String(value || "").trim().replace(/^https?:\/\/(?:www\.)?ligastavok\.ru/i, "");
+const WEB_SPORT_BY_APP = {
+  football: "soccer"
+};
+const APP_SPORT_BY_WEB = {
+  soccer: "football"
+};
+const MY_LINE_SPORTS = new Set([
+  "tennis",
+  "soccer",
+  "football",
+  "basketball",
+  "ice-hockey",
+  "table-tennis",
+  "cybersport",
+  "e-sport",
+  "short-hockey"
+]);
+
+function mapAppSportToWeb(sport) {
+  return WEB_SPORT_BY_APP[sport] || sport;
 }
 
-function makeAppBetUrl(value) {
-  const raw = String(value || "").trim();
-  if (!raw) {
+function mapWebSportToApp(sport) {
+  return APP_SPORT_BY_WEB[sport] || sport;
+}
+
+function withLeadingSlash(value) {
+  const path = String(value || "").trim();
+  if (!path) {
     return "";
   }
 
-  if (/^https?:\/\//i.test(raw)) {
-    return raw;
+  return path.startsWith("/") ? path : `/${path}`;
+}
+
+function parseBetUrl(value) {
+  const raw = String(value || "").trim();
+  if (!raw) {
+    return { kind: "empty", raw: "" };
   }
 
-  const path = normalizeBetPath(raw).replace(/^\/+/, "");
+  const ligaMatch = raw.match(/^https?:\/\/(?:www\.)?ligastavok\.ru(\/[^#]*)?(?:#.*)?$/i);
+  if (ligaMatch) {
+    return { kind: "liga", raw, path: withLeadingSlash(ligaMatch[1] || "/") };
+  }
+
+  if (/^https?:\/\//i.test(raw)) {
+    return { kind: "absolute", raw };
+  }
+
+  return { kind: "path", raw, path: withLeadingSlash(raw) };
+}
+
+function makeAppBetUrl(value) {
+  const parsed = parseBetUrl(value);
+  if (parsed.kind === "empty") {
+    return "";
+  }
+
+  if (parsed.kind === "absolute" || parsed.kind === "liga") {
+    return parsed.raw;
+  }
+
+  const path = parsed.path.replace(/^\/+/, "");
   if (!path) {
     return "";
   }
@@ -591,31 +643,60 @@ function makeAppBetUrl(value) {
     return "https://www.ligastavok.ru/quick-games";
   }
 
-  if (path.startsWith("prematch/")) {
-    return `https://ligastavok.ru/bets/my-line/${path.replace(/^prematch\/+/, "")}`;
+  const prematchMatch = path.match(/^prematch\/(.+)$/);
+  const sport = prematchMatch?.[1] || (MY_LINE_SPORTS.has(path) ? path : "");
+  if (sport) {
+    return `https://ligastavok.ru/bets/my-line/${mapWebSportToApp(sport)}`;
   }
 
   return `https://www.ligastavok.ru/${path}`;
 }
 
 function makeWebBetUrl(value) {
-  const raw = String(value || "").trim();
-  if (!raw || !/^https?:\/\//i.test(raw)) {
-    return raw;
+  const parsed = parseBetUrl(value);
+  if (parsed.kind === "empty") {
+    return "";
   }
 
-  const path = normalizeBetPath(raw);
-  const myLineMatch = path.match(/^\/bets\/my-line\/(.+)$/);
+  if (parsed.kind === "absolute") {
+    return parsed.raw;
+  }
 
-  if (path === "/quick-games") {
+  const path = parsed.path || withLeadingSlash(parsed.raw);
+  const pathname = path.split("?")[0];
+  const myLineMatch = pathname.match(/^\/bets\/my-line(?:\/(.*))?$/);
+
+  if (myLineMatch) {
+    const sport = (myLineMatch[1] || "").replace(/\/+$/, "");
+    return sport ? `/prematch/${mapAppSportToWeb(sport)}` : "";
+  }
+
+  if (pathname === "/quick-games") {
     return "/quick-games";
   }
 
-  if (myLineMatch?.[1]) {
-    return `/prematch/${myLineMatch[1]}`;
+  if (/^\/(?:championships|super-championships)\//.test(pathname)) {
+    return path;
   }
 
-  return raw;
+  if (parsed.kind === "path") {
+    const prematchMatch = pathname.match(/^\/prematch\/(.+)$/);
+    if (prematchMatch?.[1]) {
+      return `/prematch/${mapAppSportToWeb(prematchMatch[1])}`;
+    }
+
+    return path;
+  }
+
+  return parsed.raw;
+}
+
+function pickMakeBetUrl(appUrl, webUrl, target) {
+  if (target === "web") {
+    return webUrl ? makeWebBetUrl(webUrl) : makeWebBetUrl(appUrl);
+  }
+
+  return appUrl ? makeAppBetUrl(appUrl) : makeAppBetUrl(webUrl);
 }
 
 function normalizeTournamentData(value) {
@@ -951,7 +1032,7 @@ function buildTournamentParameter(card, target) {
     places: { values: { d: textToTournamentHtml(card.places) } },
     dates: { values: { d: card.startDate, c: card.endDate } },
     fullRulesUrl: card.fullRulesUrl,
-    makeBetUrl: target === "web" ? card.webMakeBetUrl : card.appMakeBetUrl
+    makeBetUrl: pickMakeBetUrl(card.appMakeBetUrl, card.webMakeBetUrl, target)
   };
 }
 
@@ -965,7 +1046,7 @@ function buildStoredTournamentParameter(tournament, target) {
     places: cloneData(tournament.places || { values: { d: "" } }),
     dates: cloneData(tournament.dates || { values: { d: "", c: "" } }),
     fullRulesUrl: tournament.fullRulesUrl || "",
-    makeBetUrl: target === "web" ? tournament.webMakeBetUrl || "" : tournament.appMakeBetUrl || ""
+    makeBetUrl: pickMakeBetUrl(tournament.appMakeBetUrl || "", tournament.webMakeBetUrl || "", target)
   };
 }
 
