@@ -290,7 +290,7 @@
         <div class="toggles">
           <label class="check-row">
             <input class="rule-widget-enabled" type="checkbox" />
-            Прогресс-виджет
+            Прогресс-бары
           </label>
           <label class="check-row">
             <input class="rule-terms-enabled" type="checkbox" />
@@ -298,26 +298,14 @@
           </label>
         </div>
         <div class="widget-fields hidden">
-          <div class="field-grid">
-            <label>
-              Campaign ID
-              <input class="widget-campaign-id" type="text" />
-            </label>
-            <label>
-              Widget title
-              <input class="widget-title" type="text" />
-            </label>
+          <div class="terms-heading">
+            <div>
+              <h4>Прогресс-бары</h4>
+              <p>В одном разделе можно добавить несколько виджетов подряд</p>
+            </div>
+            <button class="secondary add-widget" type="button">Добавить прогресс-бар</button>
           </div>
-          <div class="field-grid">
-            <label>
-              Progress text
-              <input class="widget-progress-text" type="text" />
-            </label>
-            <label>
-              Widget image URL
-              <input class="widget-image-url" type="url" />
-            </label>
-          </div>
+          <div class="widgets-list"></div>
         </div>
         <div class="terms-fields hidden">
           <div class="terms-heading">
@@ -329,6 +317,83 @@
           </div>
           <div class="terms-list"></div>
         </div>
+      </article>
+    </template>
+
+    <template id="widgetTemplate">
+      <article class="widget-editor">
+        <div class="term-editor-head">
+          <strong></strong>
+          <button class="icon-button remove-widget" type="button" aria-label="Удалить прогресс-бар">×</button>
+        </div>
+        <div class="field-grid">
+          <label>
+            Campaign ID
+            <input class="widget-campaign-id" type="text" />
+          </label>
+          <label>
+            Title
+            <input class="widget-title" type="text" placeholder="Сделай ставки на сумму от 250 000 ₽" />
+          </label>
+        </div>
+        <div class="field-grid">
+          <label>
+            Progress text
+            <span class="field-note">Для старых версий</span>
+            <input class="widget-progress-text" type="text" placeholder="Ставок сделано на сумму:" />
+          </label>
+          <label>
+            Subtitle
+            <input class="widget-subtitle" type="text" placeholder="И получи два фрибета по 5000" />
+          </label>
+        </div>
+        <div class="field-grid">
+          <label>
+            Тип прогресса
+            <select class="widget-progress-type">
+              <option value="continuous">continuous</option>
+              <option value="steps">steps</option>
+            </select>
+          </label>
+          <label>
+            Progress label
+            <input class="widget-progress-label" type="text" placeholder="Ставок сделано на сумму:" />
+          </label>
+        </div>
+        <div class="field-grid">
+          <label>
+            Фон виджета
+            <input class="widget-image-url" type="url" placeholder="https://www.ligastavok.ru/files/file/.../Bg.webp" />
+          </label>
+          <label>
+            Картинка карточки
+            <input class="widget-card-image-url" type="url" placeholder="https://www.ligastavok.ru/files/file/.../Icon.webp" />
+          </label>
+        </div>
+        <div class="field-grid">
+          <label>
+            Reward text
+            <input class="widget-reward-text" type="text" placeholder="+ 2 x 5000" />
+          </label>
+          <label>
+            Reward image URL
+            <input class="widget-reward-image-url" type="url" placeholder="https://www.ligastavok.ru/files/file/.../reward.webp" />
+          </label>
+        </div>
+        <div class="field-grid">
+          <label>
+            Completed text
+            <input class="widget-completed-text" type="text" placeholder="Фрибет получен" />
+          </label>
+          <label>
+            Card URL
+            <input class="widget-card-url" type="url" placeholder="https://www.ligastavok.ru/home" />
+          </label>
+        </div>
+        <label>
+          Rule text
+          <input class="widget-rule-text" type="text" placeholder="Учитываются только рассчитанные ставки" />
+        </label>
       </article>
     </template>
 

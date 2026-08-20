@@ -2,6 +2,7 @@ const DEFAULT_WIDGET_IMAGE = "https://www.ligastavok.ru/files/file/16326/Marketi
 const DEFAULT_TERM_IMAGE = "https://www.ligastavok.ru/files/file/11160/Freebet_3x.webp";
 const TOURNAMENT_SECONDARY_BUTTON_TEXT = "Полные правила";
 const DEFAULT_HEADER_TYPE = "marketing2";
+const DEFAULT_REMAINING_TIME = { dateLabel: "Осталось дней", timeLabel: "Осталось" };
 
 function makePromoHeader({ header = "", imageUrl = "", backgroundUrl = "", animationType = "none", animationUrl = "" } = {}) {
   const promoHeader = {
@@ -196,6 +197,7 @@ const guestCustomFields = document.querySelector("#guestCustomFields");
 const promoHeaderAnimationFields = document.querySelector("#promoHeaderAnimationFields");
 const rulesList = document.querySelector("#rulesList");
 const ruleTemplate = document.querySelector("#ruleTemplate");
+const widgetTemplate = document.querySelector("#widgetTemplate");
 const termTemplate = document.querySelector("#termTemplate");
 const jsonOutput = document.querySelector("#jsonOutput");
 const templateSelect = document.querySelector("#templateSelect");
@@ -507,15 +509,13 @@ function addRule(rule = { header: "", content: "" }) {
   node.querySelector(".rule-header").value = rule.header || "";
   node.querySelector(".rule-content").value = rule.content || "";
 
-  const widget = rule.widgets?.[0];
+  const widgets = Array.isArray(rule.widgets) ? rule.widgets : [];
   const widgetEnabled = node.querySelector(".rule-widget-enabled");
   const widgetFields = node.querySelector(".widget-fields");
-  widgetEnabled.checked = Boolean(widget);
-  widgetFields.classList.toggle("hidden", !widget);
-  node.querySelector(".widget-campaign-id").value = widget?.campaignId || "";
-  node.querySelector(".widget-title").value = widget?.title || "Твой прогресс";
-  node.querySelector(".widget-progress-text").value = widget?.progressText || "";
-  node.querySelector(".widget-image-url").value = widget?.imageUrl || DEFAULT_WIDGET_IMAGE;
+  const widgetsList = node.querySelector(".widgets-list");
+  widgetEnabled.checked = widgets.length > 0;
+  widgetFields.classList.toggle("hidden", !widgets.length);
+  widgets.forEach((widget) => addWidgetCard(widgetsList, widget));
 
   const termsEnabled = node.querySelector(".rule-terms-enabled");
   const termsFields = node.querySelector(".terms-fields");
@@ -526,6 +526,15 @@ function addRule(rule = { header: "", content: "" }) {
 
   widgetEnabled.addEventListener("change", () => {
     widgetFields.classList.toggle("hidden", !widgetEnabled.checked);
+    if (widgetEnabled.checked && !widgetsList.children.length) {
+      addWidgetCard(widgetsList);
+    }
+    updateAll();
+  });
+  node.querySelector(".add-widget").addEventListener("click", () => {
+    addWidgetCard(widgetsList, getNextWidgetSeed(widgetsList));
+    widgetEnabled.checked = true;
+    widgetFields.classList.remove("hidden");
     updateAll();
   });
   termsEnabled.addEventListener("change", () => {
@@ -549,6 +558,62 @@ function addRule(rule = { header: "", content: "" }) {
 
   rulesList.append(node);
   renumberRules();
+}
+
+function getNextWidgetSeed(widgetsList) {
+  const previous = widgetsList.querySelector(".widget-editor:last-child");
+  if (!previous) {
+    return {};
+  }
+
+  const seed = collectWidgetFromNode(previous);
+  return {
+    campaignId: seed.campaignId,
+    progressText: seed.progressText,
+    imageUrl: seed.imageUrl,
+    cardImageUrl: seed.cardImageUrl,
+    progress: seed.progress,
+    remainingTime: seed.remainingTime,
+    completedText: seed.completedText,
+    cardUrl: seed.cardUrl
+  };
+}
+
+function addWidgetCard(widgetsList, widget = {}) {
+  const node = widgetTemplate.content.firstElementChild.cloneNode(true);
+  const progress = widget.progress && typeof widget.progress === "object" ? widget.progress : {};
+  const reward = widget.reward && typeof widget.reward === "object" ? widget.reward : {};
+  const remainingTime = widget.remainingTime && typeof widget.remainingTime === "object" ? widget.remainingTime : DEFAULT_REMAINING_TIME;
+
+  node.querySelector(".widget-campaign-id").value = widget.campaignId || "";
+  node.querySelector(".widget-title").value = widget.title || "";
+  node.querySelector(".widget-progress-text").value = widget.progressText || "";
+  node.querySelector(".widget-subtitle").value = widget.subtitle || "";
+  node.querySelector(".widget-progress-type").value = progress.type === "steps" ? "steps" : "continuous";
+  node.querySelector(".widget-progress-label").value = progress.label || widget.progressText || "";
+  node.querySelector(".widget-image-url").value = widget.imageUrl || DEFAULT_WIDGET_IMAGE;
+  node.querySelector(".widget-card-image-url").value = widget.cardImageUrl || "";
+  node.querySelector(".widget-reward-text").value = reward.text || "";
+  node.querySelector(".widget-reward-image-url").value = reward.imageUrl || "";
+  node.querySelector(".widget-completed-text").value = widget.completedText || "";
+  node.querySelector(".widget-card-url").value = widget.cardUrl || "";
+  node.querySelector(".widget-rule-text").value = widget.ruleText || "";
+  node.dataset.dateLabel = remainingTime.dateLabel || DEFAULT_REMAINING_TIME.dateLabel;
+  node.dataset.timeLabel = remainingTime.timeLabel || DEFAULT_REMAINING_TIME.timeLabel;
+
+  node.querySelector(".remove-widget").addEventListener("click", () => {
+    const ruleNode = widgetsList.closest(".rule-card");
+    node.remove();
+    renumberWidgets(widgetsList);
+    if (ruleNode && !widgetsList.children.length) {
+      ruleNode.querySelector(".rule-widget-enabled").checked = false;
+      ruleNode.querySelector(".widget-fields").classList.add("hidden");
+    }
+    updateAll();
+  });
+
+  widgetsList.append(node);
+  renumberWidgets(widgetsList);
 }
 
 function addTermCard(termsList, term = { header: "", content: "", imageUrl: DEFAULT_TERM_IMAGE }) {
@@ -598,6 +663,12 @@ function addTournamentCard(tournament = {}) {
 
   tournamentList.append(node);
   renumberTournaments();
+}
+
+function renumberWidgets(widgetsList) {
+  [...widgetsList.children].forEach((node, index) => {
+    node.querySelector(".term-editor-head strong").textContent = `Прогресс-бар ${index + 1}`;
+  });
 }
 
 function renumberTerms(termsList) {
@@ -1022,6 +1093,52 @@ function collectTerms(node) {
     .map(({ hasCustomImage, ...term }) => term);
 }
 
+function collectWidgetFromNode(node) {
+  const progressText = node.querySelector(".widget-progress-text").value.trim();
+  const progressLabel = node.querySelector(".widget-progress-label").value.trim() || progressText;
+  const rewardText = node.querySelector(".widget-reward-text").value.trim();
+  const rewardImageUrl = node.querySelector(".widget-reward-image-url").value.trim();
+  const ruleText = node.querySelector(".widget-rule-text").value.trim();
+  const widget = {
+    type: "progressBar",
+    position: "bottom",
+    enabled: true,
+    campaignId: node.querySelector(".widget-campaign-id").value.trim(),
+    title: node.querySelector(".widget-title").value.trim(),
+    progressText,
+    subtitle: node.querySelector(".widget-subtitle").value.trim(),
+    imageUrl: node.querySelector(".widget-image-url").value.trim() || DEFAULT_WIDGET_IMAGE,
+    cardImageUrl: node.querySelector(".widget-card-image-url").value.trim(),
+    progress: {
+      type: node.querySelector(".widget-progress-type").value === "steps" ? "steps" : "continuous",
+      label: progressLabel
+    }
+  };
+
+  if (ruleText) {
+    widget.ruleText = ruleText;
+  }
+
+  if (rewardText || rewardImageUrl) {
+    widget.reward = {
+      text: rewardText,
+      imageUrl: rewardImageUrl
+    };
+  }
+
+  widget.remainingTime = {
+    dateLabel: node.dataset.dateLabel || DEFAULT_REMAINING_TIME.dateLabel,
+    timeLabel: node.dataset.timeLabel || DEFAULT_REMAINING_TIME.timeLabel
+  };
+  widget.completedText = node.querySelector(".widget-completed-text").value.trim();
+  widget.cardUrl = node.querySelector(".widget-card-url").value.trim();
+  return widget;
+}
+
+function collectWidgets(node) {
+  return [...node.querySelectorAll(".widgets-list .widget-editor")].map(collectWidgetFromNode);
+}
+
 function collectRules() {
   return [...rulesList.children].map((node) => {
     const rule = {
@@ -1030,18 +1147,10 @@ function collectRules() {
     };
 
     if (node.querySelector(".rule-widget-enabled").checked) {
-      rule.widgets = [
-        {
-          type: "progressBar",
-          position: "bottom",
-          enabled: true,
-          campaignId: node.querySelector(".widget-campaign-id").value.trim(),
-          title: node.querySelector(".widget-title").value.trim() || "Твой прогресс",
-          progressText: node.querySelector(".widget-progress-text").value.trim(),
-          imageUrl: node.querySelector(".widget-image-url").value.trim() || DEFAULT_WIDGET_IMAGE,
-          remainingTime: { dateLabel: "Осталось дней", timeLabel: "Осталось:" }
-        }
-      ];
+      const widgets = collectWidgets(node);
+      if (widgets.length) {
+        rule.widgets = widgets;
+      }
     }
 
     if (node.querySelector(".rule-terms-enabled").checked) {
@@ -1386,13 +1495,15 @@ function renderPreview(data) {
 }
 
 function renderRulePreview(rule) {
-  const widget = rule.widgets?.[0] ? renderWidget(rule.widgets[0]) : "";
+  const widgets = Array.isArray(rule.widgets) && rule.widgets.length
+    ? `<div class="widgets-preview">${rule.widgets.map(renderWidget).join("")}</div>`
+    : "";
   const terms = Array.isArray(rule.terms) && rule.terms.length ? renderTerms(rule.terms) : "";
   return `
     <section class="rule-preview">
       <h3>${escapeHtml(rule.header || "Раздел")}</h3>
       <p class="rule-content-preview">${escapeHtml(rule.content || "")}</p>
-      ${widget}
+      ${widgets}
       ${terms}
     </section>
   `;
@@ -1400,12 +1511,21 @@ function renderRulePreview(rule) {
 
 function renderWidget(widget) {
   const bg = widget.imageUrl ? ` style="background-image: linear-gradient(rgba(9, 18, 16, 0.45), rgba(9, 18, 16, 0.45)), url('${escapeHtml(widget.imageUrl)}')"` : "";
+  const progressLabel = widget.progress?.label || widget.progressText || "Прогресс:";
+  const reward = widget.reward?.text
+    ? `<span class="progress-reward">${escapeHtml(widget.reward.text)}</span>`
+    : "";
+  const subtitle = widget.subtitle ? `<p class="progress-subtitle">${escapeHtml(widget.subtitle)}</p>` : "";
   return `
     <div class="progress-widget"${bg}>
-      <strong>${escapeHtml(widget.title || "Твой прогресс")}</strong>
+      <div class="progress-widget-head">
+        <strong>${escapeHtml(widget.title || "Твой прогресс")}</strong>
+        ${reward}
+      </div>
+      ${subtitle}
       <div class="progress-row">
-        <span>${escapeHtml(widget.progressText || "Прогресс:")}</span>
-        <span>1 280 из 2 000</span>
+        <span>${escapeHtml(progressLabel)}</span>
+        <span>${widget.progress?.type === "steps" ? "2 из 5" : "1 280 из 2 000"}</span>
       </div>
       <div class="bar"><span></span></div>
     </div>

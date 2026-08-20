@@ -504,10 +504,25 @@ select:focus {
   display: none !important;
 }
 
+.widget-fields,
 .terms-fields {
   border: 1px solid var(--line);
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.72);
+  padding: 14px;
+}
+
+.widgets-list,
+.terms-list {
+  display: grid;
+  gap: 12px;
+}
+
+.widget-editor,
+.term-editor {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(247, 249, 255, 0.78);
   padding: 14px;
 }
 
@@ -543,16 +558,13 @@ select:focus {
   white-space: nowrap;
 }
 
-.terms-list {
-  display: grid;
-  gap: 12px;
+.widget-editor .field-grid label,
+.widget-editor > label {
+  margin-bottom: 12px;
 }
 
-.term-editor {
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  background: rgba(247, 249, 255, 0.78);
-  padding: 14px;
+.widget-editor > label:last-child {
+  margin-bottom: 0;
 }
 
 .term-editor-head {
@@ -797,8 +809,13 @@ select:focus {
   font-size: 13px;
 }
 
-.progress-widget {
+.widgets-preview {
+  display: grid;
+  gap: 10px;
   margin-top: 14px;
+}
+
+.progress-widget {
   overflow: hidden;
   border-radius: 18px;
   background: #12251f;
@@ -808,10 +825,36 @@ select:focus {
   background-size: cover;
 }
 
+.progress-widget-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
 .progress-widget strong {
   display: block;
-  margin-bottom: 8px;
+  margin: 0;
   font-size: 16px;
+}
+
+.progress-reward {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: rgba(37, 215, 90, 0.22);
+  color: #b8ffcc;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.progress-subtitle {
+  margin: 0 0 8px;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 12px;
+  line-height: 1.35;
 }
 
 .progress-row {
