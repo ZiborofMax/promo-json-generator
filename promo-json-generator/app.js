@@ -1,14 +1,35 @@
 const DEFAULT_WIDGET_IMAGE = "https://www.ligastavok.ru/files/file/16326/Marketing_widgetProgressBar_Bg.webp";
 const DEFAULT_TERM_IMAGE = "https://www.ligastavok.ru/files/file/11160/Freebet_3x.webp";
 const TOURNAMENT_SECONDARY_BUTTON_TEXT = "Полные правила";
+const DEFAULT_HEADER_TYPE = "marketing2";
+
+function makePromoHeader({ header = "", imageUrl = "", backgroundUrl = "", animationType = "none", animationUrl = "" } = {}) {
+  const promoHeader = {
+    backgroundUrl,
+    imageUrl,
+    animationType: animationType === "rive" ? "rive" : "none",
+    title: header
+  };
+
+  if (promoHeader.animationType === "rive") {
+    promoHeader.animationUrl = animationUrl;
+  }
+
+  return promoHeader;
+}
 
 const templates = {
   offer: {
     switcherByPromoId: ["S_FBV_VGD500_2305", "TESTDV"],
     common: {
       title: "Акция",
+      headerType: DEFAULT_HEADER_TYPE,
       imageUrl: "https://www.ligastavok.ru/files/file/14559/freebetVsem_marketingPromoImg.webp",
       header: "Фрибет 500",
+      promoHeader: makePromoHeader({
+        header: "Фрибет 500",
+        imageUrl: "https://www.ligastavok.ru/files/file/14559/freebetVsem_marketingPromoImg.webp"
+      }),
       content: "",
       rules: [
         {
@@ -50,8 +71,13 @@ const templates = {
     switcherByPromoId: ["TEST_REACT_TASK1", "TESTDV", "S_FBV_ZAD1000_2305"],
     common: {
       title: "Акция",
+      headerType: DEFAULT_HEADER_TYPE,
       imageUrl: "https://www.ligastavok.ru/files/file/16685/marketingimg_rebrand_2.webp",
       header: "Фрибет 1000",
+      promoHeader: makePromoHeader({
+        header: "Фрибет 1000",
+        imageUrl: "https://www.ligastavok.ru/files/file/16685/marketingimg_rebrand_2.webp"
+      }),
       content: "",
       rules: [
         {
@@ -83,8 +109,13 @@ const templates = {
     switcherByPromoId: ["VERYVIPGRAND1"],
     common: {
       title: "Очень большая игра",
+      headerType: DEFAULT_HEADER_TYPE,
       imageUrl: "https://www.ligastavok.ru/files/file/17495/mail_1080_500.webp",
       header: "До 350 000 фрибетами",
+      promoHeader: makePromoHeader({
+        header: "До 350 000 фрибетами",
+        imageUrl: "https://www.ligastavok.ru/files/file/17495/mail_1080_500.webp"
+      }),
       content:
         "Получи 35 фрибетов по 10 000, последовательно выполняя шаги в течение 30 дней. <br>После выполнения очередного шага заходи в раздел, чтобы отслеживать свой прогресс.<br>Подробности в правилах акции или в сторис. ",
       rules: [
@@ -119,8 +150,10 @@ const templates = {
     switcherByPromoId: [""],
     common: {
       title: "Акция",
+      headerType: DEFAULT_HEADER_TYPE,
       imageUrl: "",
       header: "",
+      promoHeader: makePromoHeader(),
       content: "",
       rules: [{ header: "Основная информация", content: "" }],
       primaryButtonText: "Участвовать",
@@ -138,11 +171,29 @@ const fields = {
   header: document.querySelector("#header"),
   imageUrl: document.querySelector("#imageUrl"),
   content: document.querySelector("#content"),
+  promoHeaderTitle: document.querySelector("#promoHeaderTitle"),
+  promoHeaderBackgroundUrl: document.querySelector("#promoHeaderBackgroundUrl"),
+  promoHeaderImageUrl: document.querySelector("#promoHeaderImageUrl"),
+  promoHeaderAnimationType: document.querySelector("#promoHeaderAnimationType"),
+  promoHeaderAnimationUrl: document.querySelector("#promoHeaderAnimationUrl"),
+  guestEnabled: document.querySelector("#guestEnabled"),
+  guestContentMode: document.querySelector("#guestContentMode"),
+  guestTitle: document.querySelector("#guestTitle"),
+  guestHeader: document.querySelector("#guestHeader"),
+  guestImageUrl: document.querySelector("#guestImageUrl"),
+  guestContent: document.querySelector("#guestContent"),
+  guestPrimaryButtonText: document.querySelector("#guestPrimaryButtonText"),
+  guestPrimaryButtonUrl: document.querySelector("#guestPrimaryButtonUrl"),
+  guestSecondaryButtonText: document.querySelector("#guestSecondaryButtonText"),
+  guestSecondaryButtonUrl: document.querySelector("#guestSecondaryButtonUrl"),
   primaryButtonText: document.querySelector("#primaryButtonText"),
   primaryButtonUrl: document.querySelector("#primaryButtonUrl"),
   secondaryButtonText: document.querySelector("#secondaryButtonText"),
   secondaryButtonUrl: document.querySelector("#secondaryButtonUrl")
 };
+const guestModeFields = document.querySelector("#guestModeFields");
+const guestCustomFields = document.querySelector("#guestCustomFields");
+const promoHeaderAnimationFields = document.querySelector("#promoHeaderAnimationFields");
 const rulesList = document.querySelector("#rulesList");
 const ruleTemplate = document.querySelector("#ruleTemplate");
 const termTemplate = document.querySelector("#termTemplate");
@@ -158,6 +209,7 @@ const statusBadge = document.querySelector("#statusBadge");
 let jsonImportTimer = 0;
 let tournamentJsonImportTimer = 0;
 let activeView = "promo";
+let customGuestRules = null;
 
 const viewTabs = document.querySelectorAll(".view-tab");
 const topbarEyebrow = document.querySelector("#topbarEyebrow");
@@ -364,10 +416,13 @@ function cloneData(value) {
 function createEmptyData() {
   return {
     switcherByPromoId: [],
+    guestEnabled: false,
     common: {
       title: "",
+      headerType: DEFAULT_HEADER_TYPE,
       imageUrl: "",
       header: "",
+      promoHeader: makePromoHeader(),
       content: "",
       rules: [],
       primaryButtonText: "",
@@ -397,6 +452,8 @@ function loadTemplate(name) {
 
 function applyDataToForm(data, options = {}) {
   const common = data.common || {};
+  const promoHeader = common.promoHeader && typeof common.promoHeader === "object" ? common.promoHeader : {};
+  const guest = data.guest && typeof data.guest === "object" ? data.guest : {};
   const promoIds = Array.isArray(data.switcherByPromoId) ? data.switcherByPromoId : [];
 
   fields.promoIds.value = options.clearPromoIds ? "" : promoIds.join(", ");
@@ -404,6 +461,22 @@ function applyDataToForm(data, options = {}) {
   fields.header.value = common.header || "";
   fields.imageUrl.value = common.imageUrl || "";
   fields.content.value = htmlBreaksToText(common.content || "");
+  fields.promoHeaderTitle.value = promoHeader.title || common.header || "";
+  fields.promoHeaderBackgroundUrl.value = promoHeader.backgroundUrl || "";
+  fields.promoHeaderImageUrl.value = promoHeader.imageUrl || "";
+  fields.promoHeaderAnimationType.value = promoHeader.animationType === "rive" ? "rive" : "none";
+  fields.promoHeaderAnimationUrl.value = promoHeader.animationUrl || "";
+  fields.guestEnabled.checked = Boolean(data.guestEnabled);
+  fields.guestContentMode.value = data.guestContentMode === "duplicate" ? "duplicate" : "custom";
+  fields.guestTitle.value = guest.title || "";
+  fields.guestHeader.value = guest.header || "";
+  fields.guestImageUrl.value = guest.imageUrl || "";
+  fields.guestContent.value = htmlBreaksToText(guest.content || "");
+  fields.guestPrimaryButtonText.value = guest.primaryButtonText || "";
+  fields.guestPrimaryButtonUrl.value = guest.primaryButtonUrl || "";
+  fields.guestSecondaryButtonText.value = guest.secondaryButtonText || "";
+  fields.guestSecondaryButtonUrl.value = guest.secondaryButtonUrl || "";
+  customGuestRules = Array.isArray(guest.rules) ? cloneData(guest.rules) : null;
   fields.primaryButtonText.value = common.primaryButtonText || "";
   fields.primaryButtonUrl.value = common.primaryButtonUrl || "";
   fields.secondaryButtonText.value = common.secondaryButtonText || "";
@@ -416,7 +489,15 @@ function applyDataToForm(data, options = {}) {
       content: htmlBreaksToText(safeRule.content || "")
     });
   });
+  syncPromoChromeFields();
   updateAll();
+}
+
+function syncPromoChromeFields() {
+  const guestOn = fields.guestEnabled.checked;
+  guestModeFields.classList.toggle("hidden", !guestOn);
+  guestCustomFields.classList.toggle("hidden", !guestOn || fields.guestContentMode.value !== "custom");
+  promoHeaderAnimationFields.classList.toggle("hidden", fields.promoHeaderAnimationType.value !== "rive");
 }
 
 function addRule(rule = { header: "", content: "" }) {
@@ -841,19 +922,42 @@ function normalizeImportedJsonData(value) {
     : typeof source.switcherByPromoId === "string"
       ? parsePromoIds(source.switcherByPromoId)
       : [];
+  const guest = source.guest && typeof source.guest === "object" ? source.guest : {};
+  const promoHeader = common.promoHeader && typeof common.promoHeader === "object" ? common.promoHeader : {};
 
   return {
     switcherByPromoId,
+    guestEnabled: Boolean(source.guestEnabled),
+    guestContentMode: source.guestContentMode === "duplicate" ? "duplicate" : "custom",
     common: {
       title: common.title || "",
+      headerType: common.headerType || DEFAULT_HEADER_TYPE,
       imageUrl: common.imageUrl || "",
       header: common.header || "",
+      promoHeader: {
+        backgroundUrl: promoHeader.backgroundUrl || "",
+        imageUrl: promoHeader.imageUrl || "",
+        animationType: promoHeader.animationType === "rive" ? "rive" : "none",
+        animationUrl: promoHeader.animationUrl || "",
+        title: promoHeader.title || ""
+      },
       content: common.content || "",
       rules: Array.isArray(common.rules) ? common.rules : [],
       primaryButtonText: common.primaryButtonText || "",
       primaryButtonUrl: common.primaryButtonUrl || "",
       secondaryButtonText: common.secondaryButtonText || "",
       secondaryButtonUrl: common.secondaryButtonUrl || ""
+    },
+    guest: {
+      title: guest.title || "",
+      imageUrl: guest.imageUrl || "",
+      header: guest.header || "",
+      content: guest.content || "",
+      rules: Array.isArray(guest.rules) ? guest.rules : [],
+      primaryButtonText: guest.primaryButtonText || "",
+      primaryButtonUrl: guest.primaryButtonUrl || "",
+      secondaryButtonText: guest.secondaryButtonText || "",
+      secondaryButtonUrl: guest.secondaryButtonUrl || ""
     }
   };
 }
@@ -948,11 +1052,41 @@ function collectRules() {
   });
 }
 
+function buildPromoHeaderFromForm() {
+  return makePromoHeader({
+    header: fields.promoHeaderTitle.value.trim() || fields.header.value.trim(),
+    imageUrl: fields.promoHeaderImageUrl.value.trim(),
+    backgroundUrl: fields.promoHeaderBackgroundUrl.value.trim(),
+    animationType: fields.promoHeaderAnimationType.value,
+    animationUrl: fields.promoHeaderAnimationUrl.value.trim()
+  });
+}
+
+function buildGuestCustom(commonRules) {
+  const rules = Array.isArray(customGuestRules) && customGuestRules.length
+    ? cloneData(customGuestRules)
+    : (commonRules || []).map(() => ({ header: "", content: "" }));
+
+  return {
+    title: fields.guestTitle.value.trim(),
+    imageUrl: fields.guestImageUrl.value.trim(),
+    header: fields.guestHeader.value.trim(),
+    content: fields.guestContent.value,
+    rules,
+    primaryButtonText: fields.guestPrimaryButtonText.value.trim(),
+    primaryButtonUrl: fields.guestPrimaryButtonUrl.value.trim(),
+    secondaryButtonText: fields.guestSecondaryButtonText.value.trim(),
+    secondaryButtonUrl: fields.guestSecondaryButtonUrl.value.trim()
+  };
+}
+
 function buildJson() {
   const common = {
+    headerType: DEFAULT_HEADER_TYPE,
     title: fields.title.value.trim(),
     imageUrl: fields.imageUrl.value.trim(),
-    header: fields.header.value.trim()
+    header: fields.header.value.trim(),
+    promoHeader: buildPromoHeaderFromForm()
   };
 
   if (fields.content.value.trim()) {
@@ -965,41 +1099,63 @@ function buildJson() {
   common.secondaryButtonText = fields.secondaryButtonText.value.trim();
   common.secondaryButtonUrl = fields.secondaryButtonUrl.value.trim();
 
-  return normalizeJsonText({
+  const data = {
     switcherByPromoId: parsePromoIds(fields.promoIds.value),
-    common,
-    failures: [
-      {
-        type: "common",
-        header: "Не смогли загрузить данные",
-        content: "Обновите страницу или вернитесь позже",
-        buttonText: "Обновить"
-      },
-      {
-        type: "noAccess",
-        header: "Текущая акция для вас недоступна",
-        content: "Вы можете обратиться в службу<br>поддержки для выяснения причин"
-      }
-    ]
-  });
+    guestEnabled: fields.guestEnabled.checked
+  };
+
+  if (data.guestEnabled) {
+    data.guestContentMode = fields.guestContentMode.value === "duplicate" ? "duplicate" : "custom";
+  }
+
+  data.common = common;
+
+  if (data.guestEnabled) {
+    data.guest = data.guestContentMode === "duplicate" ? cloneData(common) : buildGuestCustom(common.rules);
+  }
+
+  data.failures = [
+    {
+      type: "common",
+      header: "Не смогли загрузить данные",
+      content: "Обновите страницу или вернитесь позже",
+      buttonText: "Обновить"
+    },
+    {
+      type: "noAccess",
+      header: "Текущая акция для вас недоступна",
+      content: "Вы можете обратиться в службу<br>поддержки для выяснения причин"
+    }
+  ];
+
+  return normalizeJsonText(data);
 }
 
 function toWebLineBreaks(value) {
   return String(value).replace(/\r\n/g, "\n").replace(/\r/g, "\n").replace(/\n/g, "<br>");
 }
 
-function buildWebJson() {
-  const data = cloneData(buildJson());
-
-  if (typeof data.common.content === "string") {
-    data.common.content = toWebLineBreaks(data.common.content);
+function applyWebLineBreaksToPromoBlock(block) {
+  if (!block || typeof block !== "object") {
+    return;
   }
 
-  data.common.rules = data.common.rules.map((rule) => ({
-    ...rule,
-    content: toWebLineBreaks(rule.content || "")
-  }));
+  if (typeof block.content === "string") {
+    block.content = toWebLineBreaks(block.content);
+  }
 
+  if (Array.isArray(block.rules)) {
+    block.rules = block.rules.map((rule) => ({
+      ...rule,
+      content: toWebLineBreaks(rule.content || "")
+    }));
+  }
+}
+
+function buildWebJson() {
+  const data = cloneData(buildJson());
+  applyWebLineBreaksToPromoBlock(data.common);
+  applyWebLineBreaksToPromoBlock(data.guest);
   return data;
 }
 
@@ -1199,16 +1355,29 @@ function escapeHtml(value) {
 
 function renderPreview(data) {
   const { common } = data;
-  previewTitle.textContent = common.title || "Акция";
-  const image = common.imageUrl
-    ? `<img class="hero-image" src="${escapeHtml(common.imageUrl)}" alt="">`
-    : `<div class="hero-image"></div>`;
+  const promoHeader = common.promoHeader || {};
+  previewTitle.textContent = common.title || promoHeader.title || "Акция";
+  const bannerTitle = promoHeader.title || common.header || "Заголовок акции";
+  const bannerStyle = promoHeader.backgroundUrl
+    ? ` style="background-image: url('${escapeHtml(promoHeader.backgroundUrl)}')"`
+    : "";
+  const bannerImage = promoHeader.imageUrl
+    ? `<img class="promo-banner-image" src="${escapeHtml(promoHeader.imageUrl)}" alt="">`
+    : "";
+  const animationBadge = promoHeader.animationType === "rive"
+    ? `<span class="promo-banner-anim">Rive</span>`
+    : "";
   const intro = common.content ? `<p class="preview-intro">${escapeHtml(common.content)}</p>` : "";
   const rules = common.rules.map(renderRulePreview).join("");
 
   preview.innerHTML = `
-    ${image}
-    <h2 class="preview-header">${escapeHtml(common.header || "Заголовок акции")}</h2>
+    <div class="promo-banner"${bannerStyle}>
+      ${bannerImage}
+      <div class="promo-banner-copy">
+        <h2>${escapeHtml(bannerTitle)}</h2>
+        ${animationBadge}
+      </div>
+    </div>
     ${intro}
     ${rules}
     ${common.primaryButtonText ? `<a class="primary-preview" href="${escapeHtml(common.primaryButtonUrl || "#")}">${escapeHtml(common.primaryButtonText)}</a>` : ""}
@@ -1327,6 +1496,7 @@ function updateAll() {
   const data = buildJson();
   jsonOutput.textContent = getJsonText(data);
   renderPreview(data);
+  syncPromoChromeFields();
   const hasPromoId = Boolean(data.switcherByPromoId.length);
   statusBadge.textContent = hasPromoId ? "JSON готов" : "Укажите Promo ID";
   statusBadge.classList.toggle("warning", !hasPromoId);
@@ -1338,7 +1508,7 @@ function getSafeFileBaseName(data) {
     return firstId ? `tournament_${firstId}` : "tournaments";
   }
 
-  const rawName = data.common?.header || "promo-action";
+  const rawName = data.common?.promoHeader?.title || data.common?.header || "promo-action";
   return rawName
     .trim()
     .replace(/\s+/g, "_")
@@ -1572,6 +1742,7 @@ function animateRuleRemoval(ruleNode, onComplete) {
 }
 
 form.addEventListener("input", updateAll);
+form.addEventListener("change", updateAll);
 tournamentForm.addEventListener("input", () => {
   renumberTournaments();
   updateAll();

@@ -218,6 +218,18 @@ label {
   font-weight: 800;
 }
 
+.field-note {
+  margin: 0 0 14px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+label .field-note {
+  margin: 0;
+}
+
 input,
 textarea,
 select {
@@ -674,6 +686,54 @@ select:focus {
   border-radius: 18px;
   background: #101820;
   object-fit: cover;
+}
+
+.promo-banner {
+  position: relative;
+  display: grid;
+  align-items: end;
+  margin: 0 -18px 16px;
+  min-height: 214px;
+  overflow: hidden;
+  background: #101820 center / cover no-repeat;
+}
+
+.promo-banner-image {
+  display: block;
+  width: 100%;
+  min-height: 214px;
+  max-height: 240px;
+  object-fit: contain;
+  object-position: center bottom;
+}
+
+.promo-banner-copy {
+  position: absolute;
+  inset: 16px 16px auto;
+  display: grid;
+  gap: 8px;
+}
+
+.promo-banner-copy h2 {
+  margin: 0;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 900;
+  line-height: 1.12;
+  text-transform: uppercase;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
+}
+
+.promo-banner-anim {
+  justify-self: start;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .preview-header {

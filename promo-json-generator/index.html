@@ -66,17 +66,111 @@
                 </label>
                 <label>
                   Header
+                  <span class="field-note">Для старых версий, в новой шапке не показывается</span>
                   <input id="header" type="text" placeholder="Фрибет 500" />
                 </label>
               </div>
               <label>
                 Image URL
+                <span class="field-note">Для старых версий, в новой шапке не показывается</span>
                 <input id="imageUrl" type="url" placeholder="https://www.ligastavok.ru/files/file/.../image.webp" />
               </label>
               <label>
                 Intro content
                 <textarea id="content" rows="3" placeholder="Короткое описание под заголовком"></textarea>
               </label>
+            </section>
+
+            <section class="panel">
+              <div class="panel-heading">
+                <h2>Баннер</h2>
+              </div>
+              <p class="field-note">Новая шапка <code>headerType: marketing2</code>. Title рисуется поверх баннера.</p>
+              <label>
+                Title на баннере
+                <input id="promoHeaderTitle" type="text" placeholder="ФРИБЕТ ВСЕМ. СТАРЫМ И НОВЫМ ПОЛЬЗОВАТЕЛЯМ" />
+              </label>
+              <label>
+                Фон баннера
+                <input id="promoHeaderBackgroundUrl" type="url" placeholder="https://www.ligastavok.ru/files/file/.../BG_Patern.webp" />
+              </label>
+              <label>
+                Картинка поверх фона
+                <input id="promoHeaderImageUrl" type="url" placeholder="https://www.ligastavok.ru/files/file/.../Image_2x.webp" />
+              </label>
+              <label>
+                Анимация
+                <select id="promoHeaderAnimationType">
+                  <option value="none">none — без анимации</option>
+                  <option value="rive">rive — анимация на баннере</option>
+                </select>
+              </label>
+              <div id="promoHeaderAnimationFields" class="hidden">
+                <label>
+                  Файл анимации URL
+                  <span class="field-note">Ссылка на уже загруженный .riv в файловом хранилище</span>
+                  <input id="promoHeaderAnimationUrl" type="url" placeholder="https://www.ligastavok.ru/files/file/.../confettis.riv" />
+                </label>
+              </div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-heading">
+                <h2>Гостевой режим</h2>
+              </div>
+              <label class="check-row">
+                <input id="guestEnabled" type="checkbox" />
+                Показывать акцию гостям
+              </label>
+              <div id="guestModeFields" class="hidden">
+                <label>
+                  Тип контента
+                  <select id="guestContentMode">
+                    <option value="custom">custom — отдельный контент</option>
+                    <option value="duplicate">duplicate — дублирует весь раздел</option>
+                  </select>
+                </label>
+                <div id="guestCustomFields" class="hidden">
+                  <div class="field-grid">
+                    <label>
+                      Guest title
+                      <input id="guestTitle" type="text" placeholder="Акция" />
+                    </label>
+                    <label>
+                      Guest header
+                      <input id="guestHeader" type="text" />
+                    </label>
+                  </div>
+                  <label>
+                    Guest image URL
+                    <input id="guestImageUrl" type="url" placeholder="https://www.ligastavok.ru/files/file/.../image.webp" />
+                  </label>
+                  <label>
+                    Guest content
+                    <textarea id="guestContent" rows="3" placeholder="Зарегистрируйтесь или войдите в аккаунт, чтобы принять участие в акции"></textarea>
+                  </label>
+                  <div class="field-grid">
+                    <label>
+                      Guest primary text
+                      <input id="guestPrimaryButtonText" type="text" placeholder="Войти или зарегистрироваться" />
+                    </label>
+                    <label>
+                      Guest primary URL
+                      <input id="guestPrimaryButtonUrl" type="url" placeholder="https://www.ligastavok.ru/login" />
+                    </label>
+                  </div>
+                  <div class="field-grid">
+                    <label>
+                      Guest secondary text
+                      <input id="guestSecondaryButtonText" type="text" placeholder="Полные правила акции" />
+                    </label>
+                    <label>
+                      Guest secondary URL
+                      <input id="guestSecondaryButtonUrl" type="url" placeholder="https://www.ligastavok.ru/files/file/.../rules.pdf" />
+                    </label>
+                  </div>
+                </div>
+              </div>
             </section>
 
             <section class="panel">
