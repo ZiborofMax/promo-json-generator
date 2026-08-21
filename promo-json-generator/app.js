@@ -1,5 +1,10 @@
 const DEFAULT_WIDGET_IMAGE = "https://www.ligastavok.ru/files/file/16326/Marketing_widgetProgressBar_Bg.webp";
 const DEFAULT_TERM_IMAGE = "https://www.ligastavok.ru/files/file/11160/Freebet_3x.webp";
+const DEFAULT_LEGACY_IMAGE_URL = "https://www.ligastavok.ru/files/file/16316/MarketingImg_reBrand.webp";
+const DEFAULT_BANNER_BACKGROUND_URL = "https://www.ligastavok.ru/files/file/18198/BG_Patern.webp";
+const DEFAULT_WIDGET_SUBTITLE = "Учитываются только рассчитанные ставки";
+const DEFAULT_WIDGET_PROGRESS_LABEL = "Ставок сделано на сумму";
+const DEFAULT_PROMO_TITLE = "Акция";
 const TOURNAMENT_SECONDARY_BUTTON_TEXT = "Полные правила";
 const DEFAULT_HEADER_TYPE = "marketing2";
 const DEFAULT_REMAINING_TIME = { dateLabel: "Осталось дней", timeLabel: "Осталось" };
@@ -188,7 +193,8 @@ const fields = {
   guestSecondaryButtonText: document.querySelector("#guestSecondaryButtonText"),
   guestSecondaryButtonUrl: document.querySelector("#guestSecondaryButtonUrl"),
   primaryButtonText: document.querySelector("#primaryButtonText"),
-  primaryButtonUrl: document.querySelector("#primaryButtonUrl"),
+  primaryButtonAppUrl: document.querySelector("#primaryButtonAppUrl"),
+  primaryButtonWebUrl: document.querySelector("#primaryButtonWebUrl"),
   secondaryButtonText: document.querySelector("#secondaryButtonText"),
   secondaryButtonUrl: document.querySelector("#secondaryButtonUrl")
 };
@@ -393,7 +399,7 @@ const tournamentTemplateData = {
   ]
 };
 
-function makeWidgetRule(header, content, campaignId, progressText, title = "Твой прогресс", imageUrl = DEFAULT_WIDGET_IMAGE) {
+function makeWidgetRule(header, content, campaignId, progressText = DEFAULT_WIDGET_PROGRESS_LABEL, title = "Твой прогресс", imageUrl = DEFAULT_WIDGET_IMAGE) {
   return {
     header,
     content,
@@ -405,7 +411,9 @@ function makeWidgetRule(header, content, campaignId, progressText, title = "Тв
         campaignId,
         title,
         progressText,
+        subtitle: DEFAULT_WIDGET_SUBTITLE,
         imageUrl,
+        progress: { type: "continuous", label: progressText },
         remainingTime: { ...DEFAULT_REMAINING_TIME }
       }
     ]
@@ -416,21 +424,99 @@ function cloneData(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
+function getDefaultWidgetSeed() {
+  return {
+    subtitle: DEFAULT_WIDGET_SUBTITLE,
+    progressText: DEFAULT_WIDGET_PROGRESS_LABEL,
+    progress: { type: "continuous", label: DEFAULT_WIDGET_PROGRESS_LABEL },
+    imageUrl: DEFAULT_WIDGET_IMAGE,
+    appCardUrl: "",
+    webCardUrl: ""
+  };
+}
+
+function getLastWidgetEditor() {
+  const editors = rulesList.querySelectorAll(".widget-editor");
+  return editors.length ? editors[editors.length - 1] : null;
+}
+
+function getNextWidgetSeed() {
+  const previous = getLastWidgetEditor();
+  if (!previous) {
+    return getDefaultWidgetSeed();
+  }
+
+  return {
+    ...collectWidgetFromNode(previous),
+    appCardUrl: previous.querySelector(".widget-app-card-url").value.trim(),
+    webCardUrl: previous.querySelector(".widget-web-card-url").value.trim()
+  };
+}
+
+function applyPromoFormDefaults() {
+  if (!fields.title.value.trim()) {
+    fields.title.value = DEFAULT_PROMO_TITLE;
+  }
+  if (!fields.imageUrl.value.trim()) {
+    fields.imageUrl.value = DEFAULT_LEGACY_IMAGE_URL;
+  }
+  if (!fields.promoHeaderBackgroundUrl.value.trim()) {
+    fields.promoHeaderBackgroundUrl.value = DEFAULT_BANNER_BACKGROUND_URL;
+  }
+  if (!fields.promoHeaderImageUrl.value.trim()) {
+    fields.promoHeaderImageUrl.value = DEFAULT_LEGACY_IMAGE_URL;
+  }
+  if (!fields.secondaryButtonText.value.trim()) {
+    fields.secondaryButtonText.value = "Полные правила акции";
+  }
+}
+
+function applyPromoWebUrls(data) {
+  if (!data?.common) {
+    return;
+  }
+
+  const webPrimaryUrl = fields.primaryButtonWebUrl.value.trim();
+  if (webPrimaryUrl) {
+    data.common.primaryButtonUrl = webPrimaryUrl;
+  }
+
+  const ruleNodes = [...rulesList.children];
+  ruleNodes.forEach((ruleNode, ruleIndex) => {
+    const rule = data.common.rules?.[ruleIndex];
+    if (!rule?.widgets) {
+      return;
+    }
+
+    const widgetNodes = [...ruleNode.querySelectorAll(".widgets-list .widget-editor")];
+    widgetNodes.forEach((widgetNode, widgetIndex) => {
+      const webCardUrl = widgetNode.querySelector(".widget-web-card-url").value.trim();
+      if (rule.widgets[widgetIndex] && webCardUrl) {
+        rule.widgets[widgetIndex].cardUrl = webCardUrl;
+      }
+    });
+  });
+}
+
 function createEmptyData() {
   return {
     switcherByPromoId: [],
     guestEnabled: false,
     common: {
-      title: "",
+      title: DEFAULT_PROMO_TITLE,
       headerType: DEFAULT_HEADER_TYPE,
-      imageUrl: "",
+      imageUrl: DEFAULT_LEGACY_IMAGE_URL,
       header: "",
-      promoHeader: makePromoHeader(),
+      promoHeader: makePromoHeader({
+        backgroundUrl: DEFAULT_BANNER_BACKGROUND_URL,
+        imageUrl: DEFAULT_LEGACY_IMAGE_URL
+      }),
       content: "",
       rules: [],
       primaryButtonText: "",
-      primaryButtonUrl: "",
-      secondaryButtonText: "",
+      primaryButtonAppUrl: "",
+      primaryButtonWebUrl: "",
+      secondaryButtonText: "Полные правила акции",
       secondaryButtonUrl: ""
     }
   };
@@ -480,8 +566,9 @@ function applyDataToForm(data, options = {}) {
   fields.guestSecondaryButtonText.value = guest.secondaryButtonText || "";
   fields.guestSecondaryButtonUrl.value = guest.secondaryButtonUrl || "";
   fields.primaryButtonText.value = common.primaryButtonText || "";
-  fields.primaryButtonUrl.value = common.primaryButtonUrl || "";
-  fields.secondaryButtonText.value = common.secondaryButtonText || "";
+  fields.primaryButtonAppUrl.value = common.primaryButtonAppUrl || common.primaryButtonUrl || "";
+  fields.primaryButtonWebUrl.value = common.primaryButtonWebUrl || common.primaryButtonUrl || "";
+  fields.secondaryButtonText.value = common.secondaryButtonText || "Полные правила акции";
   fields.secondaryButtonUrl.value = common.secondaryButtonUrl || "";
   rulesList.innerHTML = "";
   (Array.isArray(common.rules) ? common.rules : []).forEach((rule) => {
@@ -499,6 +586,7 @@ function applyDataToForm(data, options = {}) {
     addGuestRule();
   }
   syncPromoChromeFields();
+  applyPromoFormDefaults();
   updateAll();
 }
 
@@ -564,12 +652,12 @@ function addRule(rule = { header: "", content: "" }) {
   widgetEnabled.addEventListener("change", () => {
     widgetFields.classList.toggle("hidden", !widgetEnabled.checked);
     if (widgetEnabled.checked && !widgetsList.children.length) {
-      addWidgetCard(widgetsList);
+      addWidgetCard(widgetsList, getNextWidgetSeed());
     }
     updateAll();
   });
   node.querySelector(".add-widget").addEventListener("click", () => {
-    addWidgetCard(widgetsList, getNextWidgetSeed(widgetsList));
+    addWidgetCard(widgetsList, getNextWidgetSeed());
     widgetEnabled.checked = true;
     widgetFields.classList.remove("hidden");
     updateAll();
@@ -612,41 +700,25 @@ function syncWidgetScaleFields(node) {
   scaleFields.classList.toggle("hidden", getWidgetProgressType(node.querySelector(".widget-progress-type").value) === "none");
 }
 
-function getNextWidgetSeed(widgetsList) {
-  const previous = widgetsList.querySelector(".widget-editor:last-child");
-  if (!previous) {
-    return {};
-  }
-
-  const seed = collectWidgetFromNode(previous);
-  return {
-    campaignId: seed.campaignId,
-    progressText: seed.progressText,
-    imageUrl: seed.imageUrl,
-    cardImageUrl: seed.cardImageUrl,
-    progress: seed.progress,
-    remainingTime: seed.remainingTime,
-    completedText: seed.completedText,
-    cardUrl: seed.cardUrl
-  };
-}
-
 function addWidgetCard(widgetsList, widget = {}) {
   const node = widgetTemplate.content.firstElementChild.cloneNode(true);
   const progress = widget.progress && typeof widget.progress === "object" ? widget.progress : {};
   const reward = widget.reward && typeof widget.reward === "object" ? widget.reward : {};
+  const defaults = getDefaultWidgetSeed();
 
   node.querySelector(".widget-campaign-id").value = widget.campaignId || "";
   node.querySelector(".widget-title").value = widget.title || "";
-  node.querySelector(".widget-progress-text").value = progress.label || widget.progressText || "";
-  node.querySelector(".widget-subtitle").value = widget.subtitle || "";
+  node.querySelector(".widget-progress-text").value =
+    progress.label || widget.progressText || defaults.progressText;
+  node.querySelector(".widget-subtitle").value = widget.subtitle || defaults.subtitle;
   node.querySelector(".widget-progress-type").value = getWidgetProgressType(progress.type);
   node.querySelector(".widget-image-url").value = widget.imageUrl || DEFAULT_WIDGET_IMAGE;
   node.querySelector(".widget-card-image-url").value = widget.cardImageUrl || "";
   node.querySelector(".widget-reward-text").value = reward.text || "";
   node.querySelector(".widget-reward-image-url").value = reward.imageUrl || "";
   node.querySelector(".widget-completed-text").value = widget.completedText || "";
-  node.querySelector(".widget-card-url").value = widget.cardUrl || "";
+  node.querySelector(".widget-app-card-url").value = widget.appCardUrl || widget.cardUrl || "";
+  node.querySelector(".widget-web-card-url").value = widget.webCardUrl || widget.cardUrl || "";
   node.querySelector(".widget-rule-text").value = widget.ruleText || "";
   syncWidgetScaleFields(node);
 
@@ -1069,6 +1141,8 @@ function normalizeImportedJsonData(value) {
       rules: Array.isArray(common.rules) ? common.rules : [],
       primaryButtonText: common.primaryButtonText || "",
       primaryButtonUrl: common.primaryButtonUrl || "",
+      primaryButtonAppUrl: common.primaryButtonAppUrl || common.primaryButtonUrl || "",
+      primaryButtonWebUrl: common.primaryButtonWebUrl || common.primaryButtonUrl || "",
       secondaryButtonText: common.secondaryButtonText || "",
       secondaryButtonUrl: common.secondaryButtonUrl || ""
     },
@@ -1181,7 +1255,7 @@ function collectWidgetFromNode(node) {
 
   widget.remainingTime = { ...DEFAULT_REMAINING_TIME };
   widget.completedText = node.querySelector(".widget-completed-text").value.trim();
-  widget.cardUrl = node.querySelector(".widget-card-url").value.trim();
+  widget.cardUrl = node.querySelector(".widget-app-card-url").value.trim();
   return widget;
 }
 
@@ -1254,7 +1328,7 @@ function buildJson() {
 
   common.rules = collectRules();
   common.primaryButtonText = fields.primaryButtonText.value.trim();
-  common.primaryButtonUrl = fields.primaryButtonUrl.value.trim();
+  common.primaryButtonUrl = fields.primaryButtonAppUrl.value.trim();
   common.secondaryButtonText = fields.secondaryButtonText.value.trim();
   common.secondaryButtonUrl = fields.secondaryButtonUrl.value.trim();
 
@@ -1315,6 +1389,7 @@ function buildWebJson() {
   const data = cloneData(buildJson());
   applyWebLineBreaksToPromoBlock(data.common);
   applyWebLineBreaksToPromoBlock(data.guest);
+  applyPromoWebUrls(data);
   return data;
 }
 
@@ -1515,7 +1590,7 @@ function escapeHtml(value) {
 function renderPreview(data) {
   const { common } = data;
   const promoHeader = common.promoHeader || {};
-  previewTitle.textContent = common.title || promoHeader.title || "Акция";
+  previewTitle.textContent = common.title || promoHeader.title || DEFAULT_PROMO_TITLE;
   const bannerTitle = promoHeader.title || common.header || "Заголовок акции";
   const bannerStyle = promoHeader.backgroundUrl
     ? ` style="background-image: url('${escapeHtml(promoHeader.backgroundUrl)}')"`
@@ -1528,6 +1603,14 @@ function renderPreview(data) {
     : "";
   const intro = common.content ? `<p class="preview-intro">${escapeHtml(common.content)}</p>` : "";
   const rules = common.rules.map(renderRulePreview).join("");
+  const primaryButton = common.primaryButtonText
+    ? `<a class="primary-preview" href="${escapeHtml(common.primaryButtonUrl || "#")}">${escapeHtml(common.primaryButtonText)}</a>`
+    : "";
+  const secondaryButton = common.secondaryButtonText
+    ? common.secondaryButtonUrl
+      ? `<a class="secondary-preview" href="${escapeHtml(common.secondaryButtonUrl)}">${escapeHtml(common.secondaryButtonText)}</a>`
+      : `<span class="secondary-preview secondary-preview-link">${escapeHtml(common.secondaryButtonText)}</span>`
+    : "";
 
   preview.innerHTML = `
     <div class="promo-banner"${bannerStyle}>
@@ -1539,8 +1622,8 @@ function renderPreview(data) {
     </div>
     ${intro}
     ${rules}
-    ${common.primaryButtonText ? `<a class="primary-preview" href="${escapeHtml(common.primaryButtonUrl || "#")}">${escapeHtml(common.primaryButtonText)}</a>` : ""}
-    ${common.secondaryButtonText ? `<a class="secondary-preview" href="${escapeHtml(common.secondaryButtonUrl || "#")}">${escapeHtml(common.secondaryButtonText)}</a>` : ""}
+    ${primaryButton}
+    ${secondaryButton}
   `;
 }
 
@@ -1561,12 +1644,13 @@ function renderRulePreview(rule) {
 
 function renderWidget(widget) {
   const progressType = getWidgetProgressType(widget.progress?.type);
-  const bg = widget.imageUrl ? ` style="background-image: linear-gradient(rgba(8, 18, 22, 0.28), rgba(8, 18, 22, 0.55)), url('${escapeHtml(widget.imageUrl)}')"` : "";
-  const progressLabel = widget.progress?.label || widget.progressText || "Ставок сделано на сумму:";
+  const progressLabel = widget.progress?.label || widget.progressText || DEFAULT_WIDGET_PROGRESS_LABEL;
   const cardImage = widget.cardImageUrl
     ? `<img class="progress-card-image" src="${escapeHtml(widget.cardImageUrl)}" alt="">`
     : "";
-  const subtitle = widget.subtitle ? `<p class="progress-subtitle">${escapeHtml(widget.subtitle)}</p>` : "";
+  const subtitle = widget.subtitle
+    ? `<p class="progress-subtitle">${escapeHtml(widget.subtitle)}</p>`
+    : `<p class="progress-subtitle">${escapeHtml(DEFAULT_WIDGET_SUBTITLE)}</p>`;
   const scale = progressType === "none"
     ? ""
     : `
@@ -1584,15 +1668,16 @@ function renderWidget(widget) {
     : "";
   const ruleText = widget.ruleText ? `<p class="progress-rule-text">${escapeHtml(widget.ruleText)}</p>` : "";
   const completedText = widget.completedText ? `<p class="progress-completed">${escapeHtml(widget.completedText)}</p>` : "";
-  const clickableClass = widget.cardUrl ? " is-clickable" : "";
-  const tag = widget.cardUrl ? "a" : "div";
-  const href = widget.cardUrl ? ` href="${escapeHtml(widget.cardUrl)}"` : "";
+  const cardUrl = widget.cardUrl || "";
+  const clickableClass = cardUrl ? " is-clickable" : "";
+  const tag = cardUrl ? "a" : "div";
+  const href = cardUrl ? ` href="${escapeHtml(cardUrl)}"` : "";
 
   return `
-    <${tag} class="progress-widget${clickableClass}"${href}${bg}>
+    <${tag} class="progress-widget${clickableClass}"${href}>
       <div class="progress-widget-top">
         <div class="progress-widget-copy">
-          <strong>${escapeHtml(widget.title || "Твой прогресс")}</strong>
+          <strong>${escapeHtml(widget.title || "Твой прогресс")}<span class="progress-chevron" aria-hidden="true">›</span></strong>
           ${subtitle}
         </div>
         ${cardImage}
