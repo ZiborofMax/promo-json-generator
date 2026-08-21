@@ -193,7 +193,9 @@ const fields = {
   secondaryButtonUrl: document.querySelector("#secondaryButtonUrl")
 };
 const guestModeFields = document.querySelector("#guestModeFields");
-const guestCustomFields = document.querySelector("#guestCustomFields");
+const guestSectionPanel = document.querySelector("#guestSectionPanel");
+const guestRulesList = document.querySelector("#guestRulesList");
+const guestRuleTemplate = document.querySelector("#guestRuleTemplate");
 const promoHeaderAnimationFields = document.querySelector("#promoHeaderAnimationFields");
 const rulesList = document.querySelector("#rulesList");
 const ruleTemplate = document.querySelector("#ruleTemplate");
@@ -211,7 +213,6 @@ const statusBadge = document.querySelector("#statusBadge");
 let jsonImportTimer = 0;
 let tournamentJsonImportTimer = 0;
 let activeView = "promo";
-let customGuestRules = null;
 
 const viewTabs = document.querySelectorAll(".view-tab");
 const topbarEyebrow = document.querySelector("#topbarEyebrow");
@@ -478,7 +479,6 @@ function applyDataToForm(data, options = {}) {
   fields.guestPrimaryButtonUrl.value = guest.primaryButtonUrl || "";
   fields.guestSecondaryButtonText.value = guest.secondaryButtonText || "";
   fields.guestSecondaryButtonUrl.value = guest.secondaryButtonUrl || "";
-  customGuestRules = Array.isArray(guest.rules) ? cloneData(guest.rules) : null;
   fields.primaryButtonText.value = common.primaryButtonText || "";
   fields.primaryButtonUrl.value = common.primaryButtonUrl || "";
   fields.secondaryButtonText.value = common.secondaryButtonText || "";
@@ -491,15 +491,52 @@ function applyDataToForm(data, options = {}) {
       content: htmlBreaksToText(safeRule.content || "")
     });
   });
+  guestRulesList.innerHTML = "";
+  const guestRules = Array.isArray(guest.rules) ? guest.rules : [];
+  if (guestRules.length) {
+    guestRules.forEach((rule) => addGuestRule(rule));
+  } else if (data.guestEnabled && data.guestContentMode !== "duplicate") {
+    addGuestRule();
+  }
   syncPromoChromeFields();
   updateAll();
 }
 
 function syncPromoChromeFields() {
   const guestOn = fields.guestEnabled.checked;
+  const guestCustom = guestOn && fields.guestContentMode.value === "custom";
   guestModeFields.classList.toggle("hidden", !guestOn);
-  guestCustomFields.classList.toggle("hidden", !guestOn || fields.guestContentMode.value !== "custom");
+  guestSectionPanel.classList.toggle("hidden", !guestCustom);
   promoHeaderAnimationFields.classList.toggle("hidden", fields.promoHeaderAnimationType.value !== "rive");
+  if (guestCustom && !guestRulesList.children.length) {
+    addGuestRule();
+  }
+}
+
+function addGuestRule(rule = { header: "", content: "" }) {
+  const node = guestRuleTemplate.content.firstElementChild.cloneNode(true);
+  node.querySelector(".guest-rule-header").value = rule.header || "";
+  node.querySelector(".guest-rule-content").value = htmlBreaksToText(rule.content || "");
+  node.querySelector(".remove-guest-rule").addEventListener("click", () => {
+    node.remove();
+    renumberGuestRules();
+    updateAll();
+  });
+  guestRulesList.append(node);
+  renumberGuestRules();
+}
+
+function renumberGuestRules() {
+  [...guestRulesList.children].forEach((node, index) => {
+    node.querySelector("h3").textContent = `Раздел гостя ${index + 1}`;
+  });
+}
+
+function collectGuestRules() {
+  return [...guestRulesList.children].map((node) => ({
+    header: node.querySelector(".guest-rule-header").value.trim(),
+    content: node.querySelector(".guest-rule-content").value
+  }));
 }
 
 function addRule(rule = { header: "", content: "" }) {
@@ -1184,17 +1221,13 @@ function buildPromoHeaderFromForm() {
   });
 }
 
-function buildGuestCustom(commonRules) {
-  const rules = Array.isArray(customGuestRules) && customGuestRules.length
-    ? cloneData(customGuestRules)
-    : (commonRules || []).map(() => ({ header: "", content: "" }));
-
+function buildGuestCustom() {
   return {
     title: fields.guestTitle.value.trim(),
     imageUrl: fields.guestImageUrl.value.trim(),
     header: fields.guestHeader.value.trim(),
     content: fields.guestContent.value,
-    rules,
+    rules: collectGuestRules(),
     primaryButtonText: fields.guestPrimaryButtonText.value.trim(),
     primaryButtonUrl: fields.guestPrimaryButtonUrl.value.trim(),
     secondaryButtonText: fields.guestSecondaryButtonText.value.trim(),
@@ -1205,11 +1238,15 @@ function buildGuestCustom(commonRules) {
 function buildJson() {
   const common = {
     headerType: DEFAULT_HEADER_TYPE,
-    title: fields.title.value.trim(),
     imageUrl: fields.imageUrl.value.trim(),
     header: fields.header.value.trim(),
     promoHeader: buildPromoHeaderFromForm()
   };
+
+  const title = fields.title.value.trim();
+  if (title) {
+    common.title = title;
+  }
 
   if (fields.content.value.trim()) {
     common.content = fields.content.value;
@@ -1233,7 +1270,7 @@ function buildJson() {
   data.common = common;
 
   if (data.guestEnabled) {
-    data.guest = data.guestContentMode === "duplicate" ? cloneData(common) : buildGuestCustom(common.rules);
+    data.guest = data.guestContentMode === "duplicate" ? cloneData(common) : buildGuestCustom();
   }
 
   data.failures = [
@@ -1910,6 +1947,10 @@ viewTabs.forEach((tab) => {
 });
 document.querySelector("#addRuleButton").addEventListener("click", () => {
   addRule();
+  updateAll();
+});
+document.querySelector("#addGuestRuleButton").addEventListener("click", () => {
+  addGuestRule();
   updateAll();
 });
 document.querySelector("#addTournamentButton").addEventListener("click", () => {

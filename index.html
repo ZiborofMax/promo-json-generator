@@ -130,46 +130,6 @@
                     <option value="duplicate">duplicate — дублирует весь раздел</option>
                   </select>
                 </label>
-                <div id="guestCustomFields" class="hidden">
-                  <div class="field-grid">
-                    <label>
-                      Guest title
-                      <input id="guestTitle" type="text" placeholder="Акция" />
-                    </label>
-                    <label>
-                      Guest header
-                      <input id="guestHeader" type="text" />
-                    </label>
-                  </div>
-                  <label>
-                    Guest image URL
-                    <input id="guestImageUrl" type="url" placeholder="https://www.ligastavok.ru/files/file/.../image.webp" />
-                  </label>
-                  <label>
-                    Guest content
-                    <textarea id="guestContent" rows="3" placeholder="Зарегистрируйтесь или войдите в аккаунт, чтобы принять участие в акции"></textarea>
-                  </label>
-                  <div class="field-grid">
-                    <label>
-                      Guest primary text
-                      <input id="guestPrimaryButtonText" type="text" placeholder="Войти или зарегистрироваться" />
-                    </label>
-                    <label>
-                      Guest primary URL
-                      <input id="guestPrimaryButtonUrl" type="url" placeholder="https://www.ligastavok.ru/login" />
-                    </label>
-                  </div>
-                  <div class="field-grid">
-                    <label>
-                      Guest secondary text
-                      <input id="guestSecondaryButtonText" type="text" placeholder="Полные правила акции" />
-                    </label>
-                    <label>
-                      Guest secondary URL
-                      <input id="guestSecondaryButtonUrl" type="url" placeholder="https://www.ligastavok.ru/files/file/.../rules.pdf" />
-                    </label>
-                  </div>
-                </div>
               </div>
             </section>
 
@@ -190,7 +150,7 @@
               <div class="field-grid">
                 <label>
                   Primary text
-                  <input id="primaryButtonText" type="text" placeholder="За фрибетом" />
+                  <input id="primaryButtonText" type="text" placeholder="Заключить пари" />
                 </label>
                 <label>
                   Primary URL
@@ -205,6 +165,61 @@
                 <label>
                   Secondary URL
                   <input id="secondaryButtonUrl" type="url" placeholder="https://www.ligastavok.ru/files/file/.../rules.pdf" />
+                </label>
+              </div>
+            </section>
+
+            <section class="panel hidden" id="guestSectionPanel">
+              <div class="panel-heading">
+                <h2>Гостевой раздел</h2>
+              </div>
+              <p class="field-note">Отдельный контент для неавторизованных пользователей при <code>guestContentMode: custom</code>.</p>
+              <div class="field-grid">
+                <label>
+                  Guest title
+                  <input id="guestTitle" type="text" placeholder="Акция" />
+                </label>
+                <label>
+                  Guest header
+                  <input id="guestHeader" type="text" />
+                </label>
+              </div>
+              <label>
+                Guest image URL
+                <input id="guestImageUrl" type="url" placeholder="https://www.ligastavok.ru/files/file/.../image.webp" />
+              </label>
+              <label>
+                Guest content
+                <textarea id="guestContent" rows="3" placeholder="Зарегистрируйтесь или войдите в аккаунт, чтобы принять участие в акции"></textarea>
+              </label>
+              <div class="panel-heading">
+                <h2>Разделы гостя</h2>
+              </div>
+              <div class="rules-list" id="guestRulesList"></div>
+              <div class="section-footer">
+                <button class="secondary" id="addGuestRuleButton" type="button">Добавить раздел гостя</button>
+              </div>
+              <div class="panel-heading">
+                <h2>Кнопки гостя</h2>
+              </div>
+              <div class="field-grid">
+                <label>
+                  Guest primary text
+                  <input id="guestPrimaryButtonText" type="text" placeholder="Войти или зарегистрироваться" />
+                </label>
+                <label>
+                  Guest primary URL
+                  <input id="guestPrimaryButtonUrl" type="url" placeholder="https://www.ligastavok.ru/login" />
+                </label>
+              </div>
+              <div class="field-grid">
+                <label>
+                  Guest secondary text
+                  <input id="guestSecondaryButtonText" type="text" placeholder="Полные правила акции" />
+                </label>
+                <label>
+                  Guest secondary URL
+                  <input id="guestSecondaryButtonUrl" type="url" placeholder="https://www.ligastavok.ru/files/file/.../rules.pdf" />
                 </label>
               </div>
             </section>
@@ -272,6 +287,23 @@
         </div>
       </section>
     </main>
+
+    <template id="guestRuleTemplate">
+      <article class="rule-card guest-rule-card">
+        <div class="rule-card-head">
+          <h3></h3>
+          <button class="icon-button remove-guest-rule" type="button" aria-label="Удалить раздел гостя">×</button>
+        </div>
+        <label>
+          Заголовок раздела
+          <input class="guest-rule-header" type="text" />
+        </label>
+        <label>
+          Текст раздела
+          <textarea class="guest-rule-content" rows="4"></textarea>
+        </label>
+      </article>
+    </template>
 
     <template id="ruleTemplate">
       <article class="rule-card">
