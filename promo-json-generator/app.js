@@ -45,7 +45,7 @@ const templates = {
               title: "Твой прогресс",
               progressText: "Ставок сделано на сумму, ₽:",
               imageUrl: DEFAULT_WIDGET_IMAGE,
-              remainingTime: { dateLabel: "Осталось дней", timeLabel: "Осталось:" }
+              remainingTime: { ...DEFAULT_REMAINING_TIME }
             }
           ]
         },
@@ -132,7 +132,7 @@ const templates = {
               title: "Твой прогресс",
               progressText: "Ставок сделано на сумму, ₽:",
               imageUrl: DEFAULT_WIDGET_IMAGE,
-              remainingTime: { dateLabel: "Осталось дней", timeLabel: "Осталось:" }
+              remainingTime: { ...DEFAULT_REMAINING_TIME }
             }
           ]
         },
@@ -405,7 +405,7 @@ function makeWidgetRule(header, content, campaignId, progressText, title = "Тв
         title,
         progressText,
         imageUrl,
-        remainingTime: { dateLabel: "Осталось дней", timeLabel: "Осталось:" }
+        remainingTime: { ...DEFAULT_REMAINING_TIME }
       }
     ]
   };
@@ -560,6 +560,21 @@ function addRule(rule = { header: "", content: "" }) {
   renumberRules();
 }
 
+function getWidgetProgressType(value) {
+  if (value === "steps" || value === "none") {
+    return value;
+  }
+  return "continuous";
+}
+
+function syncWidgetScaleFields(node) {
+  const scaleFields = node.querySelector(".widget-scale-fields");
+  if (!scaleFields) {
+    return;
+  }
+  scaleFields.classList.toggle("hidden", getWidgetProgressType(node.querySelector(".widget-progress-type").value) === "none");
+}
+
 function getNextWidgetSeed(widgetsList) {
   const previous = widgetsList.querySelector(".widget-editor:last-child");
   if (!previous) {
@@ -583,14 +598,12 @@ function addWidgetCard(widgetsList, widget = {}) {
   const node = widgetTemplate.content.firstElementChild.cloneNode(true);
   const progress = widget.progress && typeof widget.progress === "object" ? widget.progress : {};
   const reward = widget.reward && typeof widget.reward === "object" ? widget.reward : {};
-  const remainingTime = widget.remainingTime && typeof widget.remainingTime === "object" ? widget.remainingTime : DEFAULT_REMAINING_TIME;
 
   node.querySelector(".widget-campaign-id").value = widget.campaignId || "";
   node.querySelector(".widget-title").value = widget.title || "";
-  node.querySelector(".widget-progress-text").value = widget.progressText || "";
+  node.querySelector(".widget-progress-text").value = progress.label || widget.progressText || "";
   node.querySelector(".widget-subtitle").value = widget.subtitle || "";
-  node.querySelector(".widget-progress-type").value = progress.type === "steps" ? "steps" : "continuous";
-  node.querySelector(".widget-progress-label").value = progress.label || widget.progressText || "";
+  node.querySelector(".widget-progress-type").value = getWidgetProgressType(progress.type);
   node.querySelector(".widget-image-url").value = widget.imageUrl || DEFAULT_WIDGET_IMAGE;
   node.querySelector(".widget-card-image-url").value = widget.cardImageUrl || "";
   node.querySelector(".widget-reward-text").value = reward.text || "";
@@ -598,9 +611,12 @@ function addWidgetCard(widgetsList, widget = {}) {
   node.querySelector(".widget-completed-text").value = widget.completedText || "";
   node.querySelector(".widget-card-url").value = widget.cardUrl || "";
   node.querySelector(".widget-rule-text").value = widget.ruleText || "";
-  node.dataset.dateLabel = remainingTime.dateLabel || DEFAULT_REMAINING_TIME.dateLabel;
-  node.dataset.timeLabel = remainingTime.timeLabel || DEFAULT_REMAINING_TIME.timeLabel;
+  syncWidgetScaleFields(node);
 
+  node.querySelector(".widget-progress-type").addEventListener("change", () => {
+    syncWidgetScaleFields(node);
+    updateAll();
+  });
   node.querySelector(".remove-widget").addEventListener("click", () => {
     const ruleNode = widgetsList.closest(".rule-card");
     node.remove();
@@ -1095,7 +1111,7 @@ function collectTerms(node) {
 
 function collectWidgetFromNode(node) {
   const progressText = node.querySelector(".widget-progress-text").value.trim();
-  const progressLabel = node.querySelector(".widget-progress-label").value.trim() || progressText;
+  const progressType = getWidgetProgressType(node.querySelector(".widget-progress-type").value);
   const rewardText = node.querySelector(".widget-reward-text").value.trim();
   const rewardImageUrl = node.querySelector(".widget-reward-image-url").value.trim();
   const ruleText = node.querySelector(".widget-rule-text").value.trim();
@@ -1110,8 +1126,8 @@ function collectWidgetFromNode(node) {
     imageUrl: node.querySelector(".widget-image-url").value.trim() || DEFAULT_WIDGET_IMAGE,
     cardImageUrl: node.querySelector(".widget-card-image-url").value.trim(),
     progress: {
-      type: node.querySelector(".widget-progress-type").value === "steps" ? "steps" : "continuous",
-      label: progressLabel
+      type: progressType,
+      label: progressText
     }
   };
 
@@ -1126,10 +1142,7 @@ function collectWidgetFromNode(node) {
     };
   }
 
-  widget.remainingTime = {
-    dateLabel: node.dataset.dateLabel || DEFAULT_REMAINING_TIME.dateLabel,
-    timeLabel: node.dataset.timeLabel || DEFAULT_REMAINING_TIME.timeLabel
-  };
+  widget.remainingTime = { ...DEFAULT_REMAINING_TIME };
   widget.completedText = node.querySelector(".widget-completed-text").value.trim();
   widget.cardUrl = node.querySelector(".widget-card-url").value.trim();
   return widget;
@@ -1510,25 +1523,48 @@ function renderRulePreview(rule) {
 }
 
 function renderWidget(widget) {
-  const bg = widget.imageUrl ? ` style="background-image: linear-gradient(rgba(9, 18, 16, 0.45), rgba(9, 18, 16, 0.45)), url('${escapeHtml(widget.imageUrl)}')"` : "";
-  const progressLabel = widget.progress?.label || widget.progressText || "Прогресс:";
-  const reward = widget.reward?.text
-    ? `<span class="progress-reward">${escapeHtml(widget.reward.text)}</span>`
+  const progressType = getWidgetProgressType(widget.progress?.type);
+  const bg = widget.imageUrl ? ` style="background-image: linear-gradient(rgba(8, 18, 22, 0.28), rgba(8, 18, 22, 0.55)), url('${escapeHtml(widget.imageUrl)}')"` : "";
+  const progressLabel = widget.progress?.label || widget.progressText || "Ставок сделано на сумму:";
+  const cardImage = widget.cardImageUrl
+    ? `<img class="progress-card-image" src="${escapeHtml(widget.cardImageUrl)}" alt="">`
     : "";
   const subtitle = widget.subtitle ? `<p class="progress-subtitle">${escapeHtml(widget.subtitle)}</p>` : "";
-  return `
-    <div class="progress-widget"${bg}>
-      <div class="progress-widget-head">
-        <strong>${escapeHtml(widget.title || "Твой прогресс")}</strong>
-        ${reward}
-      </div>
-      ${subtitle}
+  const scale = progressType === "none"
+    ? ""
+    : `
       <div class="progress-row">
         <span>${escapeHtml(progressLabel)}</span>
-        <span>${widget.progress?.type === "steps" ? "2 из 5" : "1 280 из 2 000"}</span>
+        <span>0/1</span>
       </div>
-      <div class="bar"><span></span></div>
-    </div>
+      <div class="bar${progressType === "steps" ? " is-steps" : ""}"><span></span></div>
+    `;
+  const rewardIcon = widget.reward?.imageUrl
+    ? `<img src="${escapeHtml(widget.reward.imageUrl)}" alt="">`
+    : "";
+  const reward = widget.reward?.text || widget.reward?.imageUrl
+    ? `<div class="progress-reward-row">${rewardIcon}<span>${escapeHtml(widget.reward.text || "")}</span></div>`
+    : "";
+  const ruleText = widget.ruleText ? `<p class="progress-rule-text">${escapeHtml(widget.ruleText)}</p>` : "";
+  const completedText = widget.completedText ? `<p class="progress-completed">${escapeHtml(widget.completedText)}</p>` : "";
+  const clickableClass = widget.cardUrl ? " is-clickable" : "";
+  const tag = widget.cardUrl ? "a" : "div";
+  const href = widget.cardUrl ? ` href="${escapeHtml(widget.cardUrl)}"` : "";
+
+  return `
+    <${tag} class="progress-widget${clickableClass}"${href}${bg}>
+      <div class="progress-widget-top">
+        <div class="progress-widget-copy">
+          <strong>${escapeHtml(widget.title || "Твой прогресс")}</strong>
+          ${subtitle}
+        </div>
+        ${cardImage}
+      </div>
+      ${scale}
+      ${reward}
+      ${ruleText}
+      ${completedText}
+    </${tag}>
   `;
 }
 

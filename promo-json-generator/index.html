@@ -336,64 +336,62 @@
             <input class="widget-title" type="text" placeholder="Сделай ставки на сумму от 250 000 ₽" />
           </label>
         </div>
-        <div class="field-grid">
-          <label>
-            Progress text
-            <span class="field-note">Для старых версий</span>
-            <input class="widget-progress-text" type="text" placeholder="Ставок сделано на сумму:" />
-          </label>
-          <label>
-            Subtitle
-            <input class="widget-subtitle" type="text" placeholder="И получи два фрибета по 5000" />
-          </label>
-        </div>
-        <div class="field-grid">
-          <label>
-            Тип прогресса
-            <select class="widget-progress-type">
-              <option value="continuous">continuous</option>
-              <option value="steps">steps</option>
-            </select>
-          </label>
-          <label>
-            Progress label
-            <input class="widget-progress-label" type="text" placeholder="Ставок сделано на сумму:" />
-          </label>
-        </div>
+        <label>
+          Subtitle
+          <input class="widget-subtitle" type="text" placeholder="И получи два фрибета по 5000" />
+        </label>
         <div class="field-grid">
           <label>
             Фон виджета
             <input class="widget-image-url" type="url" placeholder="https://www.ligastavok.ru/files/file/.../Bg.webp" />
           </label>
           <label>
-            Картинка карточки
+            Картинка справа
             <input class="widget-card-image-url" type="url" placeholder="https://www.ligastavok.ru/files/file/.../Icon.webp" />
           </label>
         </div>
         <div class="field-grid">
           <label>
+            Тип шкалы
+            <select class="widget-progress-type">
+              <option value="continuous">continuous — сплошная шкала</option>
+              <option value="steps">steps — шаги</option>
+              <option value="none">none — без шкалы</option>
+            </select>
+          </label>
+          <label class="widget-scale-fields">
+            Подпись над шкалой
+            <input class="widget-progress-text" type="text" placeholder="Ставок сделано на сумму" />
+          </label>
+        </div>
+        <p class="field-note">Reward — текст и иконка под шкалой</p>
+        <div class="field-grid">
+          <label>
             Reward text
-            <input class="widget-reward-text" type="text" placeholder="+ 2 x 5000" />
+            <input class="widget-reward-text" type="text" placeholder="+ 2 × 5000" />
           </label>
           <label>
             Reward image URL
-            <input class="widget-reward-image-url" type="url" placeholder="https://www.ligastavok.ru/files/file/.../reward.webp" />
-          </label>
-        </div>
-        <div class="field-grid">
-          <label>
-            Completed text
-            <input class="widget-completed-text" type="text" placeholder="Фрибет получен" />
-          </label>
-          <label>
-            Card URL
-            <input class="widget-card-url" type="url" placeholder="https://www.ligastavok.ru/home" />
+            <input class="widget-reward-image-url" type="url" placeholder="https://www.ligastavok.ru/files/file/.../coin.webp" />
           </label>
         </div>
         <label>
           Rule text
+          <span class="field-note">Дополнительная строка под reward, на карточке может не показываться</span>
           <input class="widget-rule-text" type="text" placeholder="Учитываются только рассчитанные ставки" />
         </label>
+        <div class="field-grid">
+          <label>
+            Completed text
+            <span class="field-note">Текст внизу после выполнения задания</span>
+            <input class="widget-completed-text" type="text" placeholder="Задание выполнено" />
+          </label>
+          <label>
+            Card URL
+            <span class="field-note">Если ссылка есть, весь прогресс-бар кликабельный</span>
+            <input class="widget-card-url" type="url" placeholder="https://www.ligastavok.ru/bets/live" />
+          </label>
+        </div>
       </article>
     </template>
 
