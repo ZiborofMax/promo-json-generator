@@ -59,24 +59,72 @@
                 Promo ID
                 <textarea id="promoIds" rows="2" placeholder="Введите Promo ID, по которым будет доступен раздел. Можно перечислить несколько через запятую"></textarea>
               </label>
-              <div class="field-grid">
-                <label>
-                  Title
-                  <input id="title" type="text" placeholder="Акция" />
-                </label>
-                <label>
-                  Header
-                  <input id="header" type="text" placeholder="Фрибет 500" />
-                </label>
-              </div>
+              <label>
+                Header
+                <span class="field-note">Для старых версий, в новой шапке не показывается</span>
+                <input id="header" type="text" placeholder="Фрибет 500" />
+              </label>
               <label>
                 Image URL
-                <input id="imageUrl" type="url" placeholder="https://www.ligastavok.ru/files/file/.../image.webp" />
+                <span class="field-note">Для старых версий, в новой шапке не показывается</span>
+                <input id="imageUrl" type="url" value="https://www.ligastavok.ru/files/file/16316/MarketingImg_reBrand.webp" placeholder="https://www.ligastavok.ru/files/file/16316/MarketingImg_reBrand.webp" />
               </label>
               <label>
                 Intro content
                 <textarea id="content" rows="3" placeholder="Короткое описание под заголовком"></textarea>
               </label>
+            </section>
+
+            <section class="panel">
+              <div class="panel-heading">
+                <h2>Баннер</h2>
+              </div>
+              <p class="field-note">Новая шапка <code>headerType: marketing2</code>. Title рисуется поверх баннера.</p>
+              <label>
+                Title на баннере
+                <input id="promoHeaderTitle" type="text" placeholder="ФРИБЕТ ВСЕМ. СТАРЫМ И НОВЫМ ПОЛЬЗОВАТЕЛЯМ" />
+              </label>
+              <label>
+                Фон баннера
+                <input id="promoHeaderBackgroundUrl" type="url" value="https://www.ligastavok.ru/files/file/18198/BG_Patern.webp" placeholder="https://www.ligastavok.ru/files/file/18198/BG_Patern.webp" />
+              </label>
+              <label>
+                Картинка поверх фона
+                <input id="promoHeaderImageUrl" type="url" value="https://www.ligastavok.ru/files/file/18185/Image_2x.webp" placeholder="https://www.ligastavok.ru/files/file/18185/Image_2x.webp" />
+              </label>
+              <label>
+                Анимация
+                <select id="promoHeaderAnimationType">
+                  <option value="none">none — без анимации</option>
+                  <option value="rive">rive — анимация на баннере</option>
+                </select>
+              </label>
+              <div id="promoHeaderAnimationFields" class="hidden">
+                <label>
+                  Файл анимации URL
+                  <span class="field-note">Ссылка на уже загруженный .riv в файловом хранилище</span>
+                  <input id="promoHeaderAnimationUrl" type="url" placeholder="https://www.ligastavok.ru/files/file/.../confettis.riv" />
+                </label>
+              </div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-heading">
+                <h2>Гостевой режим</h2>
+              </div>
+              <label class="check-row">
+                <input id="guestEnabled" type="checkbox" />
+                Показывать акцию гостям
+              </label>
+              <div id="guestModeFields" class="hidden">
+                <label>
+                  Тип контента
+                  <select id="guestContentMode">
+                    <option value="custom">custom — отдельный контент</option>
+                    <option value="duplicate">duplicate — дублирует весь раздел</option>
+                  </select>
+                </label>
+              </div>
             </section>
 
             <section class="panel">
@@ -96,21 +144,80 @@
               <div class="field-grid">
                 <label>
                   Primary text
-                  <input id="primaryButtonText" type="text" placeholder="За фрибетом" />
+                  <input id="primaryButtonText" type="text" placeholder="Заключить пари" />
                 </label>
                 <label>
-                  Primary URL
-                  <input id="primaryButtonUrl" type="url" placeholder="https://www.ligastavok.ru/home" />
+                  Primary URL APP
+                  <input id="primaryButtonAppUrl" type="url" placeholder="https://www.ligastavok.ru/home" />
                 </label>
               </div>
               <div class="field-grid">
                 <label>
-                  Secondary text
-                  <input id="secondaryButtonText" type="text" placeholder="Полные правила акции" />
+                  Primary URL WEB
+                  <input id="primaryButtonWebUrl" type="url" placeholder="/home" />
                 </label>
                 <label>
-                  Secondary URL
-                  <input id="secondaryButtonUrl" type="url" placeholder="https://www.ligastavok.ru/files/file/.../rules.pdf" />
+                  Secondary text
+                  <input id="secondaryButtonText" type="text" placeholder="Полные правила акции" value="Полные правила акции" />
+                </label>
+              </div>
+              <label>
+                Secondary URL
+                <input id="secondaryButtonUrl" type="url" placeholder="" />
+              </label>
+            </section>
+
+            <section class="panel hidden" id="guestSectionPanel">
+              <div class="panel-heading">
+                <h2>Гостевой раздел</h2>
+              </div>
+              <p class="field-note">Отдельный контент для неавторизованных пользователей при <code>guestContentMode: custom</code>.</p>
+              <div class="field-grid">
+                <label>
+                  Guest title
+                  <input id="guestTitle" type="text" placeholder="Акция" />
+                </label>
+                <label>
+                  Guest header
+                  <input id="guestHeader" type="text" />
+                </label>
+              </div>
+              <label>
+                Guest image URL
+                <input id="guestImageUrl" type="url" placeholder="https://www.ligastavok.ru/files/file/.../image.webp" />
+              </label>
+              <label>
+                Guest content
+                <textarea id="guestContent" rows="3" placeholder="Зарегистрируйтесь или войдите в аккаунт, чтобы принять участие в акции"></textarea>
+              </label>
+              <div class="panel-heading">
+                <h2>Разделы гостя</h2>
+              </div>
+              <div class="rules-list" id="guestRulesList"></div>
+              <div class="section-footer">
+                <button class="secondary" id="addGuestRuleButton" type="button">Добавить раздел гостя</button>
+              </div>
+              <div class="panel-heading">
+                <h2>Кнопки гостя</h2>
+              </div>
+              <div class="field-grid">
+                <label>
+                  Guest primary text
+                  <input id="guestPrimaryButtonText" type="text" placeholder="Войти или зарегистрироваться" />
+                </label>
+                <label>
+                  Guest primary URL
+                  <input id="guestPrimaryButtonUrl" type="url" placeholder="https://www.ligastavok.ru/login" />
+                </label>
+              </div>
+              <div class="field-grid">
+                <label>
+                  Guest secondary text
+                  <input id="guestSecondaryButtonText" type="text" placeholder="Полные правила акции" />
+                </label>
+                <label>
+                  Guest secondary URL
+                  <input id="guestSecondaryButtonUrl" type="url" placeholder="https://www.ligastavok.ru/files/file/.../rules.pdf" />
                 </label>
               </div>
             </section>
@@ -179,6 +286,23 @@
       </section>
     </main>
 
+    <template id="guestRuleTemplate">
+      <article class="rule-card guest-rule-card">
+        <div class="rule-card-head">
+          <h3></h3>
+          <button class="icon-button remove-guest-rule" type="button" aria-label="Удалить раздел гостя">×</button>
+        </div>
+        <label>
+          Заголовок раздела
+          <input class="guest-rule-header" type="text" />
+        </label>
+        <label>
+          Текст раздела
+          <textarea class="guest-rule-content" rows="4"></textarea>
+        </label>
+      </article>
+    </template>
+
     <template id="ruleTemplate">
       <article class="rule-card">
         <div class="rule-card-head">
@@ -196,7 +320,7 @@
         <div class="toggles">
           <label class="check-row">
             <input class="rule-widget-enabled" type="checkbox" />
-            Прогресс-виджет
+            Прогресс-бары
           </label>
           <label class="check-row">
             <input class="rule-terms-enabled" type="checkbox" />
@@ -204,26 +328,14 @@
           </label>
         </div>
         <div class="widget-fields hidden">
-          <div class="field-grid">
-            <label>
-              Campaign ID
-              <input class="widget-campaign-id" type="text" />
-            </label>
-            <label>
-              Widget title
-              <input class="widget-title" type="text" />
-            </label>
+          <div class="terms-heading">
+            <div>
+              <h4>Прогресс-бары</h4>
+              <p>В одном разделе можно добавить несколько виджетов подряд</p>
+            </div>
+            <button class="secondary add-widget" type="button">Добавить прогресс-бар</button>
           </div>
-          <div class="field-grid">
-            <label>
-              Progress text
-              <input class="widget-progress-text" type="text" />
-            </label>
-            <label>
-              Widget image URL
-              <input class="widget-image-url" type="url" />
-            </label>
-          </div>
+          <div class="widgets-list"></div>
         </div>
         <div class="terms-fields hidden">
           <div class="terms-heading">
@@ -234,6 +346,88 @@
             <button class="secondary add-term" type="button">Добавить плитку</button>
           </div>
           <div class="terms-list"></div>
+        </div>
+      </article>
+    </template>
+
+    <template id="widgetTemplate">
+      <article class="widget-editor">
+        <div class="term-editor-head">
+          <strong></strong>
+          <button class="icon-button remove-widget" type="button" aria-label="Удалить прогресс-бар">×</button>
+        </div>
+        <div class="field-grid">
+          <label>
+            Campaign ID
+            <input class="widget-campaign-id" type="text" />
+          </label>
+          <label>
+            Title
+            <input class="widget-title" type="text" placeholder="Сделай ставки на сумму от 250 000 ₽" />
+          </label>
+        </div>
+        <label>
+          Subtitle
+          <input class="widget-subtitle" type="text" value="Учитываются только рассчитанные ставки" placeholder="Учитываются только рассчитанные ставки" />
+        </label>
+        <div class="field-grid">
+          <label>
+            Фон виджета
+            <input class="widget-image-url" type="url" placeholder="https://www.ligastavok.ru/files/file/.../Bg.webp" />
+          </label>
+          <label>
+            Картинка справа
+            <input class="widget-card-image-url" type="url" placeholder="https://www.ligastavok.ru/files/file/.../Icon.webp" />
+          </label>
+        </div>
+        <div class="field-grid">
+          <label>
+            Тип шкалы
+            <select class="widget-progress-type">
+              <option value="continuous">continuous — сплошная шкала</option>
+              <option value="steps">steps — шаги</option>
+              <option value="none">none — без шкалы</option>
+            </select>
+          </label>
+          <label class="widget-scale-fields">
+            Подпись над шкалой
+            <input class="widget-progress-text" type="text" value="Ставок сделано на сумму" placeholder="Ставок сделано на сумму" />
+          </label>
+        </div>
+        <p class="field-note">Reward — текст и иконка под шкалой</p>
+        <div class="field-grid">
+          <label>
+            Reward text
+            <input class="widget-reward-text" type="text" placeholder="+ 2 × 5000" />
+          </label>
+          <label>
+            Reward image URL
+            <input class="widget-reward-image-url" type="url" placeholder="https://www.ligastavok.ru/files/file/.../coin.webp" />
+          </label>
+        </div>
+        <label>
+          Rule text
+          <span class="field-note">Дополнительная строка под reward, на карточке может не показываться</span>
+          <input class="widget-rule-text" type="text" placeholder="Учитываются только рассчитанные ставки" />
+        </label>
+        <div class="field-grid">
+          <label>
+            Completed text
+            <span class="field-note">Текст внизу после выполнения задания</span>
+            <input class="widget-completed-text" type="text" placeholder="Задание выполнено" />
+          </label>
+        </div>
+        <div class="field-grid">
+          <label>
+            Card URL APP
+            <span class="field-note">Попадает в «Скопировать APP»</span>
+            <input class="widget-app-card-url" type="url" placeholder="https://www.ligastavok.ru/bets/live" />
+          </label>
+          <label>
+            Card URL WEB
+            <span class="field-note">Попадает в «Скопировать WEB»</span>
+            <input class="widget-web-card-url" type="url" placeholder="/bets/live" />
+          </label>
         </div>
       </article>
     </template>

@@ -1,14 +1,53 @@
 const DEFAULT_WIDGET_IMAGE = "https://www.ligastavok.ru/files/file/16326/Marketing_widgetProgressBar_Bg.webp";
 const DEFAULT_TERM_IMAGE = "https://www.ligastavok.ru/files/file/11160/Freebet_3x.webp";
+const DEFAULT_LEGACY_IMAGE_URL = "https://www.ligastavok.ru/files/file/16316/MarketingImg_reBrand.webp";
+const DEFAULT_BANNER_BACKGROUND_URL = "https://www.ligastavok.ru/files/file/18198/BG_Patern.webp";
+const DEFAULT_BANNER_OVERLAY_IMAGE_URL = "https://www.ligastavok.ru/files/file/18185/Image_2x.webp";
+const LEGACY_BANNER_OVERLAY_IMAGE_URLS = [
+  "https://www.ligastavok.ru/files/file/14559/freebetVsem_marketingPromoImg.webp",
+  DEFAULT_LEGACY_IMAGE_URL
+];
+const LEGACY_SECONDARY_BUTTON_URL = "https://www.ligastavok.ru/files/file/16671/FREEBETVSEM.pdf";
+const DEFAULT_WIDGET_SUBTITLE = "Учитываются только рассчитанные ставки";
+const DEFAULT_WIDGET_PROGRESS_LABEL = "Ставок сделано на сумму";
+const DEFAULT_PROMO_TITLE = "Акция";
 const TOURNAMENT_SECONDARY_BUTTON_TEXT = "Полные правила";
+const DEFAULT_HEADER_TYPE = "marketing2";
+const DEFAULT_REMAINING_TIME = { dateLabel: "Осталось дней", timeLabel: "Осталось" };
+
+function makePromoHeader({
+  header = "",
+  imageUrl = DEFAULT_BANNER_OVERLAY_IMAGE_URL,
+  backgroundUrl = DEFAULT_BANNER_BACKGROUND_URL,
+  animationType = "none",
+  animationUrl = ""
+} = {}) {
+  const promoHeader = {
+    backgroundUrl,
+    imageUrl,
+    animationType: animationType === "rive" ? "rive" : "none",
+    title: header
+  };
+
+  if (promoHeader.animationType === "rive") {
+    promoHeader.animationUrl = animationUrl;
+  }
+
+  return promoHeader;
+}
 
 const templates = {
   offer: {
     switcherByPromoId: ["S_FBV_VGD500_2305", "TESTDV"],
     common: {
       title: "Акция",
+      headerType: DEFAULT_HEADER_TYPE,
       imageUrl: "https://www.ligastavok.ru/files/file/14559/freebetVsem_marketingPromoImg.webp",
       header: "Фрибет 500",
+      promoHeader: makePromoHeader({
+        header: "Фрибет 500",
+        imageUrl: DEFAULT_BANNER_OVERLAY_IMAGE_URL
+      }),
       content: "",
       rules: [
         {
@@ -21,9 +60,9 @@ const templates = {
               enabled: true,
               campaignId: "S_FBV_VGD500_2305",
               title: "Твой прогресс",
-              progressText: "Ставок сделано на сумму, ₽:",
+              progressText: DEFAULT_WIDGET_PROGRESS_LABEL,
               imageUrl: DEFAULT_WIDGET_IMAGE,
-              remainingTime: { dateLabel: "Осталось дней", timeLabel: "Осталось:" }
+              remainingTime: { ...DEFAULT_REMAINING_TIME }
             }
           ]
         },
@@ -43,15 +82,20 @@ const templates = {
       primaryButtonText: "За фрибетом",
       primaryButtonUrl: "https://www.ligastavok.ru/PersonalFolder/Accounts/Deposit",
       secondaryButtonText: "Полные правила акции",
-      secondaryButtonUrl: "https://www.ligastavok.ru/files/file/16671/FREEBETVSEM.pdf"
+      secondaryButtonUrl: ""
     }
   },
   tasks: {
     switcherByPromoId: ["TEST_REACT_TASK1", "TESTDV", "S_FBV_ZAD1000_2305"],
     common: {
       title: "Акция",
+      headerType: DEFAULT_HEADER_TYPE,
       imageUrl: "https://www.ligastavok.ru/files/file/16685/marketingimg_rebrand_2.webp",
       header: "Фрибет 1000",
+      promoHeader: makePromoHeader({
+        header: "Фрибет 1000",
+        imageUrl: "https://www.ligastavok.ru/files/file/16685/marketingimg_rebrand_2.webp"
+      }),
       content: "",
       rules: [
         {
@@ -76,15 +120,20 @@ const templates = {
       primaryButtonText: "За фрибетом",
       primaryButtonUrl: "https://www.ligastavok.ru/home",
       secondaryButtonText: "Полные правила акции",
-      secondaryButtonUrl: "https://www.ligastavok.ru/files/file/16671/FREEBETVSEM.pdf"
+      secondaryButtonUrl: ""
     }
   },
   bigGame: {
     switcherByPromoId: ["VERYVIPGRAND1"],
     common: {
       title: "Очень большая игра",
+      headerType: DEFAULT_HEADER_TYPE,
       imageUrl: "https://www.ligastavok.ru/files/file/17495/mail_1080_500.webp",
       header: "До 350 000 фрибетами",
+      promoHeader: makePromoHeader({
+        header: "До 350 000 фрибетами",
+        imageUrl: "https://www.ligastavok.ru/files/file/17495/mail_1080_500.webp"
+      }),
       content:
         "Получи 35 фрибетов по 10 000, последовательно выполняя шаги в течение 30 дней. <br>После выполнения очередного шага заходи в раздел, чтобы отслеживать свой прогресс.<br>Подробности в правилах акции или в сторис. ",
       rules: [
@@ -98,9 +147,9 @@ const templates = {
               enabled: true,
               campaignId: "VERYVIPGRAND1",
               title: "Твой прогресс",
-              progressText: "Ставок сделано на сумму, ₽:",
+              progressText: DEFAULT_WIDGET_PROGRESS_LABEL,
               imageUrl: DEFAULT_WIDGET_IMAGE,
-              remainingTime: { dateLabel: "Осталось дней", timeLabel: "Осталось:" }
+              remainingTime: { ...DEFAULT_REMAINING_TIME }
             }
           ]
         },
@@ -112,15 +161,17 @@ const templates = {
       primaryButtonText: "Заключить пари",
       primaryButtonUrl: "https://www.ligastavok.ru/home",
       secondaryButtonText: "Полные правила акции",
-      secondaryButtonUrl: "https://www.ligastavok.ru/files/file/16671/FREEBETVSEM.pdf"
+      secondaryButtonUrl: ""
     }
   },
   blank: {
     switcherByPromoId: [""],
     common: {
       title: "Акция",
+      headerType: DEFAULT_HEADER_TYPE,
       imageUrl: "",
       header: "",
+      promoHeader: makePromoHeader(),
       content: "",
       rules: [{ header: "Основная информация", content: "" }],
       primaryButtonText: "Участвовать",
@@ -134,17 +185,38 @@ const templates = {
 const form = document.querySelector("#promoForm");
 const fields = {
   promoIds: document.querySelector("#promoIds"),
-  title: document.querySelector("#title"),
   header: document.querySelector("#header"),
   imageUrl: document.querySelector("#imageUrl"),
   content: document.querySelector("#content"),
+  promoHeaderTitle: document.querySelector("#promoHeaderTitle"),
+  promoHeaderBackgroundUrl: document.querySelector("#promoHeaderBackgroundUrl"),
+  promoHeaderImageUrl: document.querySelector("#promoHeaderImageUrl"),
+  promoHeaderAnimationType: document.querySelector("#promoHeaderAnimationType"),
+  promoHeaderAnimationUrl: document.querySelector("#promoHeaderAnimationUrl"),
+  guestEnabled: document.querySelector("#guestEnabled"),
+  guestContentMode: document.querySelector("#guestContentMode"),
+  guestTitle: document.querySelector("#guestTitle"),
+  guestHeader: document.querySelector("#guestHeader"),
+  guestImageUrl: document.querySelector("#guestImageUrl"),
+  guestContent: document.querySelector("#guestContent"),
+  guestPrimaryButtonText: document.querySelector("#guestPrimaryButtonText"),
+  guestPrimaryButtonUrl: document.querySelector("#guestPrimaryButtonUrl"),
+  guestSecondaryButtonText: document.querySelector("#guestSecondaryButtonText"),
+  guestSecondaryButtonUrl: document.querySelector("#guestSecondaryButtonUrl"),
   primaryButtonText: document.querySelector("#primaryButtonText"),
-  primaryButtonUrl: document.querySelector("#primaryButtonUrl"),
+  primaryButtonAppUrl: document.querySelector("#primaryButtonAppUrl"),
+  primaryButtonWebUrl: document.querySelector("#primaryButtonWebUrl"),
   secondaryButtonText: document.querySelector("#secondaryButtonText"),
   secondaryButtonUrl: document.querySelector("#secondaryButtonUrl")
 };
+const guestModeFields = document.querySelector("#guestModeFields");
+const guestSectionPanel = document.querySelector("#guestSectionPanel");
+const guestRulesList = document.querySelector("#guestRulesList");
+const guestRuleTemplate = document.querySelector("#guestRuleTemplate");
+const promoHeaderAnimationFields = document.querySelector("#promoHeaderAnimationFields");
 const rulesList = document.querySelector("#rulesList");
 const ruleTemplate = document.querySelector("#ruleTemplate");
+const widgetTemplate = document.querySelector("#widgetTemplate");
 const termTemplate = document.querySelector("#termTemplate");
 const jsonOutput = document.querySelector("#jsonOutput");
 const templateSelect = document.querySelector("#templateSelect");
@@ -338,7 +410,7 @@ const tournamentTemplateData = {
   ]
 };
 
-function makeWidgetRule(header, content, campaignId, progressText, title = "Твой прогресс", imageUrl = DEFAULT_WIDGET_IMAGE) {
+function makeWidgetRule(header, content, campaignId, progressText = DEFAULT_WIDGET_PROGRESS_LABEL, title = "Твой прогресс", imageUrl = DEFAULT_WIDGET_IMAGE) {
   return {
     header,
     content,
@@ -350,8 +422,10 @@ function makeWidgetRule(header, content, campaignId, progressText, title = "Тв
         campaignId,
         title,
         progressText,
+        subtitle: DEFAULT_WIDGET_SUBTITLE,
         imageUrl,
-        remainingTime: { dateLabel: "Осталось дней", timeLabel: "Осталось:" }
+        progress: { type: "continuous", label: progressText },
+        remainingTime: { ...DEFAULT_REMAINING_TIME }
       }
     ]
   };
@@ -361,18 +435,111 @@ function cloneData(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
+function getDefaultWidgetSeed() {
+  return {
+    subtitle: DEFAULT_WIDGET_SUBTITLE,
+    progressText: DEFAULT_WIDGET_PROGRESS_LABEL,
+    progress: { type: "continuous", label: DEFAULT_WIDGET_PROGRESS_LABEL },
+    imageUrl: DEFAULT_WIDGET_IMAGE,
+    appCardUrl: "",
+    webCardUrl: ""
+  };
+}
+
+function getLastWidgetEditor() {
+  const editors = rulesList.querySelectorAll(".widget-editor");
+  return editors.length ? editors[editors.length - 1] : null;
+}
+
+function getNextWidgetSeed() {
+  const previous = getLastWidgetEditor();
+  if (!previous) {
+    return getDefaultWidgetSeed();
+  }
+
+  return {
+    ...collectWidgetFromNode(previous),
+    appCardUrl: previous.querySelector(".widget-app-card-url").value.trim(),
+    webCardUrl: previous.querySelector(".widget-web-card-url").value.trim()
+  };
+}
+
+function resolveSecondaryButtonUrl(value) {
+  const trimmed = String(value || "").trim();
+  if (!trimmed || trimmed === LEGACY_SECONDARY_BUTTON_URL) {
+    return "";
+  }
+  return trimmed;
+}
+
+function resolveBannerOverlayUrl(value) {
+  const trimmed = String(value || "").trim();
+  if (!trimmed || LEGACY_BANNER_OVERLAY_IMAGE_URLS.includes(trimmed)) {
+    return DEFAULT_BANNER_OVERLAY_IMAGE_URL;
+  }
+  return trimmed;
+}
+
+function applyPromoFormDefaults() {
+  if (!fields.imageUrl.value.trim()) {
+    fields.imageUrl.value = DEFAULT_LEGACY_IMAGE_URL;
+  }
+  if (!fields.promoHeaderBackgroundUrl.value.trim()) {
+    fields.promoHeaderBackgroundUrl.value = DEFAULT_BANNER_BACKGROUND_URL;
+  }
+  fields.promoHeaderImageUrl.value = resolveBannerOverlayUrl(fields.promoHeaderImageUrl.value);
+  if (!fields.secondaryButtonText.value.trim()) {
+    fields.secondaryButtonText.value = "Полные правила акции";
+  }
+  fields.secondaryButtonUrl.value = resolveSecondaryButtonUrl(fields.secondaryButtonUrl.value);
+}
+
+function applyPromoWebUrls(data) {
+  if (!data?.common) {
+    return;
+  }
+
+  const webPrimaryUrl = fields.primaryButtonWebUrl.value.trim();
+  if (webPrimaryUrl) {
+    data.common.primaryButtonUrl = webPrimaryUrl;
+  }
+
+  const ruleNodes = [...rulesList.children];
+  ruleNodes.forEach((ruleNode, ruleIndex) => {
+    const rule = data.common.rules?.[ruleIndex];
+    if (!rule?.widgets) {
+      return;
+    }
+
+    const widgetNodes = [...ruleNode.querySelectorAll(".widgets-list .widget-editor")];
+    widgetNodes.forEach((widgetNode, widgetIndex) => {
+      const webCardUrl = widgetNode.querySelector(".widget-web-card-url").value.trim();
+      if (rule.widgets[widgetIndex] && webCardUrl) {
+        rule.widgets[widgetIndex].cardUrl = webCardUrl;
+      }
+    });
+  });
+}
+
 function createEmptyData() {
   return {
     switcherByPromoId: [],
+    guestEnabled: false,
     common: {
-      title: "",
-      imageUrl: "",
+      title: DEFAULT_PROMO_TITLE,
+      headerType: DEFAULT_HEADER_TYPE,
+      imageUrl: DEFAULT_LEGACY_IMAGE_URL,
       header: "",
+      promoHeader: makePromoHeader({
+        backgroundUrl: DEFAULT_BANNER_BACKGROUND_URL,
+        imageUrl: DEFAULT_BANNER_OVERLAY_IMAGE_URL
+      }),
       content: "",
       rules: [],
       primaryButtonText: "",
-      primaryButtonUrl: "",
-      secondaryButtonText: "",
+      primaryButtonAppUrl: "",
+      primaryButtonWebUrl: "",
+      secondaryButtonText: "Полные правила акции",
       secondaryButtonUrl: ""
     }
   };
@@ -397,17 +564,34 @@ function loadTemplate(name) {
 
 function applyDataToForm(data, options = {}) {
   const common = data.common || {};
+  const promoHeader = common.promoHeader && typeof common.promoHeader === "object" ? common.promoHeader : {};
+  const guest = data.guest && typeof data.guest === "object" ? data.guest : {};
   const promoIds = Array.isArray(data.switcherByPromoId) ? data.switcherByPromoId : [];
 
   fields.promoIds.value = options.clearPromoIds ? "" : promoIds.join(", ");
-  fields.title.value = common.title || "";
   fields.header.value = common.header || "";
   fields.imageUrl.value = common.imageUrl || "";
   fields.content.value = htmlBreaksToText(common.content || "");
+  fields.promoHeaderTitle.value = promoHeader.title || common.header || "";
+  fields.promoHeaderBackgroundUrl.value = promoHeader.backgroundUrl || "";
+  fields.promoHeaderImageUrl.value = resolveBannerOverlayUrl(promoHeader.imageUrl);
+  fields.promoHeaderAnimationType.value = promoHeader.animationType === "rive" ? "rive" : "none";
+  fields.promoHeaderAnimationUrl.value = promoHeader.animationUrl || "";
+  fields.guestEnabled.checked = Boolean(data.guestEnabled);
+  fields.guestContentMode.value = data.guestContentMode === "duplicate" ? "duplicate" : "custom";
+  fields.guestTitle.value = guest.title || "";
+  fields.guestHeader.value = guest.header || "";
+  fields.guestImageUrl.value = guest.imageUrl || "";
+  fields.guestContent.value = htmlBreaksToText(guest.content || "");
+  fields.guestPrimaryButtonText.value = guest.primaryButtonText || "";
+  fields.guestPrimaryButtonUrl.value = guest.primaryButtonUrl || "";
+  fields.guestSecondaryButtonText.value = guest.secondaryButtonText || "";
+  fields.guestSecondaryButtonUrl.value = guest.secondaryButtonUrl || "";
   fields.primaryButtonText.value = common.primaryButtonText || "";
-  fields.primaryButtonUrl.value = common.primaryButtonUrl || "";
-  fields.secondaryButtonText.value = common.secondaryButtonText || "";
-  fields.secondaryButtonUrl.value = common.secondaryButtonUrl || "";
+  fields.primaryButtonAppUrl.value = common.primaryButtonAppUrl || common.primaryButtonUrl || "";
+  fields.primaryButtonWebUrl.value = common.primaryButtonWebUrl || common.primaryButtonUrl || "";
+  fields.secondaryButtonText.value = common.secondaryButtonText || "Полные правила акции";
+  fields.secondaryButtonUrl.value = resolveSecondaryButtonUrl(common.secondaryButtonUrl);
   rulesList.innerHTML = "";
   (Array.isArray(common.rules) ? common.rules : []).forEach((rule) => {
     const safeRule = rule && typeof rule === "object" ? rule : {};
@@ -416,7 +600,53 @@ function applyDataToForm(data, options = {}) {
       content: htmlBreaksToText(safeRule.content || "")
     });
   });
+  guestRulesList.innerHTML = "";
+  const guestRules = Array.isArray(guest.rules) ? guest.rules : [];
+  if (guestRules.length) {
+    guestRules.forEach((rule) => addGuestRule(rule));
+  } else if (data.guestEnabled && data.guestContentMode !== "duplicate") {
+    addGuestRule();
+  }
+  syncPromoChromeFields();
+  applyPromoFormDefaults();
   updateAll();
+}
+
+function syncPromoChromeFields() {
+  const guestOn = fields.guestEnabled.checked;
+  const guestCustom = guestOn && fields.guestContentMode.value === "custom";
+  guestModeFields.classList.toggle("hidden", !guestOn);
+  guestSectionPanel.classList.toggle("hidden", !guestCustom);
+  promoHeaderAnimationFields.classList.toggle("hidden", fields.promoHeaderAnimationType.value !== "rive");
+  if (guestCustom && !guestRulesList.children.length) {
+    addGuestRule();
+  }
+}
+
+function addGuestRule(rule = { header: "", content: "" }) {
+  const node = guestRuleTemplate.content.firstElementChild.cloneNode(true);
+  node.querySelector(".guest-rule-header").value = rule.header || "";
+  node.querySelector(".guest-rule-content").value = htmlBreaksToText(rule.content || "");
+  node.querySelector(".remove-guest-rule").addEventListener("click", () => {
+    node.remove();
+    renumberGuestRules();
+    updateAll();
+  });
+  guestRulesList.append(node);
+  renumberGuestRules();
+}
+
+function renumberGuestRules() {
+  [...guestRulesList.children].forEach((node, index) => {
+    node.querySelector("h3").textContent = `Раздел гостя ${index + 1}`;
+  });
+}
+
+function collectGuestRules() {
+  return [...guestRulesList.children].map((node) => ({
+    header: node.querySelector(".guest-rule-header").value.trim(),
+    content: node.querySelector(".guest-rule-content").value
+  }));
 }
 
 function addRule(rule = { header: "", content: "" }) {
@@ -426,15 +656,13 @@ function addRule(rule = { header: "", content: "" }) {
   node.querySelector(".rule-header").value = rule.header || "";
   node.querySelector(".rule-content").value = rule.content || "";
 
-  const widget = rule.widgets?.[0];
+  const widgets = Array.isArray(rule.widgets) ? rule.widgets : [];
   const widgetEnabled = node.querySelector(".rule-widget-enabled");
   const widgetFields = node.querySelector(".widget-fields");
-  widgetEnabled.checked = Boolean(widget);
-  widgetFields.classList.toggle("hidden", !widget);
-  node.querySelector(".widget-campaign-id").value = widget?.campaignId || "";
-  node.querySelector(".widget-title").value = widget?.title || "Твой прогресс";
-  node.querySelector(".widget-progress-text").value = widget?.progressText || "";
-  node.querySelector(".widget-image-url").value = widget?.imageUrl || DEFAULT_WIDGET_IMAGE;
+  const widgetsList = node.querySelector(".widgets-list");
+  widgetEnabled.checked = widgets.length > 0;
+  widgetFields.classList.toggle("hidden", !widgets.length);
+  widgets.forEach((widget) => addWidgetCard(widgetsList, widget));
 
   const termsEnabled = node.querySelector(".rule-terms-enabled");
   const termsFields = node.querySelector(".terms-fields");
@@ -445,6 +673,15 @@ function addRule(rule = { header: "", content: "" }) {
 
   widgetEnabled.addEventListener("change", () => {
     widgetFields.classList.toggle("hidden", !widgetEnabled.checked);
+    if (widgetEnabled.checked && !widgetsList.children.length) {
+      addWidgetCard(widgetsList, getNextWidgetSeed());
+    }
+    updateAll();
+  });
+  node.querySelector(".add-widget").addEventListener("click", () => {
+    addWidgetCard(widgetsList, getNextWidgetSeed());
+    widgetEnabled.checked = true;
+    widgetFields.classList.remove("hidden");
     updateAll();
   });
   termsEnabled.addEventListener("change", () => {
@@ -468,6 +705,62 @@ function addRule(rule = { header: "", content: "" }) {
 
   rulesList.append(node);
   renumberRules();
+}
+
+function getWidgetProgressType(value) {
+  if (value === "steps" || value === "none") {
+    return value;
+  }
+  return "continuous";
+}
+
+function syncWidgetScaleFields(node) {
+  const scaleFields = node.querySelector(".widget-scale-fields");
+  if (!scaleFields) {
+    return;
+  }
+  scaleFields.classList.toggle("hidden", getWidgetProgressType(node.querySelector(".widget-progress-type").value) === "none");
+}
+
+function addWidgetCard(widgetsList, widget = {}) {
+  const node = widgetTemplate.content.firstElementChild.cloneNode(true);
+  const progress = widget.progress && typeof widget.progress === "object" ? widget.progress : {};
+  const reward = widget.reward && typeof widget.reward === "object" ? widget.reward : {};
+  const defaults = getDefaultWidgetSeed();
+
+  node.querySelector(".widget-campaign-id").value = widget.campaignId || "";
+  node.querySelector(".widget-title").value = widget.title || "";
+  node.querySelector(".widget-progress-text").value =
+    normalizeProgressLabel(progress.label || widget.progressText) || defaults.progressText;
+  node.querySelector(".widget-subtitle").value = widget.subtitle || defaults.subtitle;
+  node.querySelector(".widget-progress-type").value = getWidgetProgressType(progress.type);
+  node.querySelector(".widget-image-url").value = widget.imageUrl || DEFAULT_WIDGET_IMAGE;
+  node.querySelector(".widget-card-image-url").value = widget.cardImageUrl || "";
+  node.querySelector(".widget-reward-text").value = reward.text || "";
+  node.querySelector(".widget-reward-image-url").value = reward.imageUrl || "";
+  node.querySelector(".widget-completed-text").value = widget.completedText || "";
+  node.querySelector(".widget-app-card-url").value = widget.appCardUrl || widget.cardUrl || "";
+  node.querySelector(".widget-web-card-url").value = widget.webCardUrl || widget.cardUrl || "";
+  node.querySelector(".widget-rule-text").value = widget.ruleText || "";
+  syncWidgetScaleFields(node);
+
+  node.querySelector(".widget-progress-type").addEventListener("change", () => {
+    syncWidgetScaleFields(node);
+    updateAll();
+  });
+  node.querySelector(".remove-widget").addEventListener("click", () => {
+    const ruleNode = widgetsList.closest(".rule-card");
+    node.remove();
+    renumberWidgets(widgetsList);
+    if (ruleNode && !widgetsList.children.length) {
+      ruleNode.querySelector(".rule-widget-enabled").checked = false;
+      ruleNode.querySelector(".widget-fields").classList.add("hidden");
+    }
+    updateAll();
+  });
+
+  widgetsList.append(node);
+  renumberWidgets(widgetsList);
 }
 
 function addTermCard(termsList, term = { header: "", content: "", imageUrl: DEFAULT_TERM_IMAGE }) {
@@ -504,8 +797,11 @@ function addTournamentCard(tournament = {}) {
   node.querySelector(".tournament-start-date").value = dates.d || "";
   node.querySelector(".tournament-end-date").value = dates.c || "";
   node.querySelector(".tournament-full-rules-url").value = tournament.fullRulesUrl || "";
-  node.querySelector(".tournament-app-bet-url").value = tournament.appMakeBetUrl || "";
-  node.querySelector(".tournament-web-bet-url").value = tournament.webMakeBetUrl || "";
+  node.querySelector(".tournament-app-bet-url").value =
+    tournament.appMakeBetUrl || makeAppBetUrl(tournament.webMakeBetUrl || tournament.makeBetUrl || "");
+  node.querySelector(".tournament-web-bet-url").value = tournament.webMakeBetUrl
+    ? makeWebBetUrl(tournament.webMakeBetUrl)
+    : makeWebBetUrl(tournament.appMakeBetUrl || tournament.makeBetUrl || "");
   node.querySelector(".remove-tournament").addEventListener("click", () => {
     node.remove();
     renumberTournaments();
@@ -514,6 +810,12 @@ function addTournamentCard(tournament = {}) {
 
   tournamentList.append(node);
   renumberTournaments();
+}
+
+function renumberWidgets(widgetsList) {
+  [...widgetsList.children].forEach((node, index) => {
+    node.querySelector(".term-editor-head strong").textContent = `Прогресс-бар ${index + 1}`;
+  });
 }
 
 function renumberTerms(termsList) {
@@ -568,21 +870,70 @@ function getNestedValue(source, key) {
   return source?.[key]?.values || {};
 }
 
-function normalizeBetPath(value) {
-  return String(value || "").trim().replace(/^https?:\/\/(?:www\.)?ligastavok\.ru/i, "");
+const WEB_SPORT_BY_APP = {
+  football: "soccer"
+};
+const APP_SPORT_BY_WEB = {
+  soccer: "football"
+};
+const MY_LINE_SPORTS = new Set([
+  "tennis",
+  "soccer",
+  "football",
+  "basketball",
+  "ice-hockey",
+  "table-tennis",
+  "cybersport",
+  "e-sport",
+  "short-hockey"
+]);
+
+function mapAppSportToWeb(sport) {
+  return WEB_SPORT_BY_APP[sport] || sport;
 }
 
-function makeAppBetUrl(value) {
-  const raw = String(value || "").trim();
-  if (!raw) {
+function mapWebSportToApp(sport) {
+  return APP_SPORT_BY_WEB[sport] || sport;
+}
+
+function withLeadingSlash(value) {
+  const path = String(value || "").trim();
+  if (!path) {
     return "";
   }
 
-  if (/^https?:\/\//i.test(raw)) {
-    return raw;
+  return path.startsWith("/") ? path : `/${path}`;
+}
+
+function parseBetUrl(value) {
+  const raw = String(value || "").trim();
+  if (!raw) {
+    return { kind: "empty", raw: "" };
   }
 
-  const path = normalizeBetPath(raw).replace(/^\/+/, "");
+  const ligaMatch = raw.match(/^https?:\/\/(?:www\.)?ligastavok\.ru(\/[^#]*)?(?:#.*)?$/i);
+  if (ligaMatch) {
+    return { kind: "liga", raw, path: withLeadingSlash(ligaMatch[1] || "/") };
+  }
+
+  if (/^https?:\/\//i.test(raw)) {
+    return { kind: "absolute", raw };
+  }
+
+  return { kind: "path", raw, path: withLeadingSlash(raw) };
+}
+
+function makeAppBetUrl(value) {
+  const parsed = parseBetUrl(value);
+  if (parsed.kind === "empty") {
+    return "";
+  }
+
+  if (parsed.kind === "absolute" || parsed.kind === "liga") {
+    return parsed.raw;
+  }
+
+  const path = parsed.path.replace(/^\/+/, "");
   if (!path) {
     return "";
   }
@@ -591,31 +942,60 @@ function makeAppBetUrl(value) {
     return "https://www.ligastavok.ru/quick-games";
   }
 
-  if (path.startsWith("prematch/")) {
-    return `https://ligastavok.ru/bets/my-line/${path.replace(/^prematch\/+/, "")}`;
+  const prematchMatch = path.match(/^prematch\/(.+)$/);
+  const sport = prematchMatch?.[1] || (MY_LINE_SPORTS.has(path) ? path : "");
+  if (sport) {
+    return `https://ligastavok.ru/bets/my-line/${mapWebSportToApp(sport)}`;
   }
 
   return `https://www.ligastavok.ru/${path}`;
 }
 
 function makeWebBetUrl(value) {
-  const raw = String(value || "").trim();
-  if (!raw || !/^https?:\/\//i.test(raw)) {
-    return raw;
+  const parsed = parseBetUrl(value);
+  if (parsed.kind === "empty") {
+    return "";
   }
 
-  const path = normalizeBetPath(raw);
-  const myLineMatch = path.match(/^\/bets\/my-line\/(.+)$/);
+  if (parsed.kind === "absolute") {
+    return parsed.raw;
+  }
 
-  if (path === "/quick-games") {
+  const path = parsed.path || withLeadingSlash(parsed.raw);
+  const pathname = path.split("?")[0];
+  const myLineMatch = pathname.match(/^\/bets\/my-line(?:\/(.*))?$/);
+
+  if (myLineMatch) {
+    const sport = (myLineMatch[1] || "").replace(/\/+$/, "");
+    return sport ? `/prematch/${mapAppSportToWeb(sport)}` : "";
+  }
+
+  if (pathname === "/quick-games") {
     return "/quick-games";
   }
 
-  if (myLineMatch?.[1]) {
-    return `/prematch/${myLineMatch[1]}`;
+  if (/^\/(?:championships|super-championships)\//.test(pathname)) {
+    return path;
   }
 
-  return raw;
+  if (parsed.kind === "path") {
+    const prematchMatch = pathname.match(/^\/prematch\/(.+)$/);
+    if (prematchMatch?.[1]) {
+      return `/prematch/${mapAppSportToWeb(prematchMatch[1])}`;
+    }
+
+    return path;
+  }
+
+  return parsed.raw;
+}
+
+function pickMakeBetUrl(appUrl, webUrl, target) {
+  if (target === "web") {
+    return webUrl ? makeWebBetUrl(webUrl) : makeWebBetUrl(appUrl);
+  }
+
+  return appUrl ? makeAppBetUrl(appUrl) : makeAppBetUrl(webUrl);
 }
 
 function normalizeTournamentData(value) {
@@ -760,19 +1140,44 @@ function normalizeImportedJsonData(value) {
     : typeof source.switcherByPromoId === "string"
       ? parsePromoIds(source.switcherByPromoId)
       : [];
+  const guest = source.guest && typeof source.guest === "object" ? source.guest : {};
+  const promoHeader = common.promoHeader && typeof common.promoHeader === "object" ? common.promoHeader : {};
 
   return {
     switcherByPromoId,
+    guestEnabled: Boolean(source.guestEnabled),
+    guestContentMode: source.guestContentMode === "duplicate" ? "duplicate" : "custom",
     common: {
       title: common.title || "",
+      headerType: common.headerType || DEFAULT_HEADER_TYPE,
       imageUrl: common.imageUrl || "",
       header: common.header || "",
+      promoHeader: {
+        backgroundUrl: promoHeader.backgroundUrl || "",
+        imageUrl: promoHeader.imageUrl || "",
+        animationType: promoHeader.animationType === "rive" ? "rive" : "none",
+        animationUrl: promoHeader.animationUrl || "",
+        title: promoHeader.title || ""
+      },
       content: common.content || "",
       rules: Array.isArray(common.rules) ? common.rules : [],
       primaryButtonText: common.primaryButtonText || "",
       primaryButtonUrl: common.primaryButtonUrl || "",
+      primaryButtonAppUrl: common.primaryButtonAppUrl || common.primaryButtonUrl || "",
+      primaryButtonWebUrl: common.primaryButtonWebUrl || common.primaryButtonUrl || "",
       secondaryButtonText: common.secondaryButtonText || "",
       secondaryButtonUrl: common.secondaryButtonUrl || ""
+    },
+    guest: {
+      title: guest.title || "",
+      imageUrl: guest.imageUrl || "",
+      header: guest.header || "",
+      content: guest.content || "",
+      rules: Array.isArray(guest.rules) ? guest.rules : [],
+      primaryButtonText: guest.primaryButtonText || "",
+      primaryButtonUrl: guest.primaryButtonUrl || "",
+      secondaryButtonText: guest.secondaryButtonText || "",
+      secondaryButtonUrl: guest.secondaryButtonUrl || ""
     }
   };
 }
@@ -837,6 +1242,57 @@ function collectTerms(node) {
     .map(({ hasCustomImage, ...term }) => term);
 }
 
+function normalizeProgressLabel(value) {
+  return String(value || "")
+    .replace(/,?\s*₽:?\s*$/u, "")
+    .replace(/:\s*$/u, "")
+    .trim();
+}
+
+function collectWidgetFromNode(node) {
+  const progressText =
+    normalizeProgressLabel(node.querySelector(".widget-progress-text").value) || DEFAULT_WIDGET_PROGRESS_LABEL;
+  const progressType = getWidgetProgressType(node.querySelector(".widget-progress-type").value);
+  const rewardText = node.querySelector(".widget-reward-text").value.trim();
+  const rewardImageUrl = node.querySelector(".widget-reward-image-url").value.trim();
+  const ruleText = node.querySelector(".widget-rule-text").value.trim();
+  const widget = {
+    type: "progressBar",
+    position: "bottom",
+    enabled: true,
+    campaignId: node.querySelector(".widget-campaign-id").value.trim(),
+    title: node.querySelector(".widget-title").value.trim(),
+    progressText,
+    subtitle: node.querySelector(".widget-subtitle").value.trim(),
+    imageUrl: node.querySelector(".widget-image-url").value.trim() || DEFAULT_WIDGET_IMAGE,
+    cardImageUrl: node.querySelector(".widget-card-image-url").value.trim(),
+    progress: {
+      type: progressType,
+      label: progressText
+    }
+  };
+
+  if (ruleText) {
+    widget.ruleText = ruleText;
+  }
+
+  if (rewardText || rewardImageUrl) {
+    widget.reward = {
+      text: rewardText,
+      imageUrl: rewardImageUrl
+    };
+  }
+
+  widget.remainingTime = { ...DEFAULT_REMAINING_TIME };
+  widget.completedText = node.querySelector(".widget-completed-text").value.trim();
+  widget.cardUrl = node.querySelector(".widget-app-card-url").value.trim();
+  return widget;
+}
+
+function collectWidgets(node) {
+  return [...node.querySelectorAll(".widgets-list .widget-editor")].map(collectWidgetFromNode);
+}
+
 function collectRules() {
   return [...rulesList.children].map((node) => {
     const rule = {
@@ -845,18 +1301,10 @@ function collectRules() {
     };
 
     if (node.querySelector(".rule-widget-enabled").checked) {
-      rule.widgets = [
-        {
-          type: "progressBar",
-          position: "bottom",
-          enabled: true,
-          campaignId: node.querySelector(".widget-campaign-id").value.trim(),
-          title: node.querySelector(".widget-title").value.trim() || "Твой прогресс",
-          progressText: node.querySelector(".widget-progress-text").value.trim(),
-          imageUrl: node.querySelector(".widget-image-url").value.trim() || DEFAULT_WIDGET_IMAGE,
-          remainingTime: { dateLabel: "Осталось дней", timeLabel: "Осталось:" }
-        }
-      ];
+      const widgets = collectWidgets(node);
+      if (widgets.length) {
+        rule.widgets = widgets;
+      }
     }
 
     if (node.querySelector(".rule-terms-enabled").checked) {
@@ -867,11 +1315,37 @@ function collectRules() {
   });
 }
 
+function buildPromoHeaderFromForm() {
+  return makePromoHeader({
+    header: fields.promoHeaderTitle.value.trim() || fields.header.value.trim(),
+    imageUrl: resolveBannerOverlayUrl(fields.promoHeaderImageUrl.value),
+    backgroundUrl: fields.promoHeaderBackgroundUrl.value.trim(),
+    animationType: fields.promoHeaderAnimationType.value,
+    animationUrl: fields.promoHeaderAnimationUrl.value.trim()
+  });
+}
+
+function buildGuestCustom() {
+  return {
+    title: fields.guestTitle.value.trim(),
+    imageUrl: fields.guestImageUrl.value.trim(),
+    header: fields.guestHeader.value.trim(),
+    content: fields.guestContent.value,
+    rules: collectGuestRules(),
+    primaryButtonText: fields.guestPrimaryButtonText.value.trim(),
+    primaryButtonUrl: fields.guestPrimaryButtonUrl.value.trim(),
+    secondaryButtonText: fields.guestSecondaryButtonText.value.trim(),
+    secondaryButtonUrl: fields.guestSecondaryButtonUrl.value.trim()
+  };
+}
+
 function buildJson() {
   const common = {
-    title: fields.title.value.trim(),
+    headerType: DEFAULT_HEADER_TYPE,
+    title: DEFAULT_PROMO_TITLE,
     imageUrl: fields.imageUrl.value.trim(),
-    header: fields.header.value.trim()
+    header: fields.header.value.trim(),
+    promoHeader: buildPromoHeaderFromForm()
   };
 
   if (fields.content.value.trim()) {
@@ -880,45 +1354,68 @@ function buildJson() {
 
   common.rules = collectRules();
   common.primaryButtonText = fields.primaryButtonText.value.trim();
-  common.primaryButtonUrl = fields.primaryButtonUrl.value.trim();
+  common.primaryButtonUrl = fields.primaryButtonAppUrl.value.trim();
   common.secondaryButtonText = fields.secondaryButtonText.value.trim();
-  common.secondaryButtonUrl = fields.secondaryButtonUrl.value.trim();
+  common.secondaryButtonUrl = resolveSecondaryButtonUrl(fields.secondaryButtonUrl.value);
 
-  return normalizeJsonText({
+  const data = {
     switcherByPromoId: parsePromoIds(fields.promoIds.value),
-    common,
-    failures: [
-      {
-        type: "common",
-        header: "Не смогли загрузить данные",
-        content: "Обновите страницу или вернитесь позже",
-        buttonText: "Обновить"
-      },
-      {
-        type: "noAccess",
-        header: "Текущая акция для вас недоступна",
-        content: "Вы можете обратиться в службу<br>поддержки для выяснения причин"
-      }
-    ]
-  });
+    guestEnabled: fields.guestEnabled.checked
+  };
+
+  if (data.guestEnabled) {
+    data.guestContentMode = fields.guestContentMode.value === "duplicate" ? "duplicate" : "custom";
+  }
+
+  data.common = common;
+
+  if (data.guestEnabled) {
+    data.guest = data.guestContentMode === "duplicate" ? cloneData(common) : buildGuestCustom();
+  }
+
+  data.failures = [
+    {
+      type: "common",
+      header: "Не смогли загрузить данные",
+      content: "Обновите страницу или вернитесь позже",
+      buttonText: "Обновить"
+    },
+    {
+      type: "noAccess",
+      header: "Текущая акция для вас недоступна",
+      content: "Вы можете обратиться в службу<br>поддержки для выяснения причин"
+    }
+  ];
+
+  return normalizeJsonText(data);
 }
 
 function toWebLineBreaks(value) {
   return String(value).replace(/\r\n/g, "\n").replace(/\r/g, "\n").replace(/\n/g, "<br>");
 }
 
-function buildWebJson() {
-  const data = cloneData(buildJson());
-
-  if (typeof data.common.content === "string") {
-    data.common.content = toWebLineBreaks(data.common.content);
+function applyWebLineBreaksToPromoBlock(block) {
+  if (!block || typeof block !== "object") {
+    return;
   }
 
-  data.common.rules = data.common.rules.map((rule) => ({
-    ...rule,
-    content: toWebLineBreaks(rule.content || "")
-  }));
+  if (typeof block.content === "string") {
+    block.content = toWebLineBreaks(block.content);
+  }
 
+  if (Array.isArray(block.rules)) {
+    block.rules = block.rules.map((rule) => ({
+      ...rule,
+      content: toWebLineBreaks(rule.content || "")
+    }));
+  }
+}
+
+function buildWebJson() {
+  const data = cloneData(buildJson());
+  applyWebLineBreaksToPromoBlock(data.common);
+  applyWebLineBreaksToPromoBlock(data.guest);
+  applyPromoWebUrls(data);
   return data;
 }
 
@@ -951,7 +1448,7 @@ function buildTournamentParameter(card, target) {
     places: { values: { d: textToTournamentHtml(card.places) } },
     dates: { values: { d: card.startDate, c: card.endDate } },
     fullRulesUrl: card.fullRulesUrl,
-    makeBetUrl: target === "web" ? card.webMakeBetUrl : card.appMakeBetUrl
+    makeBetUrl: pickMakeBetUrl(card.appMakeBetUrl, card.webMakeBetUrl, target)
   };
 }
 
@@ -965,7 +1462,7 @@ function buildStoredTournamentParameter(tournament, target) {
     places: cloneData(tournament.places || { values: { d: "" } }),
     dates: cloneData(tournament.dates || { values: { d: "", c: "" } }),
     fullRulesUrl: tournament.fullRulesUrl || "",
-    makeBetUrl: target === "web" ? tournament.webMakeBetUrl || "" : tournament.appMakeBetUrl || ""
+    makeBetUrl: pickMakeBetUrl(tournament.appMakeBetUrl || "", tournament.webMakeBetUrl || "", target)
   };
 }
 
@@ -1116,49 +1613,115 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
+function renderSecondaryPreviewButton(common) {
+  const text =
+    fields.secondaryButtonText.value.trim() ||
+    common.secondaryButtonText?.trim() ||
+    "Полные правила акции";
+  if (!text) {
+    return "";
+  }
+
+  const url = resolveSecondaryButtonUrl(
+    fields.secondaryButtonUrl.value.trim() || common.secondaryButtonUrl || ""
+  );
+  const href = url || "#";
+  const linkClass = url ? "secondary-preview" : "secondary-preview secondary-preview-link";
+
+  return `<a class="${linkClass}" href="${escapeHtml(href)}">${escapeHtml(text)}</a>`;
+}
+
 function renderPreview(data) {
   const { common } = data;
-  previewTitle.textContent = common.title || "Акция";
-  const image = common.imageUrl
-    ? `<img class="hero-image" src="${escapeHtml(common.imageUrl)}" alt="">`
-    : `<div class="hero-image"></div>`;
+  const promoHeader = common.promoHeader || {};
+  previewTitle.textContent = DEFAULT_PROMO_TITLE;
+  const bannerTitle = promoHeader.title || common.header || "Заголовок акции";
+  const bannerStyle = promoHeader.backgroundUrl
+    ? ` style="background-image: url('${escapeHtml(promoHeader.backgroundUrl)}')"`
+    : "";
+  const bannerImage = promoHeader.imageUrl
+    ? `<img class="promo-banner-image" src="${escapeHtml(promoHeader.imageUrl)}" alt="">`
+    : "";
   const intro = common.content ? `<p class="preview-intro">${escapeHtml(common.content)}</p>` : "";
   const rules = common.rules.map(renderRulePreview).join("");
+  const primaryButton = common.primaryButtonText
+    ? `<a class="primary-preview" href="${escapeHtml(common.primaryButtonUrl || "#")}">${escapeHtml(common.primaryButtonText)}</a>`
+    : "";
+  const secondaryButton = renderSecondaryPreviewButton(common);
+  const footer = [primaryButton, secondaryButton].filter(Boolean).join("");
 
   preview.innerHTML = `
-    ${image}
-    <h2 class="preview-header">${escapeHtml(common.header || "Заголовок акции")}</h2>
+    <div class="promo-banner"${bannerStyle}>
+      ${bannerImage}
+      <div class="promo-banner-copy">
+        <h2>${escapeHtml(bannerTitle)}</h2>
+      </div>
+    </div>
     ${intro}
     ${rules}
-    ${common.primaryButtonText ? `<a class="primary-preview" href="${escapeHtml(common.primaryButtonUrl || "#")}">${escapeHtml(common.primaryButtonText)}</a>` : ""}
-    ${common.secondaryButtonText ? `<a class="secondary-preview" href="${escapeHtml(common.secondaryButtonUrl || "#")}">${escapeHtml(common.secondaryButtonText)}</a>` : ""}
+    ${footer ? `<div class="preview-section-footer">${footer}</div>` : ""}
   `;
 }
 
 function renderRulePreview(rule) {
-  const widget = rule.widgets?.[0] ? renderWidget(rule.widgets[0]) : "";
+  const widgets = Array.isArray(rule.widgets) && rule.widgets.length
+    ? `<div class="widgets-preview">${rule.widgets.map(renderWidget).join("")}</div>`
+    : "";
   const terms = Array.isArray(rule.terms) && rule.terms.length ? renderTerms(rule.terms) : "";
+
   return `
     <section class="rule-preview">
       <h3>${escapeHtml(rule.header || "Раздел")}</h3>
       <p class="rule-content-preview">${escapeHtml(rule.content || "")}</p>
-      ${widget}
+      ${widgets}
       ${terms}
     </section>
   `;
 }
 
 function renderWidget(widget) {
-  const bg = widget.imageUrl ? ` style="background-image: linear-gradient(rgba(9, 18, 16, 0.45), rgba(9, 18, 16, 0.45)), url('${escapeHtml(widget.imageUrl)}')"` : "";
-  return `
-    <div class="progress-widget"${bg}>
-      <strong>${escapeHtml(widget.title || "Твой прогресс")}</strong>
+  const progressType = getWidgetProgressType(widget.progress?.type);
+  const progressLabel = widget.progress?.label || widget.progressText || DEFAULT_WIDGET_PROGRESS_LABEL;
+  const cardImage = widget.cardImageUrl
+    ? `<img class="progress-card-image" src="${escapeHtml(widget.cardImageUrl)}" alt="">`
+    : "";
+  const subtitle = widget.subtitle
+    ? `<p class="progress-subtitle">${escapeHtml(widget.subtitle)}</p>`
+    : `<p class="progress-subtitle">${escapeHtml(DEFAULT_WIDGET_SUBTITLE)}</p>`;
+  const scale = progressType === "none"
+    ? ""
+    : `
       <div class="progress-row">
-        <span>${escapeHtml(widget.progressText || "Прогресс:")}</span>
-        <span>1 280 из 2 000</span>
+        <span>${escapeHtml(progressLabel)}</span>
+        <span>0/1</span>
       </div>
-      <div class="bar"><span></span></div>
-    </div>
+      <div class="bar${progressType === "steps" ? " is-steps" : ""}"><span></span></div>
+    `;
+  const rewardIcon = widget.reward?.imageUrl
+    ? `<img src="${escapeHtml(widget.reward.imageUrl)}" alt="">`
+    : "";
+  const reward = widget.reward?.text || widget.reward?.imageUrl
+    ? `<div class="progress-reward-row"><span>${escapeHtml(widget.reward.text || "")}</span>${rewardIcon}</div>`
+    : "";
+  const ruleText = widget.ruleText ? `<p class="progress-rule-text">${escapeHtml(widget.ruleText)}</p>` : "";
+  const cardUrl = widget.cardUrl || "";
+  const clickableClass = cardUrl ? " is-clickable" : "";
+  const tag = cardUrl ? "a" : "div";
+  const href = cardUrl ? ` href="${escapeHtml(cardUrl)}"` : "";
+
+  return `
+    <${tag} class="progress-widget${clickableClass}"${href}>
+      <div class="progress-widget-top">
+        <div class="progress-widget-copy">
+          <strong>${escapeHtml(widget.title || "Твой прогресс")}<span class="progress-chevron" aria-hidden="true">›</span></strong>
+          ${subtitle}
+        </div>
+        ${cardImage}
+      </div>
+      ${scale}
+      ${reward}
+      ${ruleText}
+    </${tag}>
   `;
 }
 
@@ -1246,6 +1809,7 @@ function updateAll() {
   const data = buildJson();
   jsonOutput.textContent = getJsonText(data);
   renderPreview(data);
+  syncPromoChromeFields();
   const hasPromoId = Boolean(data.switcherByPromoId.length);
   statusBadge.textContent = hasPromoId ? "JSON готов" : "Укажите Promo ID";
   statusBadge.classList.toggle("warning", !hasPromoId);
@@ -1257,7 +1821,7 @@ function getSafeFileBaseName(data) {
     return firstId ? `tournament_${firstId}` : "tournaments";
   }
 
-  const rawName = data.common?.header || "promo-action";
+  const rawName = data.common?.promoHeader?.title || data.common?.header || "promo-action";
   return rawName
     .trim()
     .replace(/\s+/g, "_")
@@ -1491,6 +2055,7 @@ function animateRuleRemoval(ruleNode, onComplete) {
 }
 
 form.addEventListener("input", updateAll);
+form.addEventListener("change", updateAll);
 tournamentForm.addEventListener("input", () => {
   renumberTournaments();
   updateAll();
@@ -1502,6 +2067,10 @@ viewTabs.forEach((tab) => {
 });
 document.querySelector("#addRuleButton").addEventListener("click", () => {
   addRule();
+  updateAll();
+});
+document.querySelector("#addGuestRuleButton").addEventListener("click", () => {
+  addGuestRule();
   updateAll();
 });
 document.querySelector("#addTournamentButton").addEventListener("click", () => {
