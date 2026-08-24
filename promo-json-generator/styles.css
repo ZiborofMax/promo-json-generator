@@ -743,20 +743,24 @@ select:focus {
   inset: 16px 16px auto;
   display: grid;
   gap: 8px;
+  justify-items: center;
+  text-align: center;
 }
 
 .promo-banner-copy h2 {
   margin: 0;
+  width: 100%;
   color: #fff;
   font-size: 20px;
   font-weight: 900;
   line-height: 1.12;
   text-transform: uppercase;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
+  text-align: center;
 }
 
 .promo-banner-anim {
-  justify-self: start;
+  justify-self: center;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.18);
   color: #fff;
@@ -800,6 +804,27 @@ select:focus {
   font-size: 18px;
   font-weight: 900;
   line-height: 1.18;
+}
+
+.rule-preview-footer {
+  display: flex;
+  justify-content: center;
+  margin-top: 18px;
+}
+
+.preview-section-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 14px;
+  margin-top: 24px;
+  padding-bottom: 12px;
+}
+
+.preview-section-footer .primary-preview,
+.preview-section-footer .secondary-preview,
+.preview-section-footer .secondary-preview-link {
+  margin-top: 0;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -1068,11 +1093,12 @@ a.progress-widget {
 .secondary-preview-link {
   display: block;
   width: 100%;
-  margin-top: 14px;
   text-align: center;
   color: var(--green);
   font-size: 14px;
   font-weight: 800;
+  text-decoration: none;
+  cursor: default;
 }
 
 .json-panel {

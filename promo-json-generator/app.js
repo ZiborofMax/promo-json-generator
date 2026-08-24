@@ -2,6 +2,12 @@ const DEFAULT_WIDGET_IMAGE = "https://www.ligastavok.ru/files/file/16326/Marketi
 const DEFAULT_TERM_IMAGE = "https://www.ligastavok.ru/files/file/11160/Freebet_3x.webp";
 const DEFAULT_LEGACY_IMAGE_URL = "https://www.ligastavok.ru/files/file/16316/MarketingImg_reBrand.webp";
 const DEFAULT_BANNER_BACKGROUND_URL = "https://www.ligastavok.ru/files/file/18198/BG_Patern.webp";
+const DEFAULT_BANNER_OVERLAY_IMAGE_URL = "https://www.ligastavok.ru/files/file/18185/Image_2x.webp";
+const LEGACY_BANNER_OVERLAY_IMAGE_URLS = [
+  "https://www.ligastavok.ru/files/file/14559/freebetVsem_marketingPromoImg.webp",
+  DEFAULT_LEGACY_IMAGE_URL
+];
+const LEGACY_SECONDARY_BUTTON_URL = "https://www.ligastavok.ru/files/file/16671/FREEBETVSEM.pdf";
 const DEFAULT_WIDGET_SUBTITLE = "Учитываются только рассчитанные ставки";
 const DEFAULT_WIDGET_PROGRESS_LABEL = "Ставок сделано на сумму";
 const DEFAULT_PROMO_TITLE = "Акция";
@@ -9,7 +15,13 @@ const TOURNAMENT_SECONDARY_BUTTON_TEXT = "Полные правила";
 const DEFAULT_HEADER_TYPE = "marketing2";
 const DEFAULT_REMAINING_TIME = { dateLabel: "Осталось дней", timeLabel: "Осталось" };
 
-function makePromoHeader({ header = "", imageUrl = "", backgroundUrl = "", animationType = "none", animationUrl = "" } = {}) {
+function makePromoHeader({
+  header = "",
+  imageUrl = DEFAULT_BANNER_OVERLAY_IMAGE_URL,
+  backgroundUrl = DEFAULT_BANNER_BACKGROUND_URL,
+  animationType = "none",
+  animationUrl = ""
+} = {}) {
   const promoHeader = {
     backgroundUrl,
     imageUrl,
@@ -34,7 +46,7 @@ const templates = {
       header: "Фрибет 500",
       promoHeader: makePromoHeader({
         header: "Фрибет 500",
-        imageUrl: "https://www.ligastavok.ru/files/file/14559/freebetVsem_marketingPromoImg.webp"
+        imageUrl: DEFAULT_BANNER_OVERLAY_IMAGE_URL
       }),
       content: "",
       rules: [
@@ -48,7 +60,7 @@ const templates = {
               enabled: true,
               campaignId: "S_FBV_VGD500_2305",
               title: "Твой прогресс",
-              progressText: "Ставок сделано на сумму, ₽:",
+              progressText: DEFAULT_WIDGET_PROGRESS_LABEL,
               imageUrl: DEFAULT_WIDGET_IMAGE,
               remainingTime: { ...DEFAULT_REMAINING_TIME }
             }
@@ -70,7 +82,7 @@ const templates = {
       primaryButtonText: "За фрибетом",
       primaryButtonUrl: "https://www.ligastavok.ru/PersonalFolder/Accounts/Deposit",
       secondaryButtonText: "Полные правила акции",
-      secondaryButtonUrl: "https://www.ligastavok.ru/files/file/16671/FREEBETVSEM.pdf"
+      secondaryButtonUrl: ""
     }
   },
   tasks: {
@@ -108,7 +120,7 @@ const templates = {
       primaryButtonText: "За фрибетом",
       primaryButtonUrl: "https://www.ligastavok.ru/home",
       secondaryButtonText: "Полные правила акции",
-      secondaryButtonUrl: "https://www.ligastavok.ru/files/file/16671/FREEBETVSEM.pdf"
+      secondaryButtonUrl: ""
     }
   },
   bigGame: {
@@ -135,7 +147,7 @@ const templates = {
               enabled: true,
               campaignId: "VERYVIPGRAND1",
               title: "Твой прогресс",
-              progressText: "Ставок сделано на сумму, ₽:",
+              progressText: DEFAULT_WIDGET_PROGRESS_LABEL,
               imageUrl: DEFAULT_WIDGET_IMAGE,
               remainingTime: { ...DEFAULT_REMAINING_TIME }
             }
@@ -149,7 +161,7 @@ const templates = {
       primaryButtonText: "Заключить пари",
       primaryButtonUrl: "https://www.ligastavok.ru/home",
       secondaryButtonText: "Полные правила акции",
-      secondaryButtonUrl: "https://www.ligastavok.ru/files/file/16671/FREEBETVSEM.pdf"
+      secondaryButtonUrl: ""
     }
   },
   blank: {
@@ -173,7 +185,6 @@ const templates = {
 const form = document.querySelector("#promoForm");
 const fields = {
   promoIds: document.querySelector("#promoIds"),
-  title: document.querySelector("#title"),
   header: document.querySelector("#header"),
   imageUrl: document.querySelector("#imageUrl"),
   content: document.querySelector("#content"),
@@ -453,22 +464,34 @@ function getNextWidgetSeed() {
   };
 }
 
-function applyPromoFormDefaults() {
-  if (!fields.title.value.trim()) {
-    fields.title.value = DEFAULT_PROMO_TITLE;
+function resolveSecondaryButtonUrl(value) {
+  const trimmed = String(value || "").trim();
+  if (!trimmed || trimmed === LEGACY_SECONDARY_BUTTON_URL) {
+    return "";
   }
+  return trimmed;
+}
+
+function resolveBannerOverlayUrl(value) {
+  const trimmed = String(value || "").trim();
+  if (!trimmed || LEGACY_BANNER_OVERLAY_IMAGE_URLS.includes(trimmed)) {
+    return DEFAULT_BANNER_OVERLAY_IMAGE_URL;
+  }
+  return trimmed;
+}
+
+function applyPromoFormDefaults() {
   if (!fields.imageUrl.value.trim()) {
     fields.imageUrl.value = DEFAULT_LEGACY_IMAGE_URL;
   }
   if (!fields.promoHeaderBackgroundUrl.value.trim()) {
     fields.promoHeaderBackgroundUrl.value = DEFAULT_BANNER_BACKGROUND_URL;
   }
-  if (!fields.promoHeaderImageUrl.value.trim()) {
-    fields.promoHeaderImageUrl.value = DEFAULT_LEGACY_IMAGE_URL;
-  }
+  fields.promoHeaderImageUrl.value = resolveBannerOverlayUrl(fields.promoHeaderImageUrl.value);
   if (!fields.secondaryButtonText.value.trim()) {
     fields.secondaryButtonText.value = "Полные правила акции";
   }
+  fields.secondaryButtonUrl.value = resolveSecondaryButtonUrl(fields.secondaryButtonUrl.value);
 }
 
 function applyPromoWebUrls(data) {
@@ -509,7 +532,7 @@ function createEmptyData() {
       header: "",
       promoHeader: makePromoHeader({
         backgroundUrl: DEFAULT_BANNER_BACKGROUND_URL,
-        imageUrl: DEFAULT_LEGACY_IMAGE_URL
+        imageUrl: DEFAULT_BANNER_OVERLAY_IMAGE_URL
       }),
       content: "",
       rules: [],
@@ -546,13 +569,12 @@ function applyDataToForm(data, options = {}) {
   const promoIds = Array.isArray(data.switcherByPromoId) ? data.switcherByPromoId : [];
 
   fields.promoIds.value = options.clearPromoIds ? "" : promoIds.join(", ");
-  fields.title.value = common.title || "";
   fields.header.value = common.header || "";
   fields.imageUrl.value = common.imageUrl || "";
   fields.content.value = htmlBreaksToText(common.content || "");
   fields.promoHeaderTitle.value = promoHeader.title || common.header || "";
   fields.promoHeaderBackgroundUrl.value = promoHeader.backgroundUrl || "";
-  fields.promoHeaderImageUrl.value = promoHeader.imageUrl || "";
+  fields.promoHeaderImageUrl.value = resolveBannerOverlayUrl(promoHeader.imageUrl);
   fields.promoHeaderAnimationType.value = promoHeader.animationType === "rive" ? "rive" : "none";
   fields.promoHeaderAnimationUrl.value = promoHeader.animationUrl || "";
   fields.guestEnabled.checked = Boolean(data.guestEnabled);
@@ -569,7 +591,7 @@ function applyDataToForm(data, options = {}) {
   fields.primaryButtonAppUrl.value = common.primaryButtonAppUrl || common.primaryButtonUrl || "";
   fields.primaryButtonWebUrl.value = common.primaryButtonWebUrl || common.primaryButtonUrl || "";
   fields.secondaryButtonText.value = common.secondaryButtonText || "Полные правила акции";
-  fields.secondaryButtonUrl.value = common.secondaryButtonUrl || "";
+  fields.secondaryButtonUrl.value = resolveSecondaryButtonUrl(common.secondaryButtonUrl);
   rulesList.innerHTML = "";
   (Array.isArray(common.rules) ? common.rules : []).forEach((rule) => {
     const safeRule = rule && typeof rule === "object" ? rule : {};
@@ -709,7 +731,7 @@ function addWidgetCard(widgetsList, widget = {}) {
   node.querySelector(".widget-campaign-id").value = widget.campaignId || "";
   node.querySelector(".widget-title").value = widget.title || "";
   node.querySelector(".widget-progress-text").value =
-    progress.label || widget.progressText || defaults.progressText;
+    normalizeProgressLabel(progress.label || widget.progressText) || defaults.progressText;
   node.querySelector(".widget-subtitle").value = widget.subtitle || defaults.subtitle;
   node.querySelector(".widget-progress-type").value = getWidgetProgressType(progress.type);
   node.querySelector(".widget-image-url").value = widget.imageUrl || DEFAULT_WIDGET_IMAGE;
@@ -1220,8 +1242,16 @@ function collectTerms(node) {
     .map(({ hasCustomImage, ...term }) => term);
 }
 
+function normalizeProgressLabel(value) {
+  return String(value || "")
+    .replace(/,?\s*₽:?\s*$/u, "")
+    .replace(/:\s*$/u, "")
+    .trim();
+}
+
 function collectWidgetFromNode(node) {
-  const progressText = node.querySelector(".widget-progress-text").value.trim();
+  const progressText =
+    normalizeProgressLabel(node.querySelector(".widget-progress-text").value) || DEFAULT_WIDGET_PROGRESS_LABEL;
   const progressType = getWidgetProgressType(node.querySelector(".widget-progress-type").value);
   const rewardText = node.querySelector(".widget-reward-text").value.trim();
   const rewardImageUrl = node.querySelector(".widget-reward-image-url").value.trim();
@@ -1288,7 +1318,7 @@ function collectRules() {
 function buildPromoHeaderFromForm() {
   return makePromoHeader({
     header: fields.promoHeaderTitle.value.trim() || fields.header.value.trim(),
-    imageUrl: fields.promoHeaderImageUrl.value.trim(),
+    imageUrl: resolveBannerOverlayUrl(fields.promoHeaderImageUrl.value),
     backgroundUrl: fields.promoHeaderBackgroundUrl.value.trim(),
     animationType: fields.promoHeaderAnimationType.value,
     animationUrl: fields.promoHeaderAnimationUrl.value.trim()
@@ -1312,15 +1342,11 @@ function buildGuestCustom() {
 function buildJson() {
   const common = {
     headerType: DEFAULT_HEADER_TYPE,
+    title: DEFAULT_PROMO_TITLE,
     imageUrl: fields.imageUrl.value.trim(),
     header: fields.header.value.trim(),
     promoHeader: buildPromoHeaderFromForm()
   };
-
-  const title = fields.title.value.trim();
-  if (title) {
-    common.title = title;
-  }
 
   if (fields.content.value.trim()) {
     common.content = fields.content.value;
@@ -1330,7 +1356,7 @@ function buildJson() {
   common.primaryButtonText = fields.primaryButtonText.value.trim();
   common.primaryButtonUrl = fields.primaryButtonAppUrl.value.trim();
   common.secondaryButtonText = fields.secondaryButtonText.value.trim();
-  common.secondaryButtonUrl = fields.secondaryButtonUrl.value.trim();
+  common.secondaryButtonUrl = resolveSecondaryButtonUrl(fields.secondaryButtonUrl.value);
 
   const data = {
     switcherByPromoId: parsePromoIds(fields.promoIds.value),
@@ -1587,10 +1613,28 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
+function renderSecondaryPreviewButton(common) {
+  const text =
+    fields.secondaryButtonText.value.trim() ||
+    common.secondaryButtonText?.trim() ||
+    "Полные правила акции";
+  if (!text) {
+    return "";
+  }
+
+  const url = resolveSecondaryButtonUrl(
+    fields.secondaryButtonUrl.value.trim() || common.secondaryButtonUrl || ""
+  );
+  const href = url || "#";
+  const linkClass = url ? "secondary-preview" : "secondary-preview secondary-preview-link";
+
+  return `<a class="${linkClass}" href="${escapeHtml(href)}">${escapeHtml(text)}</a>`;
+}
+
 function renderPreview(data) {
   const { common } = data;
   const promoHeader = common.promoHeader || {};
-  previewTitle.textContent = common.title || promoHeader.title || DEFAULT_PROMO_TITLE;
+  previewTitle.textContent = DEFAULT_PROMO_TITLE;
   const bannerTitle = promoHeader.title || common.header || "Заголовок акции";
   const bannerStyle = promoHeader.backgroundUrl
     ? ` style="background-image: url('${escapeHtml(promoHeader.backgroundUrl)}')"`
@@ -1598,32 +1642,24 @@ function renderPreview(data) {
   const bannerImage = promoHeader.imageUrl
     ? `<img class="promo-banner-image" src="${escapeHtml(promoHeader.imageUrl)}" alt="">`
     : "";
-  const animationBadge = promoHeader.animationType === "rive"
-    ? `<span class="promo-banner-anim">Rive</span>`
-    : "";
   const intro = common.content ? `<p class="preview-intro">${escapeHtml(common.content)}</p>` : "";
   const rules = common.rules.map(renderRulePreview).join("");
   const primaryButton = common.primaryButtonText
     ? `<a class="primary-preview" href="${escapeHtml(common.primaryButtonUrl || "#")}">${escapeHtml(common.primaryButtonText)}</a>`
     : "";
-  const secondaryButton = common.secondaryButtonText
-    ? common.secondaryButtonUrl
-      ? `<a class="secondary-preview" href="${escapeHtml(common.secondaryButtonUrl)}">${escapeHtml(common.secondaryButtonText)}</a>`
-      : `<span class="secondary-preview secondary-preview-link">${escapeHtml(common.secondaryButtonText)}</span>`
-    : "";
+  const secondaryButton = renderSecondaryPreviewButton(common);
+  const footer = [primaryButton, secondaryButton].filter(Boolean).join("");
 
   preview.innerHTML = `
     <div class="promo-banner"${bannerStyle}>
       ${bannerImage}
       <div class="promo-banner-copy">
         <h2>${escapeHtml(bannerTitle)}</h2>
-        ${animationBadge}
       </div>
     </div>
     ${intro}
     ${rules}
-    ${primaryButton}
-    ${secondaryButton}
+    ${footer ? `<div class="preview-section-footer">${footer}</div>` : ""}
   `;
 }
 
@@ -1632,6 +1668,7 @@ function renderRulePreview(rule) {
     ? `<div class="widgets-preview">${rule.widgets.map(renderWidget).join("")}</div>`
     : "";
   const terms = Array.isArray(rule.terms) && rule.terms.length ? renderTerms(rule.terms) : "";
+
   return `
     <section class="rule-preview">
       <h3>${escapeHtml(rule.header || "Раздел")}</h3>
@@ -1664,10 +1701,9 @@ function renderWidget(widget) {
     ? `<img src="${escapeHtml(widget.reward.imageUrl)}" alt="">`
     : "";
   const reward = widget.reward?.text || widget.reward?.imageUrl
-    ? `<div class="progress-reward-row">${rewardIcon}<span>${escapeHtml(widget.reward.text || "")}</span></div>`
+    ? `<div class="progress-reward-row"><span>${escapeHtml(widget.reward.text || "")}</span>${rewardIcon}</div>`
     : "";
   const ruleText = widget.ruleText ? `<p class="progress-rule-text">${escapeHtml(widget.ruleText)}</p>` : "";
-  const completedText = widget.completedText ? `<p class="progress-completed">${escapeHtml(widget.completedText)}</p>` : "";
   const cardUrl = widget.cardUrl || "";
   const clickableClass = cardUrl ? " is-clickable" : "";
   const tag = cardUrl ? "a" : "div";
@@ -1685,7 +1721,6 @@ function renderWidget(widget) {
       ${scale}
       ${reward}
       ${ruleText}
-      ${completedText}
     </${tag}>
   `;
 }
