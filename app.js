@@ -183,8 +183,12 @@ const templates = {
 };
 
 const form = document.querySelector("#promoForm");
+const legacyHeaderFields = document.querySelector("#legacyHeaderFields");
+const promoBannerPanel = document.querySelector("#promoBannerPanel");
 const fields = {
   promoIds: document.querySelector("#promoIds"),
+  headerTypeMarketing1: document.querySelector("#headerTypeMarketing1"),
+  headerTypeMarketing2: document.querySelector("#headerTypeMarketing2"),
   header: document.querySelector("#header"),
   imageUrl: document.querySelector("#imageUrl"),
   content: document.querySelector("#content"),
@@ -569,6 +573,7 @@ function applyDataToForm(data, options = {}) {
   const promoIds = Array.isArray(data.switcherByPromoId) ? data.switcherByPromoId : [];
 
   fields.promoIds.value = options.clearPromoIds ? "" : promoIds.join(", ");
+  setHeaderTypeInForm(common.headerType === "marketing1" ? "marketing1" : "marketing2");
   fields.header.value = common.header || "";
   fields.imageUrl.value = common.imageUrl || "";
   fields.content.value = htmlBreaksToText(common.content || "");
@@ -612,11 +617,24 @@ function applyDataToForm(data, options = {}) {
   updateAll();
 }
 
+function getHeaderTypeFromForm() {
+  return fields.headerTypeMarketing1.checked ? "marketing1" : "marketing2";
+}
+
+function setHeaderTypeInForm(headerType) {
+  const isMarketing1 = headerType === "marketing1";
+  fields.headerTypeMarketing1.checked = isMarketing1;
+  fields.headerTypeMarketing2.checked = !isMarketing1;
+}
+
 function syncPromoChromeFields() {
   const guestOn = fields.guestEnabled.checked;
   const guestCustom = guestOn && fields.guestContentMode.value === "custom";
+  const isMarketing2 = getHeaderTypeFromForm() === "marketing2";
   guestModeFields.classList.toggle("hidden", !guestOn);
   guestSectionPanel.classList.toggle("hidden", !guestCustom);
+  legacyHeaderFields.classList.toggle("hidden", isMarketing2);
+  promoBannerPanel.classList.toggle("hidden", !isMarketing2);
   promoHeaderAnimationFields.classList.toggle("hidden", fields.promoHeaderAnimationType.value !== "rive");
   if (guestCustom && !guestRulesList.children.length) {
     addGuestRule();
@@ -1149,7 +1167,7 @@ function normalizeImportedJsonData(value) {
     guestContentMode: source.guestContentMode === "duplicate" ? "duplicate" : "custom",
     common: {
       title: common.title || "",
-      headerType: common.headerType || DEFAULT_HEADER_TYPE,
+      headerType: common.headerType === "marketing1" ? "marketing1" : "marketing2",
       imageUrl: common.imageUrl || "",
       header: common.header || "",
       promoHeader: {
@@ -1340,15 +1358,19 @@ function buildGuestCustom() {
 }
 
 function buildJson() {
+  const headerType = getHeaderTypeFromForm();
   const common = {
-    headerType: DEFAULT_HEADER_TYPE,
+    headerType,
     title: DEFAULT_PROMO_TITLE,
     imageUrl: fields.imageUrl.value.trim(),
-    header: fields.header.value.trim(),
-    promoHeader: buildPromoHeaderFromForm()
+    header: fields.header.value.trim()
   };
 
-  if (fields.content.value.trim()) {
+  if (headerType === "marketing2") {
+    common.promoHeader = buildPromoHeaderFromForm();
+  }
+
+  if (headerType === "marketing1" && fields.content.value.trim()) {
     common.content = fields.content.value;
   }
 
@@ -1633,6 +1655,7 @@ function renderSecondaryPreviewButton(common) {
 
 function renderPreview(data) {
   const { common } = data;
+  const headerType = common.headerType === "marketing1" ? "marketing1" : "marketing2";
   const promoHeader = common.promoHeader || {};
   previewTitle.textContent = DEFAULT_PROMO_TITLE;
   const bannerTitle = promoHeader.title || common.header || "Заголовок акции";
@@ -1642,7 +1665,27 @@ function renderPreview(data) {
   const bannerImage = promoHeader.imageUrl
     ? `<img class="promo-banner-image" src="${escapeHtml(promoHeader.imageUrl)}" alt="">`
     : "";
-  const intro = common.content ? `<p class="preview-intro">${escapeHtml(common.content)}</p>` : "";
+  const legacyHeaderImage = common.imageUrl
+    ? `<img class="hero-image" src="${escapeHtml(common.imageUrl)}" alt="">`
+    : "";
+  const legacyHeaderTitle = common.header
+    ? `<h2 class="preview-header">${escapeHtml(common.header)}</h2>`
+    : "";
+  const headerBlock =
+    headerType === "marketing1"
+      ? `${legacyHeaderImage}${legacyHeaderTitle}`
+      : `
+    <div class="promo-banner"${bannerStyle}>
+      ${bannerImage}
+      <div class="promo-banner-copy">
+        <h2>${escapeHtml(bannerTitle)}</h2>
+      </div>
+    </div>
+  `;
+  const intro =
+    headerType === "marketing1" && common.content
+      ? `<p class="preview-intro">${escapeHtml(common.content)}</p>`
+      : "";
   const rules = common.rules.map(renderRulePreview).join("");
   const primaryButton = common.primaryButtonText
     ? `<a class="primary-preview" href="${escapeHtml(common.primaryButtonUrl || "#")}">${escapeHtml(common.primaryButtonText)}</a>`
@@ -1651,12 +1694,7 @@ function renderPreview(data) {
   const footer = [primaryButton, secondaryButton].filter(Boolean).join("");
 
   preview.innerHTML = `
-    <div class="promo-banner"${bannerStyle}>
-      ${bannerImage}
-      <div class="promo-banner-copy">
-        <h2>${escapeHtml(bannerTitle)}</h2>
-      </div>
-    </div>
+    ${headerBlock}
     ${intro}
     ${rules}
     ${footer ? `<div class="preview-section-footer">${footer}</div>` : ""}

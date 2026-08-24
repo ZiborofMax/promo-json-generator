@@ -500,6 +500,24 @@ select:focus {
   accent-color: var(--purple);
 }
 
+.header-type-row {
+  margin-bottom: 14px;
+}
+
+.header-type-label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.radio-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+}
+
 .hidden {
   display: none !important;
 }
