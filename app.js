@@ -183,7 +183,7 @@ const templates = {
 };
 
 const form = document.querySelector("#promoForm");
-const legacyHeaderFields = document.querySelector("#legacyHeaderFields");
+const marketing1IntroFields = document.querySelector("#marketing1IntroFields");
 const promoBannerPanel = document.querySelector("#promoBannerPanel");
 const fields = {
   promoIds: document.querySelector("#promoIds"),
@@ -633,7 +633,7 @@ function syncPromoChromeFields() {
   const isMarketing2 = getHeaderTypeFromForm() === "marketing2";
   guestModeFields.classList.toggle("hidden", !guestOn);
   guestSectionPanel.classList.toggle("hidden", !guestCustom);
-  legacyHeaderFields.classList.toggle("hidden", isMarketing2);
+  marketing1IntroFields.classList.toggle("hidden", isMarketing2);
   promoBannerPanel.classList.toggle("hidden", !isMarketing2);
   promoHeaderAnimationFields.classList.toggle("hidden", fields.promoHeaderAnimationType.value !== "rive");
   if (guestCustom && !guestRulesList.children.length) {
