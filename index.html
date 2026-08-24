@@ -59,27 +59,43 @@
                 Promo ID
                 <textarea id="promoIds" rows="2" placeholder="Введите Promo ID, по которым будет доступен раздел. Можно перечислить несколько через запятую"></textarea>
               </label>
+              <div class="header-type-row">
+                <span class="header-type-label">Тип шапки</span>
+                <div class="radio-row">
+                  <label class="check-row">
+                    <input id="headerTypeMarketing1" name="headerType" type="radio" value="marketing1" />
+                    Шапка 1 (marketing1)
+                  </label>
+                  <label class="check-row">
+                    <input id="headerTypeMarketing2" name="headerType" type="radio" value="marketing2" checked />
+                    Шапка 2 (marketing2)
+                  </label>
+                </div>
+              </div>
+              <div id="legacyHeaderFields">
               <label>
                 Header
-                <span class="field-note">Для старых версий, в новой шапке не показывается</span>
+                <span class="field-note">Для marketing1 — заголовок под картинкой</span>
                 <input id="header" type="text" placeholder="Фрибет 500" />
               </label>
               <label>
                 Image URL
-                <span class="field-note">Для старых версий, в новой шапке не показывается</span>
+                <span class="field-note">Для marketing1 — картинка в шапке</span>
                 <input id="imageUrl" type="url" value="https://www.ligastavok.ru/files/file/16316/MarketingImg_reBrand.webp" placeholder="https://www.ligastavok.ru/files/file/16316/MarketingImg_reBrand.webp" />
               </label>
               <label>
                 Intro content
+                <span class="field-note">Короткое описание под заголовком, только для marketing1</span>
                 <textarea id="content" rows="3" placeholder="Короткое описание под заголовком"></textarea>
               </label>
+              </div>
             </section>
 
-            <section class="panel">
+            <section class="panel" id="promoBannerPanel">
               <div class="panel-heading">
                 <h2>Баннер</h2>
               </div>
-              <p class="field-note">Новая шапка <code>headerType: marketing2</code>. Title рисуется поверх баннера.</p>
+              <p class="field-note">Для <code>headerType: marketing2</code>. Title рисуется поверх баннера.</p>
               <label>
                 Title на баннере
                 <input id="promoHeaderTitle" type="text" placeholder="ФРИБЕТ ВСЕМ. СТАРЫМ И НОВЫМ ПОЛЬЗОВАТЕЛЯМ" />
@@ -156,11 +172,11 @@
                   Primary URL WEB
                   <input id="primaryButtonWebUrl" type="url" placeholder="/home" />
                 </label>
-                <label>
-                  Secondary text
-                  <input id="secondaryButtonText" type="text" placeholder="Полные правила акции" value="Полные правила акции" />
-                </label>
               </div>
+              <label>
+                Secondary text
+                <input id="secondaryButtonText" type="text" placeholder="Полные правила акции" value="Полные правила акции" />
+              </label>
               <label>
                 Secondary URL
                 <input id="secondaryButtonUrl" type="url" placeholder="" />
