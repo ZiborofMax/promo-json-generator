@@ -197,26 +197,12 @@ const fields = {
   promoHeaderImageUrl: document.querySelector("#promoHeaderImageUrl"),
   promoHeaderAnimationType: document.querySelector("#promoHeaderAnimationType"),
   promoHeaderAnimationUrl: document.querySelector("#promoHeaderAnimationUrl"),
-  guestEnabled: document.querySelector("#guestEnabled"),
-  guestContentMode: document.querySelector("#guestContentMode"),
-  guestTitle: document.querySelector("#guestTitle"),
-  guestHeader: document.querySelector("#guestHeader"),
-  guestImageUrl: document.querySelector("#guestImageUrl"),
-  guestContent: document.querySelector("#guestContent"),
-  guestPrimaryButtonText: document.querySelector("#guestPrimaryButtonText"),
-  guestPrimaryButtonUrl: document.querySelector("#guestPrimaryButtonUrl"),
-  guestSecondaryButtonText: document.querySelector("#guestSecondaryButtonText"),
-  guestSecondaryButtonUrl: document.querySelector("#guestSecondaryButtonUrl"),
   primaryButtonText: document.querySelector("#primaryButtonText"),
   primaryButtonAppUrl: document.querySelector("#primaryButtonAppUrl"),
   primaryButtonWebUrl: document.querySelector("#primaryButtonWebUrl"),
   secondaryButtonText: document.querySelector("#secondaryButtonText"),
   secondaryButtonUrl: document.querySelector("#secondaryButtonUrl")
 };
-const guestModeFields = document.querySelector("#guestModeFields");
-const guestSectionPanel = document.querySelector("#guestSectionPanel");
-const guestRulesList = document.querySelector("#guestRulesList");
-const guestRuleTemplate = document.querySelector("#guestRuleTemplate");
 const promoHeaderAnimationFields = document.querySelector("#promoHeaderAnimationFields");
 const rulesList = document.querySelector("#rulesList");
 const ruleTemplate = document.querySelector("#ruleTemplate");
@@ -569,7 +555,6 @@ function loadTemplate(name) {
 function applyDataToForm(data, options = {}) {
   const common = data.common || {};
   const promoHeader = common.promoHeader && typeof common.promoHeader === "object" ? common.promoHeader : {};
-  const guest = data.guest && typeof data.guest === "object" ? data.guest : {};
   const promoIds = Array.isArray(data.switcherByPromoId) ? data.switcherByPromoId : [];
 
   fields.promoIds.value = options.clearPromoIds ? "" : promoIds.join(", ");
@@ -582,16 +567,6 @@ function applyDataToForm(data, options = {}) {
   fields.promoHeaderImageUrl.value = resolveBannerOverlayUrl(promoHeader.imageUrl);
   fields.promoHeaderAnimationType.value = promoHeader.animationType === "rive" ? "rive" : "none";
   fields.promoHeaderAnimationUrl.value = promoHeader.animationUrl || "";
-  fields.guestEnabled.checked = Boolean(data.guestEnabled);
-  fields.guestContentMode.value = data.guestContentMode === "duplicate" ? "duplicate" : "custom";
-  fields.guestTitle.value = guest.title || "";
-  fields.guestHeader.value = guest.header || "";
-  fields.guestImageUrl.value = guest.imageUrl || "";
-  fields.guestContent.value = htmlBreaksToText(guest.content || "");
-  fields.guestPrimaryButtonText.value = guest.primaryButtonText || "";
-  fields.guestPrimaryButtonUrl.value = guest.primaryButtonUrl || "";
-  fields.guestSecondaryButtonText.value = guest.secondaryButtonText || "";
-  fields.guestSecondaryButtonUrl.value = guest.secondaryButtonUrl || "";
   fields.primaryButtonText.value = common.primaryButtonText || "";
   fields.primaryButtonAppUrl.value = common.primaryButtonAppUrl || common.primaryButtonUrl || "";
   fields.primaryButtonWebUrl.value = common.primaryButtonWebUrl || common.primaryButtonUrl || "";
@@ -605,16 +580,16 @@ function applyDataToForm(data, options = {}) {
       content: htmlBreaksToText(safeRule.content || "")
     });
   });
-  guestRulesList.innerHTML = "";
-  const guestRules = Array.isArray(guest.rules) ? guest.rules : [];
-  if (guestRules.length) {
-    guestRules.forEach((rule) => addGuestRule(rule));
-  } else if (data.guestEnabled && data.guestContentMode !== "duplicate") {
-    addGuestRule();
-  }
   syncPromoChromeFields();
   applyPromoFormDefaults();
   updateAll();
+}
+
+function syncPromoChromeFields() {
+  const isMarketing2 = getHeaderTypeFromForm() === "marketing2";
+  marketing1IntroFields.classList.toggle("hidden", isMarketing2);
+  promoBannerPanel.classList.toggle("hidden", !isMarketing2);
+  promoHeaderAnimationFields.classList.toggle("hidden", fields.promoHeaderAnimationType.value !== "rive");
 }
 
 function getHeaderTypeFromForm() {
@@ -625,46 +600,6 @@ function setHeaderTypeInForm(headerType) {
   const isMarketing1 = headerType === "marketing1";
   fields.headerTypeMarketing1.checked = isMarketing1;
   fields.headerTypeMarketing2.checked = !isMarketing1;
-}
-
-function syncPromoChromeFields() {
-  const guestOn = fields.guestEnabled.checked;
-  const guestCustom = guestOn && fields.guestContentMode.value === "custom";
-  const isMarketing2 = getHeaderTypeFromForm() === "marketing2";
-  guestModeFields.classList.toggle("hidden", !guestOn);
-  guestSectionPanel.classList.toggle("hidden", !guestCustom);
-  marketing1IntroFields.classList.toggle("hidden", isMarketing2);
-  promoBannerPanel.classList.toggle("hidden", !isMarketing2);
-  promoHeaderAnimationFields.classList.toggle("hidden", fields.promoHeaderAnimationType.value !== "rive");
-  if (guestCustom && !guestRulesList.children.length) {
-    addGuestRule();
-  }
-}
-
-function addGuestRule(rule = { header: "", content: "" }) {
-  const node = guestRuleTemplate.content.firstElementChild.cloneNode(true);
-  node.querySelector(".guest-rule-header").value = rule.header || "";
-  node.querySelector(".guest-rule-content").value = htmlBreaksToText(rule.content || "");
-  node.querySelector(".remove-guest-rule").addEventListener("click", () => {
-    node.remove();
-    renumberGuestRules();
-    updateAll();
-  });
-  guestRulesList.append(node);
-  renumberGuestRules();
-}
-
-function renumberGuestRules() {
-  [...guestRulesList.children].forEach((node, index) => {
-    node.querySelector("h3").textContent = `Раздел гостя ${index + 1}`;
-  });
-}
-
-function collectGuestRules() {
-  return [...guestRulesList.children].map((node) => ({
-    header: node.querySelector(".guest-rule-header").value.trim(),
-    content: node.querySelector(".guest-rule-content").value
-  }));
 }
 
 function addRule(rule = { header: "", content: "" }) {
@@ -1158,45 +1093,40 @@ function normalizeImportedJsonData(value) {
     : typeof source.switcherByPromoId === "string"
       ? parsePromoIds(source.switcherByPromoId)
       : [];
-  const guest = source.guest && typeof source.guest === "object" ? source.guest : {};
   const promoHeader = common.promoHeader && typeof common.promoHeader === "object" ? common.promoHeader : {};
+  const headerType = common.headerType === "marketing1" ? "marketing1" : "marketing2";
+  const normalizedCommon = {
+    title: common.title || "",
+    headerType,
+    imageUrl: common.imageUrl || "",
+    header: common.header || "",
+    rules: Array.isArray(common.rules) ? common.rules : [],
+    primaryButtonText: common.primaryButtonText || "",
+    primaryButtonUrl: common.primaryButtonUrl || "",
+    primaryButtonAppUrl: common.primaryButtonAppUrl || common.primaryButtonUrl || "",
+    primaryButtonWebUrl: common.primaryButtonWebUrl || common.primaryButtonUrl || "",
+    secondaryButtonText: common.secondaryButtonText || "",
+    secondaryButtonUrl: common.secondaryButtonUrl || ""
+  };
+
+  if (headerType === "marketing1" && common.content) {
+    normalizedCommon.content = common.content;
+  }
+
+  if (headerType === "marketing2") {
+    normalizedCommon.promoHeader = {
+      backgroundUrl: promoHeader.backgroundUrl || "",
+      imageUrl: promoHeader.imageUrl || "",
+      animationType: promoHeader.animationType === "rive" ? "rive" : "none",
+      animationUrl: promoHeader.animationUrl || "",
+      title: promoHeader.title || ""
+    };
+  }
 
   return {
     switcherByPromoId,
-    guestEnabled: Boolean(source.guestEnabled),
-    guestContentMode: source.guestContentMode === "duplicate" ? "duplicate" : "custom",
-    common: {
-      title: common.title || "",
-      headerType: common.headerType === "marketing1" ? "marketing1" : "marketing2",
-      imageUrl: common.imageUrl || "",
-      header: common.header || "",
-      promoHeader: {
-        backgroundUrl: promoHeader.backgroundUrl || "",
-        imageUrl: promoHeader.imageUrl || "",
-        animationType: promoHeader.animationType === "rive" ? "rive" : "none",
-        animationUrl: promoHeader.animationUrl || "",
-        title: promoHeader.title || ""
-      },
-      content: common.content || "",
-      rules: Array.isArray(common.rules) ? common.rules : [],
-      primaryButtonText: common.primaryButtonText || "",
-      primaryButtonUrl: common.primaryButtonUrl || "",
-      primaryButtonAppUrl: common.primaryButtonAppUrl || common.primaryButtonUrl || "",
-      primaryButtonWebUrl: common.primaryButtonWebUrl || common.primaryButtonUrl || "",
-      secondaryButtonText: common.secondaryButtonText || "",
-      secondaryButtonUrl: common.secondaryButtonUrl || ""
-    },
-    guest: {
-      title: guest.title || "",
-      imageUrl: guest.imageUrl || "",
-      header: guest.header || "",
-      content: guest.content || "",
-      rules: Array.isArray(guest.rules) ? guest.rules : [],
-      primaryButtonText: guest.primaryButtonText || "",
-      primaryButtonUrl: guest.primaryButtonUrl || "",
-      secondaryButtonText: guest.secondaryButtonText || "",
-      secondaryButtonUrl: guest.secondaryButtonUrl || ""
-    }
+    guestEnabled: false,
+    common: normalizedCommon,
   };
 }
 
@@ -1333,6 +1263,18 @@ function collectRules() {
   });
 }
 
+function stripCommonByHeaderType(common, headerType) {
+  if (!common || typeof common !== "object") {
+    return;
+  }
+
+  if (headerType === "marketing1") {
+    delete common.promoHeader;
+  } else {
+    delete common.content;
+  }
+}
+
 function buildPromoHeaderFromForm() {
   return makePromoHeader({
     header: fields.promoHeaderTitle.value.trim() || fields.header.value.trim(),
@@ -1341,20 +1283,6 @@ function buildPromoHeaderFromForm() {
     animationType: fields.promoHeaderAnimationType.value,
     animationUrl: fields.promoHeaderAnimationUrl.value.trim()
   });
-}
-
-function buildGuestCustom() {
-  return {
-    title: fields.guestTitle.value.trim(),
-    imageUrl: fields.guestImageUrl.value.trim(),
-    header: fields.guestHeader.value.trim(),
-    content: fields.guestContent.value,
-    rules: collectGuestRules(),
-    primaryButtonText: fields.guestPrimaryButtonText.value.trim(),
-    primaryButtonUrl: fields.guestPrimaryButtonUrl.value.trim(),
-    secondaryButtonText: fields.guestSecondaryButtonText.value.trim(),
-    secondaryButtonUrl: fields.guestSecondaryButtonUrl.value.trim()
-  };
 }
 
 function buildJson() {
@@ -1382,18 +1310,11 @@ function buildJson() {
 
   const data = {
     switcherByPromoId: parsePromoIds(fields.promoIds.value),
-    guestEnabled: fields.guestEnabled.checked
+    guestEnabled: false
   };
 
-  if (data.guestEnabled) {
-    data.guestContentMode = fields.guestContentMode.value === "duplicate" ? "duplicate" : "custom";
-  }
-
   data.common = common;
-
-  if (data.guestEnabled) {
-    data.guest = data.guestContentMode === "duplicate" ? cloneData(common) : buildGuestCustom();
-  }
+  stripCommonByHeaderType(data.common, headerType);
 
   data.failures = [
     {
@@ -1436,7 +1357,6 @@ function applyWebLineBreaksToPromoBlock(block) {
 function buildWebJson() {
   const data = cloneData(buildJson());
   applyWebLineBreaksToPromoBlock(data.common);
-  applyWebLineBreaksToPromoBlock(data.guest);
   applyPromoWebUrls(data);
   return data;
 }
@@ -2105,10 +2025,6 @@ viewTabs.forEach((tab) => {
 });
 document.querySelector("#addRuleButton").addEventListener("click", () => {
   addRule();
-  updateAll();
-});
-document.querySelector("#addGuestRuleButton").addEventListener("click", () => {
-  addGuestRule();
   updateAll();
 });
 document.querySelector("#addTournamentButton").addEventListener("click", () => {
