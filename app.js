@@ -1316,20 +1316,6 @@ function buildJson() {
   data.common = common;
   stripCommonByHeaderType(data.common, headerType);
 
-  data.failures = [
-    {
-      type: "common",
-      header: "Не смогли загрузить данные",
-      content: "Обновите страницу или вернитесь позже",
-      buttonText: "Обновить"
-    },
-    {
-      type: "noAccess",
-      header: "Текущая акция для вас недоступна",
-      content: "Вы можете обратиться в службу<br>поддержки для выяснения причин"
-    }
-  ];
-
   return normalizeJsonText(data);
 }
 
