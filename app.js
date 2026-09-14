@@ -3,6 +3,10 @@ const DEFAULT_TERM_IMAGE = "https://www.ligastavok.ru/files/file/11160/Freebet_3
 const DEFAULT_LEGACY_IMAGE_URL = "https://www.ligastavok.ru/files/file/16316/MarketingImg_reBrand.webp";
 const DEFAULT_MARKETING1_IMAGE_URL =
   "https://www.ligastavok.ru/files/file/19310/b6565f47-bc3d-40a7-8233-fe473381fc2df.webp";
+const LEGACY_MARKETING1_IMAGE_URLS = [
+  DEFAULT_LEGACY_IMAGE_URL,
+  "https://www.ligastavok.ru/files/file/14559/freebetVsem_marketingPromoImg.webp"
+];
 const DEFAULT_BANNER_BACKGROUND_URL = "https://www.ligastavok.ru/files/file/18198/BG_Patern.webp";
 const DEFAULT_BANNER_OVERLAY_IMAGE_URL = "https://www.ligastavok.ru/files/file/18185/Image_2x.webp";
 const DEFAULT_RIVE_ANIMATION_URL = "https://www.ligastavok.ru/files/file/18736/compainanimation.riv";
@@ -47,7 +51,7 @@ const templates = {
     common: {
       title: "Акция",
       headerType: DEFAULT_HEADER_TYPE,
-      imageUrl: "https://www.ligastavok.ru/files/file/14559/freebetVsem_marketingPromoImg.webp",
+      imageUrl: DEFAULT_MARKETING1_IMAGE_URL,
       header: "Фрибет 500",
       promoHeader: makePromoHeader({
         header: "Фрибет 500",
@@ -467,6 +471,14 @@ function resolveSecondaryButtonUrl(value) {
   return trimmed;
 }
 
+function resolveMarketing1ImageUrl(value) {
+  const trimmed = String(value || "").trim();
+  if (!trimmed || LEGACY_MARKETING1_IMAGE_URLS.includes(trimmed)) {
+    return DEFAULT_MARKETING1_IMAGE_URL;
+  }
+  return trimmed;
+}
+
 function resolveBannerOverlayUrl(value) {
   const trimmed = String(value || "").trim();
   if (!trimmed || LEGACY_BANNER_OVERLAY_IMAGE_URLS.includes(trimmed)) {
@@ -476,9 +488,7 @@ function resolveBannerOverlayUrl(value) {
 }
 
 function applyPromoFormDefaults() {
-  if (!fields.imageUrl.value.trim()) {
-    fields.imageUrl.value = DEFAULT_MARKETING1_IMAGE_URL;
-  }
+  fields.imageUrl.value = resolveMarketing1ImageUrl(fields.imageUrl.value);
   if (!fields.promoHeaderBackgroundUrl.value.trim()) {
     fields.promoHeaderBackgroundUrl.value = DEFAULT_BANNER_BACKGROUND_URL;
   }
@@ -568,7 +578,7 @@ function applyDataToForm(data, options = {}) {
   fields.promoIds.value = options.clearPromoIds ? "" : promoIds.join(", ");
   setHeaderTypeInForm(common.headerType === "marketing1" ? "marketing1" : "marketing2");
   fields.header.value = common.header || "";
-  fields.imageUrl.value = common.imageUrl || "";
+  fields.imageUrl.value = resolveMarketing1ImageUrl(common.imageUrl);
   fields.content.value = htmlBreaksToText(common.content || "");
   fields.promoHeaderTitle.value = promoHeader.title || common.header || "";
   fields.promoHeaderBackgroundUrl.value = promoHeader.backgroundUrl || "";
@@ -596,6 +606,9 @@ function applyDataToForm(data, options = {}) {
 function syncPromoChromeFields() {
   const isMarketing2 = getHeaderTypeFromForm() === "marketing2";
   const isRive = fields.promoHeaderAnimationType.value === "rive";
+  if (!isMarketing2) {
+    fields.imageUrl.value = resolveMarketing1ImageUrl(fields.imageUrl.value);
+  }
   marketing1IntroFields.classList.toggle("hidden", isMarketing2);
   promoBannerPanel.classList.toggle("hidden", !isMarketing2);
   promoHeaderAnimationFields.classList.toggle("hidden", !isRive);
@@ -1300,7 +1313,7 @@ function buildJson() {
   const common = {
     headerType,
     title: DEFAULT_PROMO_TITLE,
-    imageUrl: fields.imageUrl.value.trim(),
+    imageUrl: resolveMarketing1ImageUrl(fields.imageUrl.value.trim()),
     header: fields.header.value.trim()
   };
 
