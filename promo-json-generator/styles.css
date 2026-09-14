@@ -117,13 +117,6 @@ button:active {
   min-width: 0;
 }
 
-.topbar-title-row {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 14px;
-}
-
 .topbar-save-template {
   flex: 0 0 auto;
   min-height: 44px;
@@ -218,7 +211,7 @@ h2 {
 
 .topbar-actions {
   display: flex;
-  flex: 0 1 520px;
+  flex: 0 1 680px;
   min-width: 0;
   gap: 12px;
   align-items: start;
@@ -1393,7 +1386,7 @@ pre {
 
   .topbar-actions {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: auto minmax(0, 1fr) auto;
     width: 100%;
   }
 

@@ -2144,7 +2144,6 @@ function setActiveView(view) {
   form.classList.toggle("hidden", isTournamentView);
   tournamentForm.classList.toggle("hidden", !isTournamentView);
   promoTemplateActions.classList.toggle("hidden", isTournamentView);
-  saveTemplateButton.classList.toggle("hidden", isTournamentView);
   topbarEyebrow.textContent = isTournamentView ? "Турниры" : "Маркетинговые акции";
   topbarTitle.textContent = isTournamentView ? "Генератор JSON турниров" : "Генератор JSON";
   updateAll();
