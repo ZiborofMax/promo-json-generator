@@ -229,10 +229,12 @@ const ruleTemplate = document.querySelector("#ruleTemplate");
 const widgetTemplate = document.querySelector("#widgetTemplate");
 const termTemplate = document.querySelector("#termTemplate");
 const jsonOutput = document.querySelector("#jsonOutput");
-const templateSelect = document.querySelector("#templateSelect");
-const savedTemplateList = document.querySelector("#savedTemplateList");
-const deleteTemplateButton = document.querySelector("#deleteTemplateButton");
+const templatePicker = document.querySelector("#templatePicker");
+const templatePickerTrigger = document.querySelector("#templatePickerTrigger");
+const templatePickerLabel = document.querySelector("#templatePickerLabel");
+const templatePickerMenu = document.querySelector("#templatePickerMenu");
 const saveTemplateButton = document.querySelector("#saveTemplateButton");
+let selectedTemplateValue = "offer";
 const saveTemplateDialog = document.querySelector("#saveTemplateDialog");
 const saveTemplateNameInput = document.querySelector("#saveTemplateName");
 const saveTemplateStatus = document.querySelector("#saveTemplateStatus");
@@ -657,82 +659,114 @@ function capturePromoFormState() {
   return data;
 }
 
-function appendTemplateOption(value, label) {
-  const option = document.createElement("option");
-  option.value = value;
-  option.textContent = label;
-  templateSelect.append(option);
+function getTemplateLabel(value) {
+  if (isCustomTemplateId(value)) {
+    return getCustomTemplates()[value]?.label || value;
+  }
+
+  const builtin = BUILTIN_TEMPLATE_OPTIONS.find((option) => option.value === value);
+  return builtin?.label || value;
 }
 
-function updateDeleteTemplateButton() {
-  deleteTemplateButton.classList.toggle("hidden", !isCustomTemplateId(templateSelect.value));
+function getSelectedTemplateValue() {
+  return selectedTemplateValue;
 }
 
-function renderSavedTemplateList(selectedValue = templateSelect.value) {
-  const customTemplates = getCustomTemplates();
-  const customIds = Object.keys(customTemplates).sort((left, right) =>
-    customTemplates[left].label.localeCompare(customTemplates[right].label, "ru")
-  );
+function setSelectedTemplateValue(value) {
+  selectedTemplateValue = value;
+  templatePickerLabel.textContent = getTemplateLabel(value);
+  renderTemplatePickerMenu();
+}
 
-  savedTemplateList.innerHTML = "";
-  savedTemplateList.classList.toggle("hidden", !customIds.length);
+function closeTemplatePickerMenu() {
+  templatePickerMenu.classList.add("hidden");
+  templatePickerTrigger.setAttribute("aria-expanded", "false");
+}
 
-  customIds.forEach((id) => {
-    const item = document.createElement("li");
-    item.className = `saved-template-item${id === selectedValue ? " is-active" : ""}`;
+function openTemplatePickerMenu() {
+  renderTemplatePickerMenu();
+  templatePickerMenu.classList.remove("hidden");
+  templatePickerTrigger.setAttribute("aria-expanded", "true");
+}
 
-    const name = document.createElement("span");
-    name.className = "saved-template-name";
-    name.textContent = customTemplates[id].label;
-    name.title = customTemplates[id].label;
+function toggleTemplatePickerMenu() {
+  if (templatePickerMenu.classList.contains("hidden")) {
+    openTemplatePickerMenu();
+  } else {
+    closeTemplatePickerMenu();
+  }
+}
 
+function createTemplatePickerOption(value, label, { deletable = false } = {}) {
+  const item = document.createElement("div");
+  item.className = `template-picker-option${value === selectedTemplateValue ? " is-active" : ""}`;
+  item.setAttribute("role", "option");
+  item.setAttribute("aria-selected", String(value === selectedTemplateValue));
+
+  const selectButton = document.createElement("button");
+  selectButton.type = "button";
+  selectButton.className = "template-picker-option-button";
+  selectButton.textContent = label;
+  selectButton.addEventListener("click", () => {
+    setSelectedTemplateValue(value);
+    closeTemplatePickerMenu();
+    if (value === "json") {
+      loadTemplate("json");
+    }
+  });
+  item.append(selectButton);
+
+  if (deletable) {
     const deleteButton = document.createElement("button");
     deleteButton.type = "button";
-    deleteButton.className = "saved-template-delete";
-    deleteButton.setAttribute("aria-label", `Удалить шаблон ${customTemplates[id].label}`);
+    deleteButton.className = "template-picker-delete";
+    deleteButton.setAttribute("aria-label", `Удалить шаблон ${label}`);
     deleteButton.title = "Удалить шаблон";
     deleteButton.textContent = "×";
-    deleteButton.addEventListener("click", () => {
-      deleteCustomTemplate(id);
+    deleteButton.addEventListener("click", (event) => {
+      event.stopPropagation();
+      deleteCustomTemplate(value, { keepMenuOpen: true });
     });
+    item.append(deleteButton);
+  }
 
-    name.addEventListener("click", () => {
-      templateSelect.value = id;
-      updateDeleteTemplateButton();
-      renderSavedTemplateList(id);
-    });
-
-    item.append(name, deleteButton);
-    savedTemplateList.append(item);
-  });
+  return item;
 }
 
-function renderTemplateSelectOptions(selectedValue = templateSelect.value) {
+function renderTemplatePickerMenu() {
   const customTemplates = getCustomTemplates();
   const customIds = Object.keys(customTemplates).sort((left, right) =>
     customTemplates[left].label.localeCompare(customTemplates[right].label, "ru")
   );
-  templateSelect.innerHTML = "";
+  templatePickerMenu.innerHTML = "";
 
   BUILTIN_TEMPLATE_OPTIONS.filter(({ value }) => !["json", "blank"].includes(value)).forEach(({ value, label }) => {
-    appendTemplateOption(value, label);
+    templatePickerMenu.append(createTemplatePickerOption(value, label));
   });
 
-  customIds.forEach((id) => {
-    appendTemplateOption(id, customTemplates[id].label);
-  });
+  if (customIds.length) {
+    const divider = document.createElement("div");
+    divider.className = "template-picker-divider";
+    divider.textContent = "Сохранённые";
+    templatePickerMenu.append(divider);
+    customIds.forEach((id) => {
+      templatePickerMenu.append(createTemplatePickerOption(id, customTemplates[id].label, { deletable: true }));
+    });
+  }
 
   BUILTIN_TEMPLATE_OPTIONS.filter(({ value }) => ["json", "blank"].includes(value)).forEach(({ value, label }) => {
-    appendTemplateOption(value, label);
+    templatePickerMenu.append(createTemplatePickerOption(value, label));
   });
-
-  const hasSelectedValue = [...templateSelect.options].some((option) => option.value === selectedValue);
-  templateSelect.value = hasSelectedValue ? selectedValue : "offer";
-  updateDeleteTemplateButton();
-  renderSavedTemplateList(templateSelect.value);
 }
 
-function deleteCustomTemplate(id) {
+function renderTemplateSelectOptions(selectedValue = selectedTemplateValue) {
+  const customTemplates = getCustomTemplates();
+  const isKnownValue =
+    BUILTIN_TEMPLATE_OPTIONS.some((option) => option.value === selectedValue) || Boolean(customTemplates[selectedValue]);
+  setSelectedTemplateValue(isKnownValue ? selectedValue : "offer");
+}
+
+function deleteCustomTemplate(id, options = {}) {
   if (!isCustomTemplateId(id)) {
     return;
   }
@@ -745,7 +779,10 @@ function deleteCustomTemplate(id) {
 
   delete customTemplates[id];
   setCustomTemplates(customTemplates);
-  renderTemplateSelectOptions(templateSelect.value === id ? "offer" : templateSelect.value);
+  renderTemplateSelectOptions(selectedTemplateValue === id ? "offer" : selectedTemplateValue);
+  if (options.keepMenuOpen) {
+    openTemplatePickerMenu();
+  }
 }
 
 function saveCurrentTemplate(label) {
@@ -2296,7 +2333,20 @@ document.querySelector("#addTournamentButton").addEventListener("click", () => {
   addSelectedTournamentTemplate();
 });
 document.querySelector("#loadTemplateButton").addEventListener("click", () => {
-  loadTemplate(templateSelect.value);
+  loadTemplate(getSelectedTemplateValue());
+});
+templatePickerTrigger.addEventListener("click", () => {
+  toggleTemplatePickerMenu();
+});
+document.addEventListener("click", (event) => {
+  if (!templatePicker.contains(event.target)) {
+    closeTemplatePickerMenu();
+  }
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    closeTemplatePickerMenu();
+  }
 });
 saveTemplateButton.addEventListener("click", () => {
   openSaveTemplateDialog();
@@ -2311,16 +2361,6 @@ saveTemplateDialog.querySelector(".save-template-form").addEventListener("submit
 
   event.preventDefault();
   handleSaveTemplate();
-});
-deleteTemplateButton.addEventListener("click", () => {
-  deleteCustomTemplate(templateSelect.value);
-});
-templateSelect.addEventListener("change", () => {
-  updateDeleteTemplateButton();
-  renderSavedTemplateList(templateSelect.value);
-  if (templateSelect.value === "json") {
-    loadTemplate("json");
-  }
 });
 document.querySelector("#applyJsonButton").addEventListener("click", () => {
   importJsonText(jsonImportInput.value);

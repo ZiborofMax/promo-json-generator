@@ -224,56 +224,94 @@ h2 {
   align-items: start;
 }
 
-.template-select-wrap {
-  display: grid;
+.template-picker {
+  position: relative;
   flex: 1 1 240px;
   min-width: 0;
-  gap: 8px;
 }
 
-.topbar-actions select {
-  width: 100%;
-  min-width: 0;
-}
-
-.saved-template-list {
-  display: grid;
-  gap: 6px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.saved-template-item {
+.template-picker-trigger {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 42px 0 16px;
+  border: 1px solid rgba(48, 56, 86, 0.14);
+  border-radius: 14px;
+  background:
+    linear-gradient(45deg, transparent 50%, var(--text) 50%) calc(100% - 22px) 50% / 7px 7px no-repeat,
+    linear-gradient(135deg, var(--text) 50%, transparent 50%) calc(100% - 17px) 50% / 7px 7px no-repeat,
+    #fff;
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  text-align: left;
+  cursor: pointer;
+}
+
+.template-picker-trigger:focus-visible {
+  outline: none;
+  border-color: rgba(124, 92, 229, 0.72);
+  box-shadow: 0 0 0 3px rgba(124, 92, 229, 0.16);
+}
+
+.template-picker-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  left: 0;
+  z-index: 30;
+  display: grid;
+  gap: 4px;
+  max-height: 320px;
+  overflow: auto;
+  padding: 8px;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: var(--shadow);
+}
+
+.template-picker-divider {
+  padding: 8px 10px 4px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.template-picker-option {
+  display: flex;
+  align-items: center;
   gap: 8px;
   min-width: 0;
-  padding: 8px 10px;
-  border-radius: 14px;
-  background: rgba(124, 92, 229, 0.08);
+  border-radius: 12px;
 }
 
-.saved-template-item.is-active {
-  background: rgba(124, 92, 229, 0.16);
-  box-shadow: inset 0 0 0 1px rgba(124, 92, 229, 0.18);
+.template-picker-option.is-active {
+  background: rgba(124, 92, 229, 0.1);
 }
 
-.saved-template-name {
+.template-picker-option-button {
+  flex: 1 1 auto;
   min-width: 0;
-  overflow: hidden;
+  padding: 10px 12px;
+  border: 0;
+  background: transparent;
   color: #27304b;
-  font-size: 12px;
+  font: inherit;
+  font-size: 14px;
   font-weight: 800;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  text-align: left;
+  cursor: pointer;
 }
 
-.saved-template-delete {
+.template-picker-delete {
   flex: 0 0 auto;
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
+  margin-right: 6px;
   border: 0;
   border-radius: 999px;
   background: rgba(220, 53, 69, 0.12);
@@ -283,22 +321,8 @@ h2 {
   cursor: pointer;
 }
 
-.saved-template-delete:hover {
+.template-picker-delete:hover {
   background: rgba(220, 53, 69, 0.2);
-}
-
-.template-delete-button {
-  flex: 0 0 auto;
-  width: 44px;
-  min-width: 44px;
-  height: 44px;
-  margin-top: 0;
-  padding: 0;
-  border-radius: 14px;
-  background: rgba(220, 53, 69, 0.1);
-  color: var(--danger);
-  font-size: 24px;
-  line-height: 1;
 }
 
 .topbar-actions button {
