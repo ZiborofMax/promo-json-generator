@@ -1193,7 +1193,6 @@ function collectTerms(node) {
 function normalizeProgressLabel(value) {
   return String(value || "")
     .replace(/,?\s*₽:?\s*$/u, "")
-    .replace(/:\s*$/u, "")
     .trim();
 }
 
