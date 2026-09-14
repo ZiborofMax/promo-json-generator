@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Генератор JSON акции</title>
-    <link rel="stylesheet" href="./styles.css?v=20260914g" />
+    <link rel="stylesheet" href="./styles.css?v=20260914h" />
   </head>
   <body>
     <main class="app-shell">
@@ -15,21 +15,34 @@
         </nav>
 
         <header class="topbar">
-          <div>
+          <div class="topbar-copy">
             <p class="eyebrow" id="topbarEyebrow">Маркетинговые акции</p>
-            <h1 id="topbarTitle">Генератор JSON</h1>
+            <div class="topbar-title-row">
+              <h1 id="topbarTitle">Генератор JSON</h1>
+              <button class="secondary topbar-save-template" id="saveTemplateButton" type="button">Сохранить шаблон</button>
+            </div>
           </div>
           <div class="topbar-actions" id="promoTemplateActions">
-            <select id="templateSelect" aria-label="Шаблон">
-              <option value="offer">Оффер</option>
-              <option value="tasks">Задания</option>
-              <option value="bigGame">Очень большая игра</option>
-              <option value="json">Заполнить через JSON</option>
-              <option value="blank">Пустой шаблон</option>
-            </select>
+            <select id="templateSelect" aria-label="Шаблон"></select>
             <button class="secondary" id="loadTemplateButton" type="button">Загрузить</button>
           </div>
         </header>
+
+        <dialog class="save-template-dialog" id="saveTemplateDialog">
+          <form class="save-template-form" method="dialog">
+            <h2>Сохранить шаблон</h2>
+            <p class="field-note">Сохранятся все текущие поля формы. Шаблон появится в списке рядом с «Оффер» и «Задания».</p>
+            <label>
+              Название шаблона
+              <input id="saveTemplateName" type="text" maxlength="80" placeholder="Например, Фрибет 500 осень" required />
+            </label>
+            <p class="save-template-status" id="saveTemplateStatus" aria-live="polite"></p>
+            <div class="save-template-actions">
+              <button class="secondary" type="submit" value="cancel">Отмена</button>
+              <button class="secondary" type="submit" value="save">Сохранить</button>
+            </div>
+          </form>
+        </dialog>
 
         <div class="layout-grid">
           <form class="editor" id="promoForm">
@@ -449,7 +462,7 @@
       </article>
     </template>
 
-    <script src="./tournament-templates.js?v=20260914g"></script>
-    <script src="./app.js?v=20260914g"></script>
+    <script src="./tournament-templates.js?v=20260914h"></script>
+    <script src="./app.js?v=20260914h"></script>
   </body>
 </html>
