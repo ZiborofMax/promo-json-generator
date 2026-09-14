@@ -774,11 +774,12 @@ function addWidgetCard(widgetsList, widget = {}) {
   renumberWidgets(widgetsList);
 }
 
-function addTermCard(termsList, term = { header: "", content: "", imageUrl: "" }) {
+function addTermCard(termsList, term = { header: "", content: "", imageUrl: DEFAULT_TERM_IMAGE }) {
   const node = termTemplate.content.firstElementChild.cloneNode(true);
   node.querySelector(".term-header").value = term.header || "";
   node.querySelector(".term-content").value = term.content || "";
-  node.querySelector(".term-image-url").value = term.imageUrl || "";
+  node.querySelector(".term-image-url").value =
+    term.imageUrl === undefined || term.imageUrl === null ? DEFAULT_TERM_IMAGE : term.imageUrl;
   node.querySelector(".remove-term").addEventListener("click", () => {
     node.remove();
     renumberTerms(termsList);
