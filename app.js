@@ -21,6 +21,14 @@ const DEFAULT_PROMO_TITLE = "Акция";
 const TOURNAMENT_SECONDARY_BUTTON_TEXT = "Полные правила";
 const DEFAULT_HEADER_TYPE = "marketing2";
 const DEFAULT_REMAINING_TIME = { dateLabel: "Осталось дней", timeLabel: "Осталось" };
+const CUSTOM_TEMPLATES_STORAGE_KEY = "promo-json-generator-custom-templates";
+const BUILTIN_TEMPLATE_OPTIONS = [
+  { value: "offer", label: "Оффер" },
+  { value: "tasks", label: "Задания" },
+  { value: "bigGame", label: "Очень большая игра" },
+  { value: "json", label: "Заполнить через JSON" },
+  { value: "blank", label: "Пустой шаблон" }
+];
 
 function makePromoHeader({
   header = "",
@@ -222,6 +230,10 @@ const widgetTemplate = document.querySelector("#widgetTemplate");
 const termTemplate = document.querySelector("#termTemplate");
 const jsonOutput = document.querySelector("#jsonOutput");
 const templateSelect = document.querySelector("#templateSelect");
+const saveTemplateButton = document.querySelector("#saveTemplateButton");
+const saveTemplateDialog = document.querySelector("#saveTemplateDialog");
+const saveTemplateNameInput = document.querySelector("#saveTemplateName");
+const saveTemplateStatus = document.querySelector("#saveTemplateStatus");
 const jsonImportPanel = document.querySelector("#jsonImportPanel");
 const jsonImportInput = document.querySelector("#jsonImportInput");
 const jsonImportStatus = document.querySelector("#jsonImportStatus");
@@ -586,6 +598,123 @@ function createEmptyData() {
   };
 }
 
+function isCustomTemplateId(name) {
+  return String(name || "").startsWith("custom:");
+}
+
+function getCustomTemplates() {
+  try {
+    const stored = localStorage.getItem(CUSTOM_TEMPLATES_STORAGE_KEY);
+    const parsed = stored ? JSON.parse(stored) : {};
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function setCustomTemplates(value) {
+  localStorage.setItem(CUSTOM_TEMPLATES_STORAGE_KEY, JSON.stringify(value));
+}
+
+function makeCustomTemplateId(label) {
+  const slug = String(label || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9а-яё-]/gi, "")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 48);
+  return `custom:${slug || `template-${Date.now()}`}`;
+}
+
+function capturePromoFormState() {
+  const data = cloneData(buildJson());
+  const common = data.common || {};
+  common.primaryButtonAppUrl = fields.primaryButtonAppUrl.value.trim();
+  common.primaryButtonWebUrl = fields.primaryButtonWebUrl.value.trim();
+
+  const ruleNodes = [...rulesList.children];
+  ruleNodes.forEach((ruleNode, ruleIndex) => {
+    const rule = common.rules?.[ruleIndex];
+    if (!rule?.widgets) {
+      return;
+    }
+
+    const widgetNodes = [...ruleNode.querySelectorAll(".widgets-list .widget-editor")];
+    widgetNodes.forEach((widgetNode, widgetIndex) => {
+      const widget = rule.widgets[widgetIndex];
+      if (!widget) {
+        return;
+      }
+      widget.appCardUrl = widgetNode.querySelector(".widget-app-card-url").value.trim();
+      widget.webCardUrl = widgetNode.querySelector(".widget-web-card-url").value.trim();
+    });
+  });
+
+  return data;
+}
+
+function renderTemplateSelectOptions(selectedValue = templateSelect.value) {
+  const customTemplates = getCustomTemplates();
+  const customIds = Object.keys(customTemplates).sort((left, right) =>
+    customTemplates[left].label.localeCompare(customTemplates[right].label, "ru")
+  );
+  templateSelect.innerHTML = "";
+
+  BUILTIN_TEMPLATE_OPTIONS.forEach(({ value, label }) => {
+    if (value === "json") {
+      if (customIds.length) {
+        const optgroup = document.createElement("optgroup");
+        optgroup.label = "Сохранённые шаблоны";
+        customIds.forEach((id) => {
+          const option = document.createElement("option");
+          option.value = id;
+          option.textContent = customTemplates[id].label;
+          optgroup.append(option);
+        });
+        templateSelect.append(optgroup);
+      }
+    }
+
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = label;
+    templateSelect.append(option);
+  });
+
+  const hasSelectedValue = [...templateSelect.options].some((option) => option.value === selectedValue);
+  templateSelect.value = hasSelectedValue ? selectedValue : "offer";
+}
+
+function saveCurrentTemplate(label) {
+  const trimmedLabel = String(label || "").trim();
+  if (!trimmedLabel) {
+    return { ok: false, message: "Введите название шаблона" };
+  }
+
+  const id = makeCustomTemplateId(trimmedLabel);
+  const customTemplates = getCustomTemplates();
+  customTemplates[id] = {
+    label: trimmedLabel,
+    data: capturePromoFormState(),
+    savedAt: Date.now()
+  };
+  setCustomTemplates(customTemplates);
+  renderTemplateSelectOptions(id);
+  return { ok: true, id, label: trimmedLabel };
+}
+
+function openSaveTemplateDialog() {
+  saveTemplateStatus.textContent = "";
+  saveTemplateStatus.classList.remove("is-success");
+  saveTemplateNameInput.value = "";
+  saveTemplateDialog.showModal();
+  window.setTimeout(() => {
+    saveTemplateNameInput.focus();
+  }, 0);
+}
+
 function loadTemplate(name) {
   if (name === "json") {
     applyDataToForm(createEmptyData());
@@ -599,7 +728,18 @@ function loadTemplate(name) {
   }
 
   jsonImportPanel.classList.add("hidden");
-  const data = cloneData(templates[name]);
+
+  if (isCustomTemplateId(name)) {
+    const customTemplate = getCustomTemplates()[name];
+    if (!customTemplate?.data) {
+      window.alert("Сохранённый шаблон не найден");
+      return;
+    }
+    applyDataToForm(cloneData(customTemplate.data));
+    return;
+  }
+
+  const data = name === "blank" ? createEmptyData() : cloneData(templates[name]);
   applyDataToForm(data, { clearPromoIds: true });
 }
 
@@ -1887,6 +2027,7 @@ function setActiveView(view) {
   form.classList.toggle("hidden", isTournamentView);
   tournamentForm.classList.toggle("hidden", !isTournamentView);
   promoTemplateActions.classList.toggle("hidden", isTournamentView);
+  saveTemplateButton.classList.toggle("hidden", isTournamentView);
   topbarEyebrow.textContent = isTournamentView ? "Турниры" : "Маркетинговые акции";
   topbarTitle.textContent = isTournamentView ? "Генератор JSON турниров" : "Генератор JSON";
   updateAll();
@@ -2077,6 +2218,31 @@ document.querySelector("#addTournamentButton").addEventListener("click", () => {
 document.querySelector("#loadTemplateButton").addEventListener("click", () => {
   loadTemplate(templateSelect.value);
 });
+saveTemplateButton.addEventListener("click", () => {
+  openSaveTemplateDialog();
+});
+saveTemplateDialog.querySelector(".save-template-form").addEventListener("submit", (event) => {
+  const submitter = event.submitter;
+  if (!submitter || submitter.value !== "save") {
+    saveTemplateStatus.textContent = "";
+    saveTemplateStatus.classList.remove("is-success");
+    return;
+  }
+
+  event.preventDefault();
+  const result = saveCurrentTemplate(saveTemplateNameInput.value);
+  if (!result.ok) {
+    saveTemplateStatus.textContent = result.message;
+    saveTemplateStatus.classList.remove("is-success");
+    return;
+  }
+
+  saveTemplateStatus.textContent = `Шаблон «${result.label}» сохранён`;
+  saveTemplateStatus.classList.add("is-success");
+  window.setTimeout(() => {
+    saveTemplateDialog.close();
+  }, 450);
+});
 templateSelect.addEventListener("change", () => {
   if (templateSelect.value === "json") {
     loadTemplate("json");
@@ -2117,7 +2283,7 @@ document.querySelector("#downloadButton").addEventListener("click", () => {
   triggerConfetti(document.querySelector("#downloadButton"));
 });
 
-templateSelect.value = "offer";
+renderTemplateSelectOptions("offer");
 loadTemplate("offer");
 fillTournamentTemplateSelect();
 updateAll();
