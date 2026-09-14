@@ -488,9 +488,7 @@ function resolveBannerOverlayUrl(value) {
 }
 
 function applyPromoFormDefaults() {
-  if (!fields.imageUrl.value.trim()) {
-    fields.imageUrl.value = DEFAULT_MARKETING1_IMAGE_URL;
-  }
+  fields.imageUrl.value = resolveMarketing1ImageUrl(fields.imageUrl.value);
   if (!fields.promoHeaderBackgroundUrl.value.trim()) {
     fields.promoHeaderBackgroundUrl.value = DEFAULT_BANNER_BACKGROUND_URL;
   }
@@ -580,7 +578,7 @@ function applyDataToForm(data, options = {}) {
   fields.promoIds.value = options.clearPromoIds ? "" : promoIds.join(", ");
   setHeaderTypeInForm(common.headerType === "marketing1" ? "marketing1" : "marketing2");
   fields.header.value = common.header || "";
-  fields.imageUrl.value = common.imageUrl || "";
+  fields.imageUrl.value = resolveMarketing1ImageUrl(common.imageUrl);
   fields.content.value = htmlBreaksToText(common.content || "");
   fields.promoHeaderTitle.value = promoHeader.title || common.header || "";
   fields.promoHeaderBackgroundUrl.value = promoHeader.backgroundUrl || "";
@@ -608,6 +606,9 @@ function applyDataToForm(data, options = {}) {
 function syncPromoChromeFields() {
   const isMarketing2 = getHeaderTypeFromForm() === "marketing2";
   const isRive = fields.promoHeaderAnimationType.value === "rive";
+  if (!isMarketing2) {
+    fields.imageUrl.value = resolveMarketing1ImageUrl(fields.imageUrl.value);
+  }
   marketing1IntroFields.classList.toggle("hidden", isMarketing2);
   promoBannerPanel.classList.toggle("hidden", !isMarketing2);
   promoHeaderAnimationFields.classList.toggle("hidden", !isRive);
@@ -1312,7 +1313,7 @@ function buildJson() {
   const common = {
     headerType,
     title: DEFAULT_PROMO_TITLE,
-    imageUrl: fields.imageUrl.value.trim(),
+    imageUrl: resolveMarketing1ImageUrl(fields.imageUrl.value.trim()),
     header: fields.header.value.trim()
   };
 
