@@ -474,9 +474,14 @@ function getTermFromNode(termNode) {
   };
 }
 
+function getLastTermEditor(termsList) {
+  const editors = termsList.querySelectorAll(".term-editor");
+  return editors.length ? editors[editors.length - 1] : null;
+}
+
 function getNextTermSeed(termsList) {
-  const previous = termsList.querySelector(".term-editor:last-child");
-  return previous ? getTermFromNode(previous) : { header: "", content: "", imageUrl: "" };
+  const previous = getLastTermEditor(termsList);
+  return previous ? { ...getTermFromNode(previous) } : { header: "", content: "", imageUrl: "" };
 }
 
 function resolveSecondaryButtonUrl(value) {
@@ -527,9 +532,6 @@ function applyPromoFormDefaults() {
   fields.promoHeaderImageUrl.value = resolveBannerOverlayUrl(fields.promoHeaderImageUrl.value);
   if (fields.promoHeaderAnimationType.value === "rive" && !fields.promoHeaderAnimationUrl.value.trim()) {
     fields.promoHeaderAnimationUrl.value = DEFAULT_RIVE_ANIMATION_URL;
-  }
-  if (!fields.secondaryButtonText.value.trim()) {
-    fields.secondaryButtonText.value = "Полные правила акции";
   }
   fields.secondaryButtonUrl.value = resolveSecondaryButtonUrl(fields.secondaryButtonUrl.value);
 }
@@ -619,7 +621,7 @@ function applyDataToForm(data, options = {}) {
   fields.primaryButtonText.value = common.primaryButtonText || "";
   fields.primaryButtonAppUrl.value = common.primaryButtonAppUrl || common.primaryButtonUrl || "";
   fields.primaryButtonWebUrl.value = common.primaryButtonWebUrl || common.primaryButtonUrl || "";
-  fields.secondaryButtonText.value = common.secondaryButtonText || "Полные правила акции";
+  fields.secondaryButtonText.value = common.secondaryButtonText || "";
   fields.secondaryButtonUrl.value = resolveSecondaryButtonUrl(common.secondaryButtonUrl);
   rulesList.innerHTML = "";
   (Array.isArray(common.rules) ? common.rules : []).forEach((rule) => {
@@ -700,6 +702,8 @@ function addRule(rule = { header: "", content: "" }) {
   });
   node.querySelector(".add-term").addEventListener("click", () => {
     addTermCard(termsList, getNextTermSeed(termsList));
+    termsEnabled.checked = true;
+    termsFields.classList.remove("hidden");
     updateAll();
   });
   node.querySelector(".remove-rule").addEventListener("click", () => {
