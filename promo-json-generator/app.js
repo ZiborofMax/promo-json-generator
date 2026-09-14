@@ -248,6 +248,7 @@ const statusBadge = document.querySelector("#statusBadge");
 let jsonImportTimer = 0;
 let tournamentJsonImportTimer = 0;
 let activeView = "promo";
+let lastPromoHeaderAnimationType = "none";
 
 const viewTabs = document.querySelectorAll(".view-tab");
 const topbarEyebrow = document.querySelector("#topbarEyebrow");
@@ -895,7 +896,12 @@ function applyDataToForm(data, options = {}) {
 
 function syncPromoChromeFields() {
   const isMarketing2 = getHeaderTypeFromForm() === "marketing2";
-  const isRive = fields.promoHeaderAnimationType.value === "rive";
+  const animationType = fields.promoHeaderAnimationType.value === "rive" ? "rive" : "none";
+  const isRive = animationType === "rive";
+  if (isRive && lastPromoHeaderAnimationType !== "rive" && !fields.promoHeaderAnimationUrl.value.trim()) {
+    fields.promoHeaderAnimationUrl.value = DEFAULT_RIVE_ANIMATION_URL;
+  }
+  lastPromoHeaderAnimationType = animationType;
   fields.imageUrl.value = resolveMarketing1ImageUrl(fields.imageUrl.value);
   marketing1IntroFields.classList.toggle("hidden", isMarketing2);
   promoBannerPanel.classList.toggle("hidden", !isMarketing2);
