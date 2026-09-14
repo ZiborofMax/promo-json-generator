@@ -5,6 +5,7 @@ const DEFAULT_MARKETING1_IMAGE_URL =
   "https://www.ligastavok.ru/files/file/19310/b6565f47-bc3d-40a7-8233-fe473381fc2df.webp";
 const DEFAULT_BANNER_BACKGROUND_URL = "https://www.ligastavok.ru/files/file/18198/BG_Patern.webp";
 const DEFAULT_BANNER_OVERLAY_IMAGE_URL = "https://www.ligastavok.ru/files/file/18185/Image_2x.webp";
+const DEFAULT_RIVE_ANIMATION_URL = "https://www.ligastavok.ru/files/file/18736/compainanimation.riv";
 const LEGACY_BANNER_OVERLAY_IMAGE_URLS = [
   "https://www.ligastavok.ru/files/file/14559/freebetVsem_marketingPromoImg.webp",
   DEFAULT_LEGACY_IMAGE_URL
@@ -32,7 +33,7 @@ function makePromoHeader({
   };
 
   if (promoHeader.animationType === "rive") {
-    promoHeader.animationUrl = animationUrl;
+    promoHeader.animationUrl = animationUrl || DEFAULT_RIVE_ANIMATION_URL;
   }
 
   return promoHeader;
@@ -472,6 +473,14 @@ function resolveBannerOverlayUrl(value) {
   return trimmed;
 }
 
+function resolveRiveAnimationUrl(value, animationType) {
+  if (animationType !== "rive") {
+    return "";
+  }
+  const trimmed = String(value || "").trim();
+  return trimmed || DEFAULT_RIVE_ANIMATION_URL;
+}
+
 function applyPromoFormDefaults() {
   if (!fields.imageUrl.value.trim()) {
     fields.imageUrl.value = DEFAULT_MARKETING1_IMAGE_URL;
@@ -480,6 +489,12 @@ function applyPromoFormDefaults() {
     fields.promoHeaderBackgroundUrl.value = DEFAULT_BANNER_BACKGROUND_URL;
   }
   fields.promoHeaderImageUrl.value = resolveBannerOverlayUrl(fields.promoHeaderImageUrl.value);
+  if (fields.promoHeaderAnimationType.value === "rive") {
+    fields.promoHeaderAnimationUrl.value = resolveRiveAnimationUrl(
+      fields.promoHeaderAnimationUrl.value,
+      "rive"
+    );
+  }
   if (!fields.secondaryButtonText.value.trim()) {
     fields.secondaryButtonText.value = "Полные правила акции";
   }
@@ -589,9 +604,13 @@ function applyDataToForm(data, options = {}) {
 
 function syncPromoChromeFields() {
   const isMarketing2 = getHeaderTypeFromForm() === "marketing2";
+  const isRive = fields.promoHeaderAnimationType.value === "rive";
   marketing1IntroFields.classList.toggle("hidden", isMarketing2);
   promoBannerPanel.classList.toggle("hidden", !isMarketing2);
-  promoHeaderAnimationFields.classList.toggle("hidden", fields.promoHeaderAnimationType.value !== "rive");
+  promoHeaderAnimationFields.classList.toggle("hidden", !isRive);
+  if (isRive && !fields.promoHeaderAnimationUrl.value.trim()) {
+    fields.promoHeaderAnimationUrl.value = DEFAULT_RIVE_ANIMATION_URL;
+  }
 }
 
 function getHeaderTypeFromForm() {
@@ -1276,12 +1295,13 @@ function stripCommonByHeaderType(common, headerType) {
 }
 
 function buildPromoHeaderFromForm() {
+  const animationType = fields.promoHeaderAnimationType.value;
   return makePromoHeader({
     header: fields.promoHeaderTitle.value.trim() || fields.header.value.trim(),
     imageUrl: resolveBannerOverlayUrl(fields.promoHeaderImageUrl.value),
     backgroundUrl: fields.promoHeaderBackgroundUrl.value.trim(),
-    animationType: fields.promoHeaderAnimationType.value,
-    animationUrl: fields.promoHeaderAnimationUrl.value.trim()
+    animationType,
+    animationUrl: resolveRiveAnimationUrl(fields.promoHeaderAnimationUrl.value, animationType)
   });
 }
 
