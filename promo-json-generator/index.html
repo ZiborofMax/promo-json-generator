@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Генератор JSON акции</title>
-    <link rel="stylesheet" href="./styles.css?v=20260914h" />
+    <link rel="stylesheet" href="./styles.css?v=20260914i" />
   </head>
   <body>
     <main class="app-shell">
@@ -23,7 +23,11 @@
             </div>
           </div>
           <div class="topbar-actions" id="promoTemplateActions">
-            <select id="templateSelect" aria-label="Шаблон"></select>
+            <div class="template-select-wrap">
+              <select id="templateSelect" aria-label="Шаблон"></select>
+              <ul class="saved-template-list hidden" id="savedTemplateList" aria-label="Сохранённые шаблоны"></ul>
+            </div>
+            <button class="icon-button template-delete-button hidden" id="deleteTemplateButton" type="button" aria-label="Удалить выбранный шаблон" title="Удалить сохранённый шаблон">×</button>
             <button class="secondary" id="loadTemplateButton" type="button">Загрузить</button>
           </div>
         </header>
@@ -462,7 +466,7 @@
       </article>
     </template>
 
-    <script src="./tournament-templates.js?v=20260914h"></script>
-    <script src="./app.js?v=20260914h"></script>
+    <script src="./tournament-templates.js?v=20260914i"></script>
+    <script src="./app.js?v=20260914i"></script>
   </body>
 </html>
