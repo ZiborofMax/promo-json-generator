@@ -971,6 +971,10 @@ a.progress-widget {
   font-size: 11px;
 }
 
+.progress-row > span:last-child {
+  margin-left: auto;
+}
+
 @media (prefers-color-scheme: dark) {
   .progress-row {
     color: rgba(255, 255, 255, 0.88);

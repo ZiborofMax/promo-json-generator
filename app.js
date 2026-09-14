@@ -684,8 +684,8 @@ function addWidgetCard(widgetsList, widget = {}) {
   node.querySelector(".widget-campaign-id").value = widget.campaignId || "";
   node.querySelector(".widget-title").value = widget.title || "";
   node.querySelector(".widget-progress-text").value =
-    normalizeProgressLabel(progress.label || widget.progressText) || defaults.progressText;
-  node.querySelector(".widget-subtitle").value = widget.subtitle || defaults.subtitle;
+    normalizeProgressLabel(progress.label || widget.progressText);
+  node.querySelector(".widget-subtitle").value = widget.subtitle || "";
   node.querySelector(".widget-progress-type").value = getWidgetProgressType(progress.type);
   node.querySelector(".widget-image-url").value = widget.imageUrl || DEFAULT_WIDGET_IMAGE;
   node.querySelector(".widget-card-image-url").value = widget.cardImageUrl || "";
@@ -1198,8 +1198,7 @@ function normalizeProgressLabel(value) {
 }
 
 function collectWidgetFromNode(node) {
-  const progressText =
-    normalizeProgressLabel(node.querySelector(".widget-progress-text").value) || DEFAULT_WIDGET_PROGRESS_LABEL;
+  const progressText = normalizeProgressLabel(node.querySelector(".widget-progress-text").value);
   const progressType = getWidgetProgressType(node.querySelector(".widget-progress-type").value);
   const rewardText = node.querySelector(".widget-reward-text").value.trim();
   const rewardImageUrl = node.querySelector(".widget-reward-image-url").value.trim();
@@ -1625,18 +1624,21 @@ function renderRulePreview(rule) {
 
 function renderWidget(widget) {
   const progressType = getWidgetProgressType(widget.progress?.type);
-  const progressLabel = widget.progress?.label || widget.progressText || DEFAULT_WIDGET_PROGRESS_LABEL;
+  const progressLabel = normalizeProgressLabel(widget.progress?.label || widget.progressText || "");
   const cardImage = widget.cardImageUrl
     ? `<img class="progress-card-image" src="${escapeHtml(widget.cardImageUrl)}" alt="">`
     : "";
   const subtitle = widget.subtitle
     ? `<p class="progress-subtitle">${escapeHtml(widget.subtitle)}</p>`
-    : `<p class="progress-subtitle">${escapeHtml(DEFAULT_WIDGET_SUBTITLE)}</p>`;
+    : "";
+  const progressLabelHtml = progressLabel
+    ? `<span>${escapeHtml(progressLabel)}</span>`
+    : "";
   const scale = progressType === "none"
     ? ""
     : `
       <div class="progress-row">
-        <span>${escapeHtml(progressLabel)}</span>
+        ${progressLabelHtml}
         <span>0/1</span>
       </div>
       <div class="bar${progressType === "steps" ? " is-steps" : ""}"><span></span></div>
