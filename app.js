@@ -230,6 +230,8 @@ const widgetTemplate = document.querySelector("#widgetTemplate");
 const termTemplate = document.querySelector("#termTemplate");
 const jsonOutput = document.querySelector("#jsonOutput");
 const templateSelect = document.querySelector("#templateSelect");
+const savedTemplateList = document.querySelector("#savedTemplateList");
+const deleteTemplateButton = document.querySelector("#deleteTemplateButton");
 const saveTemplateButton = document.querySelector("#saveTemplateButton");
 const saveTemplateDialog = document.querySelector("#saveTemplateDialog");
 const saveTemplateNameInput = document.querySelector("#saveTemplateName");
@@ -655,6 +657,56 @@ function capturePromoFormState() {
   return data;
 }
 
+function appendTemplateOption(value, label) {
+  const option = document.createElement("option");
+  option.value = value;
+  option.textContent = label;
+  templateSelect.append(option);
+}
+
+function updateDeleteTemplateButton() {
+  deleteTemplateButton.classList.toggle("hidden", !isCustomTemplateId(templateSelect.value));
+}
+
+function renderSavedTemplateList(selectedValue = templateSelect.value) {
+  const customTemplates = getCustomTemplates();
+  const customIds = Object.keys(customTemplates).sort((left, right) =>
+    customTemplates[left].label.localeCompare(customTemplates[right].label, "ru")
+  );
+
+  savedTemplateList.innerHTML = "";
+  savedTemplateList.classList.toggle("hidden", !customIds.length);
+
+  customIds.forEach((id) => {
+    const item = document.createElement("li");
+    item.className = `saved-template-item${id === selectedValue ? " is-active" : ""}`;
+
+    const name = document.createElement("span");
+    name.className = "saved-template-name";
+    name.textContent = customTemplates[id].label;
+    name.title = customTemplates[id].label;
+
+    const deleteButton = document.createElement("button");
+    deleteButton.type = "button";
+    deleteButton.className = "saved-template-delete";
+    deleteButton.setAttribute("aria-label", `Удалить шаблон ${customTemplates[id].label}`);
+    deleteButton.title = "Удалить шаблон";
+    deleteButton.textContent = "×";
+    deleteButton.addEventListener("click", () => {
+      deleteCustomTemplate(id);
+    });
+
+    name.addEventListener("click", () => {
+      templateSelect.value = id;
+      updateDeleteTemplateButton();
+      renderSavedTemplateList(id);
+    });
+
+    item.append(name, deleteButton);
+    savedTemplateList.append(item);
+  });
+}
+
 function renderTemplateSelectOptions(selectedValue = templateSelect.value) {
   const customTemplates = getCustomTemplates();
   const customIds = Object.keys(customTemplates).sort((left, right) =>
@@ -662,29 +714,38 @@ function renderTemplateSelectOptions(selectedValue = templateSelect.value) {
   );
   templateSelect.innerHTML = "";
 
-  BUILTIN_TEMPLATE_OPTIONS.forEach(({ value, label }) => {
-    if (value === "json") {
-      if (customIds.length) {
-        const optgroup = document.createElement("optgroup");
-        optgroup.label = "Сохранённые шаблоны";
-        customIds.forEach((id) => {
-          const option = document.createElement("option");
-          option.value = id;
-          option.textContent = customTemplates[id].label;
-          optgroup.append(option);
-        });
-        templateSelect.append(optgroup);
-      }
-    }
+  BUILTIN_TEMPLATE_OPTIONS.filter(({ value }) => !["json", "blank"].includes(value)).forEach(({ value, label }) => {
+    appendTemplateOption(value, label);
+  });
 
-    const option = document.createElement("option");
-    option.value = value;
-    option.textContent = label;
-    templateSelect.append(option);
+  customIds.forEach((id) => {
+    appendTemplateOption(id, customTemplates[id].label);
+  });
+
+  BUILTIN_TEMPLATE_OPTIONS.filter(({ value }) => ["json", "blank"].includes(value)).forEach(({ value, label }) => {
+    appendTemplateOption(value, label);
   });
 
   const hasSelectedValue = [...templateSelect.options].some((option) => option.value === selectedValue);
   templateSelect.value = hasSelectedValue ? selectedValue : "offer";
+  updateDeleteTemplateButton();
+  renderSavedTemplateList(templateSelect.value);
+}
+
+function deleteCustomTemplate(id) {
+  if (!isCustomTemplateId(id)) {
+    return;
+  }
+
+  const customTemplates = getCustomTemplates();
+  const label = customTemplates[id]?.label || "шаблон";
+  if (!window.confirm(`Удалить сохранённый шаблон «${label}»?`)) {
+    return;
+  }
+
+  delete customTemplates[id];
+  setCustomTemplates(customTemplates);
+  renderTemplateSelectOptions(templateSelect.value === id ? "offer" : templateSelect.value);
 }
 
 function saveCurrentTemplate(label) {
@@ -693,16 +754,20 @@ function saveCurrentTemplate(label) {
     return { ok: false, message: "Введите название шаблона" };
   }
 
-  const id = makeCustomTemplateId(trimmedLabel);
-  const customTemplates = getCustomTemplates();
-  customTemplates[id] = {
-    label: trimmedLabel,
-    data: capturePromoFormState(),
-    savedAt: Date.now()
-  };
-  setCustomTemplates(customTemplates);
-  renderTemplateSelectOptions(id);
-  return { ok: true, id, label: trimmedLabel };
+  try {
+    const id = makeCustomTemplateId(trimmedLabel);
+    const customTemplates = getCustomTemplates();
+    customTemplates[id] = {
+      label: trimmedLabel,
+      data: capturePromoFormState(),
+      savedAt: Date.now()
+    };
+    setCustomTemplates(customTemplates);
+    renderTemplateSelectOptions(id);
+    return { ok: true, id, label: trimmedLabel };
+  } catch (error) {
+    return { ok: false, message: "Не удалось сохранить шаблон" };
+  }
 }
 
 function openSaveTemplateDialog() {
@@ -713,6 +778,21 @@ function openSaveTemplateDialog() {
   window.setTimeout(() => {
     saveTemplateNameInput.focus();
   }, 0);
+}
+
+function handleSaveTemplate() {
+  const result = saveCurrentTemplate(saveTemplateNameInput.value);
+  if (!result.ok) {
+    saveTemplateStatus.textContent = result.message;
+    saveTemplateStatus.classList.remove("is-success");
+    return;
+  }
+
+  saveTemplateStatus.textContent = `Шаблон «${result.label}» сохранён`;
+  saveTemplateStatus.classList.add("is-success");
+  window.setTimeout(() => {
+    saveTemplateDialog.close();
+  }, 450);
 }
 
 function loadTemplate(name) {
@@ -2230,20 +2310,14 @@ saveTemplateDialog.querySelector(".save-template-form").addEventListener("submit
   }
 
   event.preventDefault();
-  const result = saveCurrentTemplate(saveTemplateNameInput.value);
-  if (!result.ok) {
-    saveTemplateStatus.textContent = result.message;
-    saveTemplateStatus.classList.remove("is-success");
-    return;
-  }
-
-  saveTemplateStatus.textContent = `Шаблон «${result.label}» сохранён`;
-  saveTemplateStatus.classList.add("is-success");
-  window.setTimeout(() => {
-    saveTemplateDialog.close();
-  }, 450);
+  handleSaveTemplate();
+});
+deleteTemplateButton.addEventListener("click", () => {
+  deleteCustomTemplate(templateSelect.value);
 });
 templateSelect.addEventListener("change", () => {
+  updateDeleteTemplateButton();
+  renderSavedTemplateList(templateSelect.value);
   if (templateSelect.value === "json") {
     loadTemplate("json");
   }
