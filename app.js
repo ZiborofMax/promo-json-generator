@@ -28,12 +28,14 @@ function makePromoHeader({
   const promoHeader = {
     backgroundUrl,
     imageUrl,
-    animationType: animationType === "rive" ? "rive" : "none",
+    animationType: "none",
     title: header
   };
 
-  if (promoHeader.animationType === "rive") {
-    promoHeader.animationUrl = animationUrl || DEFAULT_RIVE_ANIMATION_URL;
+  const trimmedAnimationUrl = String(animationUrl || "").trim();
+  if (animationType === "rive" && trimmedAnimationUrl) {
+    promoHeader.animationType = "rive";
+    promoHeader.animationUrl = trimmedAnimationUrl;
   }
 
   return promoHeader;
@@ -473,14 +475,6 @@ function resolveBannerOverlayUrl(value) {
   return trimmed;
 }
 
-function resolveRiveAnimationUrl(value, animationType) {
-  if (animationType !== "rive") {
-    return "";
-  }
-  const trimmed = String(value || "").trim();
-  return trimmed || DEFAULT_RIVE_ANIMATION_URL;
-}
-
 function applyPromoFormDefaults() {
   if (!fields.imageUrl.value.trim()) {
     fields.imageUrl.value = DEFAULT_MARKETING1_IMAGE_URL;
@@ -489,11 +483,8 @@ function applyPromoFormDefaults() {
     fields.promoHeaderBackgroundUrl.value = DEFAULT_BANNER_BACKGROUND_URL;
   }
   fields.promoHeaderImageUrl.value = resolveBannerOverlayUrl(fields.promoHeaderImageUrl.value);
-  if (fields.promoHeaderAnimationType.value === "rive") {
-    fields.promoHeaderAnimationUrl.value = resolveRiveAnimationUrl(
-      fields.promoHeaderAnimationUrl.value,
-      "rive"
-    );
+  if (fields.promoHeaderAnimationType.value === "rive" && !fields.promoHeaderAnimationUrl.value.trim()) {
+    fields.promoHeaderAnimationUrl.value = DEFAULT_RIVE_ANIMATION_URL;
   }
   if (!fields.secondaryButtonText.value.trim()) {
     fields.secondaryButtonText.value = "Полные правила акции";
@@ -1295,13 +1286,12 @@ function stripCommonByHeaderType(common, headerType) {
 }
 
 function buildPromoHeaderFromForm() {
-  const animationType = fields.promoHeaderAnimationType.value;
   return makePromoHeader({
     header: fields.promoHeaderTitle.value.trim() || fields.header.value.trim(),
     imageUrl: resolveBannerOverlayUrl(fields.promoHeaderImageUrl.value),
     backgroundUrl: fields.promoHeaderBackgroundUrl.value.trim(),
-    animationType,
-    animationUrl: resolveRiveAnimationUrl(fields.promoHeaderAnimationUrl.value, animationType)
+    animationType: fields.promoHeaderAnimationType.value,
+    animationUrl: fields.promoHeaderAnimationUrl.value.trim()
   });
 }
 
