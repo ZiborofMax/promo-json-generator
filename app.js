@@ -471,12 +471,25 @@ function resolveSecondaryButtonUrl(value) {
   return trimmed;
 }
 
-function resolveMarketing1ImageUrl(value) {
+function isLegacyMarketing1ImageUrl(value) {
   const trimmed = String(value || "").trim();
-  if (!trimmed || LEGACY_MARKETING1_IMAGE_URLS.includes(trimmed)) {
-    return DEFAULT_MARKETING1_IMAGE_URL;
+  if (!trimmed) {
+    return true;
   }
-  return trimmed;
+  if (LEGACY_MARKETING1_IMAGE_URLS.some((legacyUrl) => legacyUrl.toLowerCase() === trimmed.toLowerCase())) {
+    return true;
+  }
+  try {
+    const { pathname } = new URL(trimmed);
+    const normalizedPath = pathname.toLowerCase();
+    return normalizedPath.includes("/file/14559/") || normalizedPath.includes("/file/16316/");
+  } catch {
+    return false;
+  }
+}
+
+function resolveMarketing1ImageUrl(value) {
+  return isLegacyMarketing1ImageUrl(value) ? DEFAULT_MARKETING1_IMAGE_URL : String(value || "").trim();
 }
 
 function resolveBannerOverlayUrl(value) {
@@ -606,9 +619,7 @@ function applyDataToForm(data, options = {}) {
 function syncPromoChromeFields() {
   const isMarketing2 = getHeaderTypeFromForm() === "marketing2";
   const isRive = fields.promoHeaderAnimationType.value === "rive";
-  if (!isMarketing2) {
-    fields.imageUrl.value = resolveMarketing1ImageUrl(fields.imageUrl.value);
-  }
+  fields.imageUrl.value = resolveMarketing1ImageUrl(fields.imageUrl.value);
   marketing1IntroFields.classList.toggle("hidden", isMarketing2);
   promoBannerPanel.classList.toggle("hidden", !isMarketing2);
   promoHeaderAnimationFields.classList.toggle("hidden", !isRive);
@@ -1123,7 +1134,7 @@ function normalizeImportedJsonData(value) {
   const normalizedCommon = {
     title: common.title || "",
     headerType,
-    imageUrl: common.imageUrl || "",
+    imageUrl: resolveMarketing1ImageUrl(common.imageUrl),
     header: common.header || "",
     rules: Array.isArray(common.rules) ? common.rules : [],
     primaryButtonText: common.primaryButtonText || "",
@@ -1776,10 +1787,10 @@ function updateAll() {
     return;
   }
 
+  syncPromoChromeFields();
   const data = buildJson();
   jsonOutput.textContent = getJsonText(data);
   renderPreview(data);
-  syncPromoChromeFields();
   const hasPromoId = Boolean(data.switcherByPromoId.length);
   statusBadge.textContent = hasPromoId ? "JSON готов" : "Укажите Promo ID";
   statusBadge.classList.toggle("warning", !hasPromoId);

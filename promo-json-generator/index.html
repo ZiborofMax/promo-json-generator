@@ -59,27 +59,43 @@
                 Promo ID
                 <textarea id="promoIds" rows="2" placeholder="Введите Promo ID, по которым будет доступен раздел. Можно перечислить несколько через запятую"></textarea>
               </label>
+              <div class="header-type-row">
+                <span class="header-type-label">Тип шапки</span>
+                <div class="radio-row">
+                  <label class="check-row">
+                    <input id="headerTypeMarketing1" name="headerType" type="radio" value="marketing1" />
+                    Шапка 1 (marketing1)
+                  </label>
+                  <label class="check-row">
+                    <input id="headerTypeMarketing2" name="headerType" type="radio" value="marketing2" checked />
+                    Шапка 2 (marketing2)
+                  </label>
+                </div>
+              </div>
               <label>
                 Header
-                <span class="field-note">Для старых версий, в новой шапке не показывается</span>
+                <span class="field-note">Для marketing1 — заголовок под картинкой. При marketing2 тоже попадает в JSON для совместимости</span>
                 <input id="header" type="text" placeholder="Фрибет 500" />
               </label>
               <label>
                 Image URL
-                <span class="field-note">Для старых версий, в новой шапке не показывается</span>
-                <input id="imageUrl" type="url" value="https://www.ligastavok.ru/files/file/16316/MarketingImg_reBrand.webp" placeholder="https://www.ligastavok.ru/files/file/16316/MarketingImg_reBrand.webp" />
+                <span class="field-note">Для marketing1 — картинка в шапке. При marketing2 тоже попадает в JSON для совместимости</span>
+                <input id="imageUrl" type="url" value="https://www.ligastavok.ru/files/file/19310/b6565f47-bc3d-40a7-8233-fe473381fc2df.webp" placeholder="https://www.ligastavok.ru/files/file/19310/b6565f47-bc3d-40a7-8233-fe473381fc2df.webp" />
               </label>
+              <div id="marketing1IntroFields">
               <label>
                 Intro content
+                <span class="field-note">Короткое описание под заголовком, только для marketing1</span>
                 <textarea id="content" rows="3" placeholder="Короткое описание под заголовком"></textarea>
               </label>
+              </div>
             </section>
 
-            <section class="panel">
+            <section class="panel" id="promoBannerPanel">
               <div class="panel-heading">
                 <h2>Баннер</h2>
               </div>
-              <p class="field-note">Новая шапка <code>headerType: marketing2</code>. Title рисуется поверх баннера.</p>
+              <p class="field-note">Для <code>headerType: marketing2</code>. Title рисуется поверх баннера.</p>
               <label>
                 Title на баннере
                 <input id="promoHeaderTitle" type="text" placeholder="ФРИБЕТ ВСЕМ. СТАРЫМ И НОВЫМ ПОЛЬЗОВАТЕЛЯМ" />
@@ -103,26 +119,7 @@
                 <label>
                   Файл анимации URL
                   <span class="field-note">Ссылка на уже загруженный .riv в файловом хранилище</span>
-                  <input id="promoHeaderAnimationUrl" type="url" placeholder="https://www.ligastavok.ru/files/file/.../confettis.riv" />
-                </label>
-              </div>
-            </section>
-
-            <section class="panel">
-              <div class="panel-heading">
-                <h2>Гостевой режим</h2>
-              </div>
-              <label class="check-row">
-                <input id="guestEnabled" type="checkbox" />
-                Показывать акцию гостям
-              </label>
-              <div id="guestModeFields" class="hidden">
-                <label>
-                  Тип контента
-                  <select id="guestContentMode">
-                    <option value="custom">custom — отдельный контент</option>
-                    <option value="duplicate">duplicate — дублирует весь раздел</option>
-                  </select>
+                  <input id="promoHeaderAnimationUrl" type="url" placeholder="https://www.ligastavok.ru/files/file/18736/compainanimation.riv" />
                 </label>
               </div>
             </section>
@@ -156,70 +153,15 @@
                   Primary URL WEB
                   <input id="primaryButtonWebUrl" type="url" placeholder="/home" />
                 </label>
-                <label>
-                  Secondary text
-                  <input id="secondaryButtonText" type="text" placeholder="Полные правила акции" value="Полные правила акции" />
-                </label>
               </div>
+              <label>
+                Secondary text
+                <input id="secondaryButtonText" type="text" placeholder="Полные правила акции" value="Полные правила акции" />
+              </label>
               <label>
                 Secondary URL
                 <input id="secondaryButtonUrl" type="url" placeholder="" />
               </label>
-            </section>
-
-            <section class="panel hidden" id="guestSectionPanel">
-              <div class="panel-heading">
-                <h2>Гостевой раздел</h2>
-              </div>
-              <p class="field-note">Отдельный контент для неавторизованных пользователей при <code>guestContentMode: custom</code>.</p>
-              <div class="field-grid">
-                <label>
-                  Guest title
-                  <input id="guestTitle" type="text" placeholder="Акция" />
-                </label>
-                <label>
-                  Guest header
-                  <input id="guestHeader" type="text" />
-                </label>
-              </div>
-              <label>
-                Guest image URL
-                <input id="guestImageUrl" type="url" placeholder="https://www.ligastavok.ru/files/file/.../image.webp" />
-              </label>
-              <label>
-                Guest content
-                <textarea id="guestContent" rows="3" placeholder="Зарегистрируйтесь или войдите в аккаунт, чтобы принять участие в акции"></textarea>
-              </label>
-              <div class="panel-heading">
-                <h2>Разделы гостя</h2>
-              </div>
-              <div class="rules-list" id="guestRulesList"></div>
-              <div class="section-footer">
-                <button class="secondary" id="addGuestRuleButton" type="button">Добавить раздел гостя</button>
-              </div>
-              <div class="panel-heading">
-                <h2>Кнопки гостя</h2>
-              </div>
-              <div class="field-grid">
-                <label>
-                  Guest primary text
-                  <input id="guestPrimaryButtonText" type="text" placeholder="Войти или зарегистрироваться" />
-                </label>
-                <label>
-                  Guest primary URL
-                  <input id="guestPrimaryButtonUrl" type="url" placeholder="https://www.ligastavok.ru/login" />
-                </label>
-              </div>
-              <div class="field-grid">
-                <label>
-                  Guest secondary text
-                  <input id="guestSecondaryButtonText" type="text" placeholder="Полные правила акции" />
-                </label>
-                <label>
-                  Guest secondary URL
-                  <input id="guestSecondaryButtonUrl" type="url" placeholder="https://www.ligastavok.ru/files/file/.../rules.pdf" />
-                </label>
-              </div>
             </section>
           </form>
 
@@ -285,23 +227,6 @@
         </div>
       </section>
     </main>
-
-    <template id="guestRuleTemplate">
-      <article class="rule-card guest-rule-card">
-        <div class="rule-card-head">
-          <h3></h3>
-          <button class="icon-button remove-guest-rule" type="button" aria-label="Удалить раздел гостя">×</button>
-        </div>
-        <label>
-          Заголовок раздела
-          <input class="guest-rule-header" type="text" />
-        </label>
-        <label>
-          Текст раздела
-          <textarea class="guest-rule-content" rows="4"></textarea>
-        </label>
-      </article>
-    </template>
 
     <template id="ruleTemplate">
       <article class="rule-card">
@@ -524,7 +449,7 @@
       </article>
     </template>
 
-    <script src="./tournament-templates.js"></script>
-    <script src="./app.js"></script>
+    <script src="./tournament-templates.js?v=20260914"></script>
+    <script src="./app.js?v=20260914"></script>
   </body>
 </html>

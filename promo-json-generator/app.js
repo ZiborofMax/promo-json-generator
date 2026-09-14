@@ -1,8 +1,15 @@
 const DEFAULT_WIDGET_IMAGE = "https://www.ligastavok.ru/files/file/16326/Marketing_widgetProgressBar_Bg.webp";
 const DEFAULT_TERM_IMAGE = "https://www.ligastavok.ru/files/file/11160/Freebet_3x.webp";
 const DEFAULT_LEGACY_IMAGE_URL = "https://www.ligastavok.ru/files/file/16316/MarketingImg_reBrand.webp";
+const DEFAULT_MARKETING1_IMAGE_URL =
+  "https://www.ligastavok.ru/files/file/19310/b6565f47-bc3d-40a7-8233-fe473381fc2df.webp";
+const LEGACY_MARKETING1_IMAGE_URLS = [
+  DEFAULT_LEGACY_IMAGE_URL,
+  "https://www.ligastavok.ru/files/file/14559/freebetVsem_marketingPromoImg.webp"
+];
 const DEFAULT_BANNER_BACKGROUND_URL = "https://www.ligastavok.ru/files/file/18198/BG_Patern.webp";
 const DEFAULT_BANNER_OVERLAY_IMAGE_URL = "https://www.ligastavok.ru/files/file/18185/Image_2x.webp";
+const DEFAULT_RIVE_ANIMATION_URL = "https://www.ligastavok.ru/files/file/18736/compainanimation.riv";
 const LEGACY_BANNER_OVERLAY_IMAGE_URLS = [
   "https://www.ligastavok.ru/files/file/14559/freebetVsem_marketingPromoImg.webp",
   DEFAULT_LEGACY_IMAGE_URL
@@ -25,12 +32,14 @@ function makePromoHeader({
   const promoHeader = {
     backgroundUrl,
     imageUrl,
-    animationType: animationType === "rive" ? "rive" : "none",
+    animationType: "none",
     title: header
   };
 
-  if (promoHeader.animationType === "rive") {
-    promoHeader.animationUrl = animationUrl;
+  const trimmedAnimationUrl = String(animationUrl || "").trim();
+  if (animationType === "rive" && trimmedAnimationUrl) {
+    promoHeader.animationType = "rive";
+    promoHeader.animationUrl = trimmedAnimationUrl;
   }
 
   return promoHeader;
@@ -42,7 +51,7 @@ const templates = {
     common: {
       title: "Акция",
       headerType: DEFAULT_HEADER_TYPE,
-      imageUrl: "https://www.ligastavok.ru/files/file/14559/freebetVsem_marketingPromoImg.webp",
+      imageUrl: DEFAULT_MARKETING1_IMAGE_URL,
       header: "Фрибет 500",
       promoHeader: makePromoHeader({
         header: "Фрибет 500",
@@ -183,8 +192,12 @@ const templates = {
 };
 
 const form = document.querySelector("#promoForm");
+const marketing1IntroFields = document.querySelector("#marketing1IntroFields");
+const promoBannerPanel = document.querySelector("#promoBannerPanel");
 const fields = {
   promoIds: document.querySelector("#promoIds"),
+  headerTypeMarketing1: document.querySelector("#headerTypeMarketing1"),
+  headerTypeMarketing2: document.querySelector("#headerTypeMarketing2"),
   header: document.querySelector("#header"),
   imageUrl: document.querySelector("#imageUrl"),
   content: document.querySelector("#content"),
@@ -193,26 +206,12 @@ const fields = {
   promoHeaderImageUrl: document.querySelector("#promoHeaderImageUrl"),
   promoHeaderAnimationType: document.querySelector("#promoHeaderAnimationType"),
   promoHeaderAnimationUrl: document.querySelector("#promoHeaderAnimationUrl"),
-  guestEnabled: document.querySelector("#guestEnabled"),
-  guestContentMode: document.querySelector("#guestContentMode"),
-  guestTitle: document.querySelector("#guestTitle"),
-  guestHeader: document.querySelector("#guestHeader"),
-  guestImageUrl: document.querySelector("#guestImageUrl"),
-  guestContent: document.querySelector("#guestContent"),
-  guestPrimaryButtonText: document.querySelector("#guestPrimaryButtonText"),
-  guestPrimaryButtonUrl: document.querySelector("#guestPrimaryButtonUrl"),
-  guestSecondaryButtonText: document.querySelector("#guestSecondaryButtonText"),
-  guestSecondaryButtonUrl: document.querySelector("#guestSecondaryButtonUrl"),
   primaryButtonText: document.querySelector("#primaryButtonText"),
   primaryButtonAppUrl: document.querySelector("#primaryButtonAppUrl"),
   primaryButtonWebUrl: document.querySelector("#primaryButtonWebUrl"),
   secondaryButtonText: document.querySelector("#secondaryButtonText"),
   secondaryButtonUrl: document.querySelector("#secondaryButtonUrl")
 };
-const guestModeFields = document.querySelector("#guestModeFields");
-const guestSectionPanel = document.querySelector("#guestSectionPanel");
-const guestRulesList = document.querySelector("#guestRulesList");
-const guestRuleTemplate = document.querySelector("#guestRuleTemplate");
 const promoHeaderAnimationFields = document.querySelector("#promoHeaderAnimationFields");
 const rulesList = document.querySelector("#rulesList");
 const ruleTemplate = document.querySelector("#ruleTemplate");
@@ -472,6 +471,27 @@ function resolveSecondaryButtonUrl(value) {
   return trimmed;
 }
 
+function isLegacyMarketing1ImageUrl(value) {
+  const trimmed = String(value || "").trim();
+  if (!trimmed) {
+    return true;
+  }
+  if (LEGACY_MARKETING1_IMAGE_URLS.some((legacyUrl) => legacyUrl.toLowerCase() === trimmed.toLowerCase())) {
+    return true;
+  }
+  try {
+    const { pathname } = new URL(trimmed);
+    const normalizedPath = pathname.toLowerCase();
+    return normalizedPath.includes("/file/14559/") || normalizedPath.includes("/file/16316/");
+  } catch {
+    return false;
+  }
+}
+
+function resolveMarketing1ImageUrl(value) {
+  return isLegacyMarketing1ImageUrl(value) ? DEFAULT_MARKETING1_IMAGE_URL : String(value || "").trim();
+}
+
 function resolveBannerOverlayUrl(value) {
   const trimmed = String(value || "").trim();
   if (!trimmed || LEGACY_BANNER_OVERLAY_IMAGE_URLS.includes(trimmed)) {
@@ -481,13 +501,14 @@ function resolveBannerOverlayUrl(value) {
 }
 
 function applyPromoFormDefaults() {
-  if (!fields.imageUrl.value.trim()) {
-    fields.imageUrl.value = DEFAULT_LEGACY_IMAGE_URL;
-  }
+  fields.imageUrl.value = resolveMarketing1ImageUrl(fields.imageUrl.value);
   if (!fields.promoHeaderBackgroundUrl.value.trim()) {
     fields.promoHeaderBackgroundUrl.value = DEFAULT_BANNER_BACKGROUND_URL;
   }
   fields.promoHeaderImageUrl.value = resolveBannerOverlayUrl(fields.promoHeaderImageUrl.value);
+  if (fields.promoHeaderAnimationType.value === "rive" && !fields.promoHeaderAnimationUrl.value.trim()) {
+    fields.promoHeaderAnimationUrl.value = DEFAULT_RIVE_ANIMATION_URL;
+  }
   if (!fields.secondaryButtonText.value.trim()) {
     fields.secondaryButtonText.value = "Полные правила акции";
   }
@@ -528,7 +549,7 @@ function createEmptyData() {
     common: {
       title: DEFAULT_PROMO_TITLE,
       headerType: DEFAULT_HEADER_TYPE,
-      imageUrl: DEFAULT_LEGACY_IMAGE_URL,
+      imageUrl: DEFAULT_MARKETING1_IMAGE_URL,
       header: "",
       promoHeader: makePromoHeader({
         backgroundUrl: DEFAULT_BANNER_BACKGROUND_URL,
@@ -565,28 +586,18 @@ function loadTemplate(name) {
 function applyDataToForm(data, options = {}) {
   const common = data.common || {};
   const promoHeader = common.promoHeader && typeof common.promoHeader === "object" ? common.promoHeader : {};
-  const guest = data.guest && typeof data.guest === "object" ? data.guest : {};
   const promoIds = Array.isArray(data.switcherByPromoId) ? data.switcherByPromoId : [];
 
   fields.promoIds.value = options.clearPromoIds ? "" : promoIds.join(", ");
+  setHeaderTypeInForm(common.headerType === "marketing1" ? "marketing1" : "marketing2");
   fields.header.value = common.header || "";
-  fields.imageUrl.value = common.imageUrl || "";
+  fields.imageUrl.value = resolveMarketing1ImageUrl(common.imageUrl);
   fields.content.value = htmlBreaksToText(common.content || "");
   fields.promoHeaderTitle.value = promoHeader.title || common.header || "";
   fields.promoHeaderBackgroundUrl.value = promoHeader.backgroundUrl || "";
   fields.promoHeaderImageUrl.value = resolveBannerOverlayUrl(promoHeader.imageUrl);
   fields.promoHeaderAnimationType.value = promoHeader.animationType === "rive" ? "rive" : "none";
   fields.promoHeaderAnimationUrl.value = promoHeader.animationUrl || "";
-  fields.guestEnabled.checked = Boolean(data.guestEnabled);
-  fields.guestContentMode.value = data.guestContentMode === "duplicate" ? "duplicate" : "custom";
-  fields.guestTitle.value = guest.title || "";
-  fields.guestHeader.value = guest.header || "";
-  fields.guestImageUrl.value = guest.imageUrl || "";
-  fields.guestContent.value = htmlBreaksToText(guest.content || "");
-  fields.guestPrimaryButtonText.value = guest.primaryButtonText || "";
-  fields.guestPrimaryButtonUrl.value = guest.primaryButtonUrl || "";
-  fields.guestSecondaryButtonText.value = guest.secondaryButtonText || "";
-  fields.guestSecondaryButtonUrl.value = guest.secondaryButtonUrl || "";
   fields.primaryButtonText.value = common.primaryButtonText || "";
   fields.primaryButtonAppUrl.value = common.primaryButtonAppUrl || common.primaryButtonUrl || "";
   fields.primaryButtonWebUrl.value = common.primaryButtonWebUrl || common.primaryButtonUrl || "";
@@ -600,53 +611,31 @@ function applyDataToForm(data, options = {}) {
       content: htmlBreaksToText(safeRule.content || "")
     });
   });
-  guestRulesList.innerHTML = "";
-  const guestRules = Array.isArray(guest.rules) ? guest.rules : [];
-  if (guestRules.length) {
-    guestRules.forEach((rule) => addGuestRule(rule));
-  } else if (data.guestEnabled && data.guestContentMode !== "duplicate") {
-    addGuestRule();
-  }
   syncPromoChromeFields();
   applyPromoFormDefaults();
   updateAll();
 }
 
 function syncPromoChromeFields() {
-  const guestOn = fields.guestEnabled.checked;
-  const guestCustom = guestOn && fields.guestContentMode.value === "custom";
-  guestModeFields.classList.toggle("hidden", !guestOn);
-  guestSectionPanel.classList.toggle("hidden", !guestCustom);
-  promoHeaderAnimationFields.classList.toggle("hidden", fields.promoHeaderAnimationType.value !== "rive");
-  if (guestCustom && !guestRulesList.children.length) {
-    addGuestRule();
+  const isMarketing2 = getHeaderTypeFromForm() === "marketing2";
+  const isRive = fields.promoHeaderAnimationType.value === "rive";
+  fields.imageUrl.value = resolveMarketing1ImageUrl(fields.imageUrl.value);
+  marketing1IntroFields.classList.toggle("hidden", isMarketing2);
+  promoBannerPanel.classList.toggle("hidden", !isMarketing2);
+  promoHeaderAnimationFields.classList.toggle("hidden", !isRive);
+  if (isRive && !fields.promoHeaderAnimationUrl.value.trim()) {
+    fields.promoHeaderAnimationUrl.value = DEFAULT_RIVE_ANIMATION_URL;
   }
 }
 
-function addGuestRule(rule = { header: "", content: "" }) {
-  const node = guestRuleTemplate.content.firstElementChild.cloneNode(true);
-  node.querySelector(".guest-rule-header").value = rule.header || "";
-  node.querySelector(".guest-rule-content").value = htmlBreaksToText(rule.content || "");
-  node.querySelector(".remove-guest-rule").addEventListener("click", () => {
-    node.remove();
-    renumberGuestRules();
-    updateAll();
-  });
-  guestRulesList.append(node);
-  renumberGuestRules();
+function getHeaderTypeFromForm() {
+  return fields.headerTypeMarketing1.checked ? "marketing1" : "marketing2";
 }
 
-function renumberGuestRules() {
-  [...guestRulesList.children].forEach((node, index) => {
-    node.querySelector("h3").textContent = `Раздел гостя ${index + 1}`;
-  });
-}
-
-function collectGuestRules() {
-  return [...guestRulesList.children].map((node) => ({
-    header: node.querySelector(".guest-rule-header").value.trim(),
-    content: node.querySelector(".guest-rule-content").value
-  }));
+function setHeaderTypeInForm(headerType) {
+  const isMarketing1 = headerType === "marketing1";
+  fields.headerTypeMarketing1.checked = isMarketing1;
+  fields.headerTypeMarketing2.checked = !isMarketing1;
 }
 
 function addRule(rule = { header: "", content: "" }) {
@@ -731,8 +720,8 @@ function addWidgetCard(widgetsList, widget = {}) {
   node.querySelector(".widget-campaign-id").value = widget.campaignId || "";
   node.querySelector(".widget-title").value = widget.title || "";
   node.querySelector(".widget-progress-text").value =
-    normalizeProgressLabel(progress.label || widget.progressText) || defaults.progressText;
-  node.querySelector(".widget-subtitle").value = widget.subtitle || defaults.subtitle;
+    normalizeProgressLabel(progress.label || widget.progressText);
+  node.querySelector(".widget-subtitle").value = widget.subtitle || "";
   node.querySelector(".widget-progress-type").value = getWidgetProgressType(progress.type);
   node.querySelector(".widget-image-url").value = widget.imageUrl || DEFAULT_WIDGET_IMAGE;
   node.querySelector(".widget-card-image-url").value = widget.cardImageUrl || "";
@@ -1140,45 +1129,40 @@ function normalizeImportedJsonData(value) {
     : typeof source.switcherByPromoId === "string"
       ? parsePromoIds(source.switcherByPromoId)
       : [];
-  const guest = source.guest && typeof source.guest === "object" ? source.guest : {};
   const promoHeader = common.promoHeader && typeof common.promoHeader === "object" ? common.promoHeader : {};
+  const headerType = common.headerType === "marketing1" ? "marketing1" : "marketing2";
+  const normalizedCommon = {
+    title: common.title || "",
+    headerType,
+    imageUrl: resolveMarketing1ImageUrl(common.imageUrl),
+    header: common.header || "",
+    rules: Array.isArray(common.rules) ? common.rules : [],
+    primaryButtonText: common.primaryButtonText || "",
+    primaryButtonUrl: common.primaryButtonUrl || "",
+    primaryButtonAppUrl: common.primaryButtonAppUrl || common.primaryButtonUrl || "",
+    primaryButtonWebUrl: common.primaryButtonWebUrl || common.primaryButtonUrl || "",
+    secondaryButtonText: common.secondaryButtonText || "",
+    secondaryButtonUrl: common.secondaryButtonUrl || ""
+  };
+
+  if (headerType === "marketing1" && common.content) {
+    normalizedCommon.content = common.content;
+  }
+
+  if (headerType === "marketing2") {
+    normalizedCommon.promoHeader = {
+      backgroundUrl: promoHeader.backgroundUrl || "",
+      imageUrl: promoHeader.imageUrl || "",
+      animationType: promoHeader.animationType === "rive" ? "rive" : "none",
+      animationUrl: promoHeader.animationUrl || "",
+      title: promoHeader.title || ""
+    };
+  }
 
   return {
     switcherByPromoId,
-    guestEnabled: Boolean(source.guestEnabled),
-    guestContentMode: source.guestContentMode === "duplicate" ? "duplicate" : "custom",
-    common: {
-      title: common.title || "",
-      headerType: common.headerType || DEFAULT_HEADER_TYPE,
-      imageUrl: common.imageUrl || "",
-      header: common.header || "",
-      promoHeader: {
-        backgroundUrl: promoHeader.backgroundUrl || "",
-        imageUrl: promoHeader.imageUrl || "",
-        animationType: promoHeader.animationType === "rive" ? "rive" : "none",
-        animationUrl: promoHeader.animationUrl || "",
-        title: promoHeader.title || ""
-      },
-      content: common.content || "",
-      rules: Array.isArray(common.rules) ? common.rules : [],
-      primaryButtonText: common.primaryButtonText || "",
-      primaryButtonUrl: common.primaryButtonUrl || "",
-      primaryButtonAppUrl: common.primaryButtonAppUrl || common.primaryButtonUrl || "",
-      primaryButtonWebUrl: common.primaryButtonWebUrl || common.primaryButtonUrl || "",
-      secondaryButtonText: common.secondaryButtonText || "",
-      secondaryButtonUrl: common.secondaryButtonUrl || ""
-    },
-    guest: {
-      title: guest.title || "",
-      imageUrl: guest.imageUrl || "",
-      header: guest.header || "",
-      content: guest.content || "",
-      rules: Array.isArray(guest.rules) ? guest.rules : [],
-      primaryButtonText: guest.primaryButtonText || "",
-      primaryButtonUrl: guest.primaryButtonUrl || "",
-      secondaryButtonText: guest.secondaryButtonText || "",
-      secondaryButtonUrl: guest.secondaryButtonUrl || ""
-    }
+    guestEnabled: false,
+    common: normalizedCommon,
   };
 }
 
@@ -1245,13 +1229,11 @@ function collectTerms(node) {
 function normalizeProgressLabel(value) {
   return String(value || "")
     .replace(/,?\s*₽:?\s*$/u, "")
-    .replace(/:\s*$/u, "")
     .trim();
 }
 
 function collectWidgetFromNode(node) {
-  const progressText =
-    normalizeProgressLabel(node.querySelector(".widget-progress-text").value) || DEFAULT_WIDGET_PROGRESS_LABEL;
+  const progressText = normalizeProgressLabel(node.querySelector(".widget-progress-text").value);
   const progressType = getWidgetProgressType(node.querySelector(".widget-progress-type").value);
   const rewardText = node.querySelector(".widget-reward-text").value.trim();
   const rewardImageUrl = node.querySelector(".widget-reward-image-url").value.trim();
@@ -1315,6 +1297,18 @@ function collectRules() {
   });
 }
 
+function stripCommonByHeaderType(common, headerType) {
+  if (!common || typeof common !== "object") {
+    return;
+  }
+
+  if (headerType === "marketing1") {
+    delete common.promoHeader;
+  } else {
+    delete common.content;
+  }
+}
+
 function buildPromoHeaderFromForm() {
   return makePromoHeader({
     header: fields.promoHeaderTitle.value.trim() || fields.header.value.trim(),
@@ -1325,30 +1319,20 @@ function buildPromoHeaderFromForm() {
   });
 }
 
-function buildGuestCustom() {
-  return {
-    title: fields.guestTitle.value.trim(),
-    imageUrl: fields.guestImageUrl.value.trim(),
-    header: fields.guestHeader.value.trim(),
-    content: fields.guestContent.value,
-    rules: collectGuestRules(),
-    primaryButtonText: fields.guestPrimaryButtonText.value.trim(),
-    primaryButtonUrl: fields.guestPrimaryButtonUrl.value.trim(),
-    secondaryButtonText: fields.guestSecondaryButtonText.value.trim(),
-    secondaryButtonUrl: fields.guestSecondaryButtonUrl.value.trim()
-  };
-}
-
 function buildJson() {
+  const headerType = getHeaderTypeFromForm();
   const common = {
-    headerType: DEFAULT_HEADER_TYPE,
+    headerType,
     title: DEFAULT_PROMO_TITLE,
-    imageUrl: fields.imageUrl.value.trim(),
-    header: fields.header.value.trim(),
-    promoHeader: buildPromoHeaderFromForm()
+    imageUrl: resolveMarketing1ImageUrl(fields.imageUrl.value.trim()),
+    header: fields.header.value.trim()
   };
 
-  if (fields.content.value.trim()) {
+  if (headerType === "marketing2") {
+    common.promoHeader = buildPromoHeaderFromForm();
+  }
+
+  if (headerType === "marketing1" && fields.content.value.trim()) {
     common.content = fields.content.value;
   }
 
@@ -1360,32 +1344,11 @@ function buildJson() {
 
   const data = {
     switcherByPromoId: parsePromoIds(fields.promoIds.value),
-    guestEnabled: fields.guestEnabled.checked
+    guestEnabled: false
   };
 
-  if (data.guestEnabled) {
-    data.guestContentMode = fields.guestContentMode.value === "duplicate" ? "duplicate" : "custom";
-  }
-
   data.common = common;
-
-  if (data.guestEnabled) {
-    data.guest = data.guestContentMode === "duplicate" ? cloneData(common) : buildGuestCustom();
-  }
-
-  data.failures = [
-    {
-      type: "common",
-      header: "Не смогли загрузить данные",
-      content: "Обновите страницу или вернитесь позже",
-      buttonText: "Обновить"
-    },
-    {
-      type: "noAccess",
-      header: "Текущая акция для вас недоступна",
-      content: "Вы можете обратиться в службу<br>поддержки для выяснения причин"
-    }
-  ];
+  stripCommonByHeaderType(data.common, headerType);
 
   return normalizeJsonText(data);
 }
@@ -1414,7 +1377,6 @@ function applyWebLineBreaksToPromoBlock(block) {
 function buildWebJson() {
   const data = cloneData(buildJson());
   applyWebLineBreaksToPromoBlock(data.common);
-  applyWebLineBreaksToPromoBlock(data.guest);
   applyPromoWebUrls(data);
   return data;
 }
@@ -1633,6 +1595,7 @@ function renderSecondaryPreviewButton(common) {
 
 function renderPreview(data) {
   const { common } = data;
+  const headerType = common.headerType === "marketing1" ? "marketing1" : "marketing2";
   const promoHeader = common.promoHeader || {};
   previewTitle.textContent = DEFAULT_PROMO_TITLE;
   const bannerTitle = promoHeader.title || common.header || "Заголовок акции";
@@ -1642,7 +1605,27 @@ function renderPreview(data) {
   const bannerImage = promoHeader.imageUrl
     ? `<img class="promo-banner-image" src="${escapeHtml(promoHeader.imageUrl)}" alt="">`
     : "";
-  const intro = common.content ? `<p class="preview-intro">${escapeHtml(common.content)}</p>` : "";
+  const legacyHeaderImage = common.imageUrl
+    ? `<img class="hero-image" src="${escapeHtml(common.imageUrl)}" alt="">`
+    : "";
+  const legacyHeaderTitle = common.header
+    ? `<h2 class="preview-header">${escapeHtml(common.header)}</h2>`
+    : "";
+  const headerBlock =
+    headerType === "marketing1"
+      ? `${legacyHeaderImage}${legacyHeaderTitle}`
+      : `
+    <div class="promo-banner"${bannerStyle}>
+      ${bannerImage}
+      <div class="promo-banner-copy">
+        <h2>${escapeHtml(bannerTitle)}</h2>
+      </div>
+    </div>
+  `;
+  const intro =
+    headerType === "marketing1" && common.content
+      ? `<p class="preview-intro">${escapeHtml(common.content)}</p>`
+      : "";
   const rules = common.rules.map(renderRulePreview).join("");
   const primaryButton = common.primaryButtonText
     ? `<a class="primary-preview" href="${escapeHtml(common.primaryButtonUrl || "#")}">${escapeHtml(common.primaryButtonText)}</a>`
@@ -1651,12 +1634,7 @@ function renderPreview(data) {
   const footer = [primaryButton, secondaryButton].filter(Boolean).join("");
 
   preview.innerHTML = `
-    <div class="promo-banner"${bannerStyle}>
-      ${bannerImage}
-      <div class="promo-banner-copy">
-        <h2>${escapeHtml(bannerTitle)}</h2>
-      </div>
-    </div>
+    ${headerBlock}
     ${intro}
     ${rules}
     ${footer ? `<div class="preview-section-footer">${footer}</div>` : ""}
@@ -1681,18 +1659,21 @@ function renderRulePreview(rule) {
 
 function renderWidget(widget) {
   const progressType = getWidgetProgressType(widget.progress?.type);
-  const progressLabel = widget.progress?.label || widget.progressText || DEFAULT_WIDGET_PROGRESS_LABEL;
+  const progressLabel = normalizeProgressLabel(widget.progress?.label || widget.progressText || "");
   const cardImage = widget.cardImageUrl
     ? `<img class="progress-card-image" src="${escapeHtml(widget.cardImageUrl)}" alt="">`
     : "";
   const subtitle = widget.subtitle
     ? `<p class="progress-subtitle">${escapeHtml(widget.subtitle)}</p>`
-    : `<p class="progress-subtitle">${escapeHtml(DEFAULT_WIDGET_SUBTITLE)}</p>`;
+    : "";
+  const progressLabelHtml = progressLabel
+    ? `<span>${escapeHtml(progressLabel)}</span>`
+    : "";
   const scale = progressType === "none"
     ? ""
     : `
       <div class="progress-row">
-        <span>${escapeHtml(progressLabel)}</span>
+        ${progressLabelHtml}
         <span>0/1</span>
       </div>
       <div class="bar${progressType === "steps" ? " is-steps" : ""}"><span></span></div>
@@ -1806,10 +1787,10 @@ function updateAll() {
     return;
   }
 
+  syncPromoChromeFields();
   const data = buildJson();
   jsonOutput.textContent = getJsonText(data);
   renderPreview(data);
-  syncPromoChromeFields();
   const hasPromoId = Boolean(data.switcherByPromoId.length);
   statusBadge.textContent = hasPromoId ? "JSON готов" : "Укажите Promo ID";
   statusBadge.classList.toggle("warning", !hasPromoId);
@@ -2067,10 +2048,6 @@ viewTabs.forEach((tab) => {
 });
 document.querySelector("#addRuleButton").addEventListener("click", () => {
   addRule();
-  updateAll();
-});
-document.querySelector("#addGuestRuleButton").addEventListener("click", () => {
-  addGuestRule();
   updateAll();
 });
 document.querySelector("#addTournamentButton").addEventListener("click", () => {
