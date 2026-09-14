@@ -643,9 +643,6 @@ function syncPromoChromeFields() {
   marketing1IntroFields.classList.toggle("hidden", isMarketing2);
   promoBannerPanel.classList.toggle("hidden", !isMarketing2);
   promoHeaderAnimationFields.classList.toggle("hidden", !isRive);
-  if (isRive && !fields.promoHeaderAnimationUrl.value.trim()) {
-    fields.promoHeaderAnimationUrl.value = DEFAULT_RIVE_ANIMATION_URL;
-  }
 }
 
 function getHeaderTypeFromForm() {
