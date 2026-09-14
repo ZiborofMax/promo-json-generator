@@ -1014,9 +1014,15 @@ a.progress-widget {
   align-items: center;
   gap: 8px;
   margin-top: 12px;
-  color: #fff;
+  color: #4a5568;
   font-size: 16px;
   font-weight: 800;
+}
+
+@media (prefers-color-scheme: dark) {
+  .progress-reward-row {
+    color: rgba(255, 255, 255, 0.88);
+  }
 }
 
 .progress-reward-row img {
