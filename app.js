@@ -24,17 +24,20 @@ const DEFAULT_REMAINING_TIME = { dateLabel: "Осталось дней", timeLab
 
 function makePromoHeader({
   header = "",
-  imageUrl = DEFAULT_BANNER_OVERLAY_IMAGE_URL,
+  imageUrl = "",
   backgroundUrl = DEFAULT_BANNER_BACKGROUND_URL,
   animationType = "none",
   animationUrl = ""
 } = {}) {
   const promoHeader = {
     backgroundUrl,
-    imageUrl,
     animationType: "none",
     title: header
   };
+  const trimmedImageUrl = String(imageUrl || "").trim();
+  if (trimmedImageUrl) {
+    promoHeader.imageUrl = trimmedImageUrl;
+  }
 
   const trimmedAnimationUrl = String(animationUrl || "").trim();
   if (animationType === "rive" && trimmedAnimationUrl) {
@@ -463,6 +466,19 @@ function getNextWidgetSeed() {
   };
 }
 
+function getTermFromNode(termNode) {
+  return {
+    header: termNode.querySelector(".term-header").value.trim(),
+    content: termNode.querySelector(".term-content").value.trim(),
+    imageUrl: termNode.querySelector(".term-image-url").value.trim()
+  };
+}
+
+function getNextTermSeed(termsList) {
+  const previous = termsList.querySelector(".term-editor:last-child");
+  return previous ? getTermFromNode(previous) : { header: "", content: "", imageUrl: "" };
+}
+
 function resolveSecondaryButtonUrl(value) {
   const trimmed = String(value || "").trim();
   if (!trimmed || trimmed === LEGACY_SECONDARY_BUTTON_URL) {
@@ -494,7 +510,10 @@ function resolveMarketing1ImageUrl(value) {
 
 function resolveBannerOverlayUrl(value) {
   const trimmed = String(value || "").trim();
-  if (!trimmed || LEGACY_BANNER_OVERLAY_IMAGE_URLS.includes(trimmed)) {
+  if (!trimmed) {
+    return "";
+  }
+  if (LEGACY_BANNER_OVERLAY_IMAGE_URLS.includes(trimmed)) {
     return DEFAULT_BANNER_OVERLAY_IMAGE_URL;
   }
   return trimmed;
@@ -552,8 +571,7 @@ function createEmptyData() {
       imageUrl: DEFAULT_MARKETING1_IMAGE_URL,
       header: "",
       promoHeader: makePromoHeader({
-        backgroundUrl: DEFAULT_BANNER_BACKGROUND_URL,
-        imageUrl: DEFAULT_BANNER_OVERLAY_IMAGE_URL
+        backgroundUrl: DEFAULT_BANNER_BACKGROUND_URL
       }),
       content: "",
       rules: [],
@@ -681,7 +699,7 @@ function addRule(rule = { header: "", content: "" }) {
     updateAll();
   });
   node.querySelector(".add-term").addEventListener("click", () => {
-    addTermCard(termsList);
+    addTermCard(termsList, getNextTermSeed(termsList));
     updateAll();
   });
   node.querySelector(".remove-rule").addEventListener("click", () => {
@@ -752,11 +770,11 @@ function addWidgetCard(widgetsList, widget = {}) {
   renumberWidgets(widgetsList);
 }
 
-function addTermCard(termsList, term = { header: "", content: "", imageUrl: DEFAULT_TERM_IMAGE }) {
+function addTermCard(termsList, term = { header: "", content: "", imageUrl: "" }) {
   const node = termTemplate.content.firstElementChild.cloneNode(true);
   node.querySelector(".term-header").value = term.header || "";
   node.querySelector(".term-content").value = term.content || "";
-  node.querySelector(".term-image-url").value = term.imageUrl || DEFAULT_TERM_IMAGE;
+  node.querySelector(".term-image-url").value = term.imageUrl || "";
   node.querySelector(".remove-term").addEventListener("click", () => {
     node.remove();
     renumberTerms(termsList);
@@ -1152,11 +1170,14 @@ function normalizeImportedJsonData(value) {
   if (headerType === "marketing2") {
     normalizedCommon.promoHeader = {
       backgroundUrl: promoHeader.backgroundUrl || "",
-      imageUrl: promoHeader.imageUrl || "",
       animationType: promoHeader.animationType === "rive" ? "rive" : "none",
       animationUrl: promoHeader.animationUrl || "",
       title: promoHeader.title || ""
     };
+    const normalizedBannerImageUrl = resolveBannerOverlayUrl(promoHeader.imageUrl);
+    if (normalizedBannerImageUrl) {
+      normalizedCommon.promoHeader.imageUrl = normalizedBannerImageUrl;
+    }
   }
 
   return {
@@ -1214,16 +1235,16 @@ function normalizeJsonText(value) {
 function collectTerms(node) {
   return [...node.querySelectorAll(".term-editor")]
     .map((termNode) => {
+      const header = termNode.querySelector(".term-header").value.trim();
+      const content = termNode.querySelector(".term-content").value.trim();
       const imageUrl = termNode.querySelector(".term-image-url").value.trim();
-      return {
-        header: termNode.querySelector(".term-header").value.trim(),
-        content: termNode.querySelector(".term-content").value.trim(),
-        imageUrl: imageUrl || DEFAULT_TERM_IMAGE,
-        hasCustomImage: Boolean(imageUrl)
-      };
+      const term = { header, content };
+      if (imageUrl) {
+        term.imageUrl = imageUrl;
+      }
+      return term;
     })
-    .filter((term) => term.header || term.content || term.hasCustomImage)
-    .map(({ hasCustomImage, ...term }) => term);
+    .filter((term) => term.header || term.content || term.imageUrl);
 }
 
 function normalizeProgressLabel(value) {
@@ -1576,10 +1597,7 @@ function escapeHtml(value) {
 }
 
 function renderSecondaryPreviewButton(common) {
-  const text =
-    fields.secondaryButtonText.value.trim() ||
-    common.secondaryButtonText?.trim() ||
-    "Полные правила акции";
+  const text = fields.secondaryButtonText.value.trim() || common.secondaryButtonText?.trim() || "";
   if (!text) {
     return "";
   }
