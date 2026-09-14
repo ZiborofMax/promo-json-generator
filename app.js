@@ -1,6 +1,8 @@
 const DEFAULT_WIDGET_IMAGE = "https://www.ligastavok.ru/files/file/16326/Marketing_widgetProgressBar_Bg.webp";
 const DEFAULT_TERM_IMAGE = "https://www.ligastavok.ru/files/file/11160/Freebet_3x.webp";
 const DEFAULT_LEGACY_IMAGE_URL = "https://www.ligastavok.ru/files/file/16316/MarketingImg_reBrand.webp";
+const DEFAULT_MARKETING1_IMAGE_URL =
+  "https://www.ligastavok.ru/files/file/19310/b6565f47-bc3d-40a7-8233-fe473381fc2df.webp";
 const DEFAULT_BANNER_BACKGROUND_URL = "https://www.ligastavok.ru/files/file/18198/BG_Patern.webp";
 const DEFAULT_BANNER_OVERLAY_IMAGE_URL = "https://www.ligastavok.ru/files/file/18185/Image_2x.webp";
 const LEGACY_BANNER_OVERLAY_IMAGE_URLS = [
@@ -472,7 +474,7 @@ function resolveBannerOverlayUrl(value) {
 
 function applyPromoFormDefaults() {
   if (!fields.imageUrl.value.trim()) {
-    fields.imageUrl.value = DEFAULT_LEGACY_IMAGE_URL;
+    fields.imageUrl.value = DEFAULT_MARKETING1_IMAGE_URL;
   }
   if (!fields.promoHeaderBackgroundUrl.value.trim()) {
     fields.promoHeaderBackgroundUrl.value = DEFAULT_BANNER_BACKGROUND_URL;
@@ -518,7 +520,7 @@ function createEmptyData() {
     common: {
       title: DEFAULT_PROMO_TITLE,
       headerType: DEFAULT_HEADER_TYPE,
-      imageUrl: DEFAULT_LEGACY_IMAGE_URL,
+      imageUrl: DEFAULT_MARKETING1_IMAGE_URL,
       header: "",
       promoHeader: makePromoHeader({
         backgroundUrl: DEFAULT_BANNER_BACKGROUND_URL,
