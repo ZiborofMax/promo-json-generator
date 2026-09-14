@@ -481,7 +481,7 @@ function getLastTermEditor(termsList) {
 
 function getNextTermSeed(termsList) {
   const previous = getLastTermEditor(termsList);
-  return previous ? { ...getTermFromNode(previous) } : { header: "", content: "", imageUrl: "" };
+  return previous ? { ...getTermFromNode(previous) } : { header: "", content: "" };
 }
 
 function resolveSecondaryButtonUrl(value) {
@@ -778,8 +778,9 @@ function addTermCard(termsList, term = { header: "", content: "", imageUrl: DEFA
   const node = termTemplate.content.firstElementChild.cloneNode(true);
   node.querySelector(".term-header").value = term.header || "";
   node.querySelector(".term-content").value = term.content || "";
-  node.querySelector(".term-image-url").value =
-    term.imageUrl === undefined || term.imageUrl === null ? DEFAULT_TERM_IMAGE : term.imageUrl;
+  node.querySelector(".term-image-url").value = Object.hasOwn(term, "imageUrl")
+    ? term.imageUrl
+    : DEFAULT_TERM_IMAGE;
   node.querySelector(".remove-term").addEventListener("click", () => {
     node.remove();
     renumberTerms(termsList);
