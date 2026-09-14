@@ -16,7 +16,7 @@ const LEGACY_BANNER_OVERLAY_IMAGE_URLS = [
 ];
 const LEGACY_SECONDARY_BUTTON_URL = "https://www.ligastavok.ru/files/file/16671/FREEBETVSEM.pdf";
 const DEFAULT_WIDGET_SUBTITLE = "Учитываются только рассчитанные ставки";
-const DEFAULT_WIDGET_PROGRESS_LABEL = "Ставок сделано на сумму";
+const DEFAULT_WIDGET_PROGRESS_LABEL = "Ставок сделано на сумму:";
 const DEFAULT_PROMO_TITLE = "Акция";
 const TOURNAMENT_SECONDARY_BUTTON_TEXT = "Полные правила";
 const DEFAULT_HEADER_TYPE = "marketing2";
@@ -1001,9 +1001,13 @@ function addWidgetCard(widgetsList, widget = {}) {
 
   node.querySelector(".widget-campaign-id").value = widget.campaignId || "";
   node.querySelector(".widget-title").value = widget.title || "";
-  node.querySelector(".widget-progress-text").value =
-    normalizeProgressLabel(progress.label || widget.progressText);
-  node.querySelector(".widget-subtitle").value = widget.subtitle || "";
+  const progressLabel = progress.label || widget.progressText;
+  node.querySelector(".widget-progress-text").value = progressLabel
+    ? normalizeProgressLabel(progressLabel)
+    : DEFAULT_WIDGET_PROGRESS_LABEL;
+  node.querySelector(".widget-subtitle").value = Object.hasOwn(widget, "subtitle")
+    ? widget.subtitle
+    : DEFAULT_WIDGET_SUBTITLE;
   node.querySelector(".widget-progress-type").value = getWidgetProgressType(progress.type);
   node.querySelector(".widget-image-url").value = widget.imageUrl || DEFAULT_WIDGET_IMAGE;
   node.querySelector(".widget-card-image-url").value = widget.cardImageUrl || "";
@@ -1522,6 +1526,7 @@ function normalizeProgressLabel(value) {
 function collectWidgetFromNode(node) {
   const progressText = normalizeProgressLabel(node.querySelector(".widget-progress-text").value);
   const progressType = getWidgetProgressType(node.querySelector(".widget-progress-type").value);
+  const subtitle = node.querySelector(".widget-subtitle").value.trim();
   const rewardText = node.querySelector(".widget-reward-text").value.trim();
   const rewardImageUrl = node.querySelector(".widget-reward-image-url").value.trim();
   const ruleText = node.querySelector(".widget-rule-text").value.trim();
@@ -1532,7 +1537,6 @@ function collectWidgetFromNode(node) {
     campaignId: node.querySelector(".widget-campaign-id").value.trim(),
     title: node.querySelector(".widget-title").value.trim(),
     progressText,
-    subtitle: node.querySelector(".widget-subtitle").value.trim(),
     imageUrl: node.querySelector(".widget-image-url").value.trim() || DEFAULT_WIDGET_IMAGE,
     cardImageUrl: node.querySelector(".widget-card-image-url").value.trim(),
     progress: {
@@ -1540,6 +1544,10 @@ function collectWidgetFromNode(node) {
       label: progressText
     }
   };
+
+  if (subtitle) {
+    widget.subtitle = subtitle;
+  }
 
   if (ruleText) {
     widget.ruleText = ruleText;
