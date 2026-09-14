@@ -3,6 +3,10 @@ const DEFAULT_TERM_IMAGE = "https://www.ligastavok.ru/files/file/11160/Freebet_3
 const DEFAULT_LEGACY_IMAGE_URL = "https://www.ligastavok.ru/files/file/16316/MarketingImg_reBrand.webp";
 const DEFAULT_MARKETING1_IMAGE_URL =
   "https://www.ligastavok.ru/files/file/19310/b6565f47-bc3d-40a7-8233-fe473381fc2df.webp";
+const LEGACY_MARKETING1_IMAGE_URLS = [
+  DEFAULT_LEGACY_IMAGE_URL,
+  "https://www.ligastavok.ru/files/file/14559/freebetVsem_marketingPromoImg.webp"
+];
 const DEFAULT_BANNER_BACKGROUND_URL = "https://www.ligastavok.ru/files/file/18198/BG_Patern.webp";
 const DEFAULT_BANNER_OVERLAY_IMAGE_URL = "https://www.ligastavok.ru/files/file/18185/Image_2x.webp";
 const DEFAULT_RIVE_ANIMATION_URL = "https://www.ligastavok.ru/files/file/18736/compainanimation.riv";
@@ -47,7 +51,7 @@ const templates = {
     common: {
       title: "Акция",
       headerType: DEFAULT_HEADER_TYPE,
-      imageUrl: "https://www.ligastavok.ru/files/file/14559/freebetVsem_marketingPromoImg.webp",
+      imageUrl: DEFAULT_MARKETING1_IMAGE_URL,
       header: "Фрибет 500",
       promoHeader: makePromoHeader({
         header: "Фрибет 500",
@@ -463,6 +467,14 @@ function resolveSecondaryButtonUrl(value) {
   const trimmed = String(value || "").trim();
   if (!trimmed || trimmed === LEGACY_SECONDARY_BUTTON_URL) {
     return "";
+  }
+  return trimmed;
+}
+
+function resolveMarketing1ImageUrl(value) {
+  const trimmed = String(value || "").trim();
+  if (!trimmed || LEGACY_MARKETING1_IMAGE_URLS.includes(trimmed)) {
+    return DEFAULT_MARKETING1_IMAGE_URL;
   }
   return trimmed;
 }
