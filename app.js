@@ -936,6 +936,7 @@ function addRule(rule = { header: "", content: "" }) {
   const termsEnabled = node.querySelector(".rule-terms-enabled");
   const termsFields = node.querySelector(".terms-fields");
   const termsList = node.querySelector(".terms-list");
+  enableTermReordering(termsList);
   termsEnabled.checked = Array.isArray(rule.terms);
   termsFields.classList.toggle("hidden", !Array.isArray(rule.terms));
   (rule.terms || []).forEach((term) => addTermCard(termsList, term));
@@ -1054,6 +1055,74 @@ function addTermCard(termsList, term = { header: "", content: "", imageUrl: DEFA
   renumberTerms(termsList);
 }
 
+function enableTermReordering(termsList) {
+  let draggedTerm = null;
+  let dropTarget = null;
+  let dropAfter = false;
+
+  function clearDropIndicator() {
+    dropTarget?.classList.remove("drop-before", "drop-after");
+    dropTarget = null;
+  }
+
+  termsList.addEventListener("dragstart", (event) => {
+    const handle = event.target.closest(".term-drag-handle");
+    if (!handle || !termsList.contains(handle)) return;
+    draggedTerm = handle.closest(".term-editor");
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", "term-tile");
+    requestAnimationFrame(() => draggedTerm?.classList.add("is-dragging"));
+  });
+
+  termsList.addEventListener("dragover", (event) => {
+    if (!draggedTerm) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "move";
+    const target = event.target.closest(".term-editor");
+    clearDropIndicator();
+    if (!target || target === draggedTerm || target.parentElement !== termsList) return;
+    dropTarget = target;
+    dropAfter = event.clientY > target.getBoundingClientRect().top + target.offsetHeight / 2;
+    target.classList.add(dropAfter ? "drop-after" : "drop-before");
+  });
+
+  termsList.addEventListener("drop", (event) => {
+    if (!draggedTerm) return;
+    event.preventDefault();
+    const originalIndex = [...termsList.children].indexOf(draggedTerm);
+    if (dropTarget) {
+      termsList.insertBefore(draggedTerm, dropAfter ? dropTarget.nextSibling : dropTarget);
+    }
+    clearDropIndicator();
+    draggedTerm.classList.remove("is-dragging");
+    if ([...termsList.children].indexOf(draggedTerm) !== originalIndex) {
+      renumberTerms(termsList);
+      updateAll();
+    }
+    draggedTerm = null;
+  });
+
+  termsList.addEventListener("dragend", () => {
+    clearDropIndicator();
+    draggedTerm?.classList.remove("is-dragging");
+    draggedTerm = null;
+  });
+
+  termsList.addEventListener("keydown", (event) => {
+    if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return;
+    const handle = event.target.closest(".term-drag-handle");
+    if (!handle || !termsList.contains(handle)) return;
+    const term = handle.closest(".term-editor");
+    const sibling = event.key === "ArrowUp" ? term.previousElementSibling : term.nextElementSibling;
+    if (!sibling) return;
+    event.preventDefault();
+    termsList.insertBefore(term, event.key === "ArrowUp" ? sibling : sibling.nextSibling);
+    renumberTerms(termsList);
+    handle.focus();
+    updateAll();
+  });
+}
+
 function addTournamentCard(tournament = {}) {
   const node = tournamentTemplate.content.firstElementChild.cloneNode(true);
   const events = getNestedValue(tournament, "events");
@@ -1098,6 +1167,7 @@ function renumberWidgets(widgetsList) {
 function renumberTerms(termsList) {
   [...termsList.children].forEach((node, index) => {
     node.querySelector(".term-editor-head strong").textContent = `Плитка ${index + 1}`;
+    node.querySelector(".term-drag-handle").setAttribute("aria-label", `Переместить плитку ${index + 1}: перетащите или используйте стрелки вверх и вниз`);
   });
 }
 

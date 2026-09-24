@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Генератор JSON акции</title>
-    <link rel="stylesheet" href="./styles.css?v=20260914m" />
+    <link rel="stylesheet" href="./styles.css?v=20260924a" />
   </head>
   <body>
     <main class="app-shell">
@@ -289,7 +289,7 @@
           <div class="terms-heading">
             <div>
               <h4>Плитки условий</h4>
-              <p>Одна строка ниже формирует одну плитку в JSON</p>
+              <p>Перетаскивайте плитки за значок слева, чтобы изменить порядок в JSON</p>
             </div>
             <button class="secondary add-term" type="button">Добавить плитку</button>
           </div>
@@ -383,6 +383,7 @@
     <template id="termTemplate">
       <article class="term-editor">
         <div class="term-editor-head">
+          <button class="term-drag-handle" type="button" draggable="true" aria-label="Перетащить плитку" title="Перетащить плитку">⠿</button>
           <strong></strong>
           <button class="icon-button remove-term" type="button" aria-label="Удалить плитку">×</button>
         </div>
@@ -472,7 +473,7 @@
       </article>
     </template>
 
-    <script src="./tournament-templates.js?v=20260914m"></script>
-    <script src="./app.js?v=20260914m"></script>
+    <script src="./tournament-templates.js?v=20260924a"></script>
+    <script src="./app.js?v=20260924a"></script>
   </body>
 </html>

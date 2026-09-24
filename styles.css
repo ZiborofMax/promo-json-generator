@@ -745,9 +745,44 @@ select:focus {
 }
 
 .term-editor-head strong {
+  flex: 1;
   color: #27304b;
   font-size: 14px;
   font-weight: 900;
+}
+
+.term-drag-handle {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 10px;
+  background: rgba(124, 92, 229, 0.1);
+  color: #6752af;
+  font-size: 23px;
+  line-height: 1;
+  cursor: grab;
+}
+
+.term-drag-handle:active {
+  cursor: grabbing;
+}
+
+.term-drag-handle:focus-visible {
+  outline: 2px solid var(--purple);
+  outline-offset: 2px;
+}
+
+.term-editor.is-dragging {
+  opacity: 0.5;
+}
+
+.term-editor.drop-before {
+  box-shadow: 0 -3px 0 var(--purple);
+}
+
+.term-editor.drop-after {
+  box-shadow: 0 3px 0 var(--purple);
 }
 
 .term-field-grid {
