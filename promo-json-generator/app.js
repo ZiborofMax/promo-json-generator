@@ -203,6 +203,25 @@ const templates = {
 };
 
 const form = document.querySelector("#promoForm");
+const guestSection = document.querySelector("#guestSection");
+const guestEditor = document.querySelector("#guestEditor");
+const guestEditorFields = document.querySelector("#guestEditorFields");
+const guestSectionHint = document.querySelector("#guestSectionHint");
+form.querySelectorAll("[data-promo-section]").forEach((section) => {
+  const copy = section.cloneNode(true);
+  copy.removeAttribute("data-promo-section");
+  if (copy.id) copy.id = `guest${copy.id[0].toUpperCase()}${copy.id.slice(1)}`;
+  copy.querySelector("#promoIds")?.closest("label")?.remove();
+  copy.querySelector("#guestEnabled")?.closest("label")?.remove();
+  copy.querySelector("#guestModeFields")?.remove();
+  copy.querySelectorAll("[id]").forEach((element) => {
+    element.id = `guest${element.id[0].toUpperCase()}${element.id.slice(1)}`;
+  });
+  copy.querySelectorAll('[name="headerType"]').forEach((element) => {
+    element.name = "guestHeaderType";
+  });
+  guestEditor.append(copy);
+});
 const marketing1IntroFields = document.querySelector("#marketing1IntroFields");
 const promoBannerPanel = document.querySelector("#promoBannerPanel");
 const fields = {
@@ -221,10 +240,19 @@ const fields = {
   primaryButtonAppUrl: document.querySelector("#primaryButtonAppUrl"),
   primaryButtonWebUrl: document.querySelector("#primaryButtonWebUrl"),
   secondaryButtonText: document.querySelector("#secondaryButtonText"),
-  secondaryButtonUrl: document.querySelector("#secondaryButtonUrl")
+  secondaryButtonUrl: document.querySelector("#secondaryButtonUrl"),
+  guestEnabled: document.querySelector("#guestEnabled"),
+  guestContentMode: document.querySelector("#guestContentMode")
 };
+const guestFields = Object.fromEntries(
+  Object.keys(fields)
+    .filter((key) => !["promoIds", "guestEnabled", "guestContentMode"].includes(key))
+    .map((key) => [key, document.querySelector(`#guest${key[0].toUpperCase()}${key.slice(1)}`)])
+);
 const promoHeaderAnimationFields = document.querySelector("#promoHeaderAnimationFields");
 const rulesList = document.querySelector("#rulesList");
+const guestRulesList = document.querySelector("#guestRulesList");
+const guestModeFields = document.querySelector("#guestModeFields");
 const ruleTemplate = document.querySelector("#ruleTemplate");
 const widgetTemplate = document.querySelector("#widgetTemplate");
 const termTemplate = document.querySelector("#termTemplate");
@@ -249,6 +277,8 @@ let jsonImportTimer = 0;
 let tournamentJsonImportTimer = 0;
 let activeView = "promo";
 let lastPromoHeaderAnimationType = "none";
+let lastGuestAnimationType = "none";
+let guestCustomInitialized = false;
 
 const viewTabs = document.querySelectorAll(".view-tab");
 const topbarEyebrow = document.querySelector("#topbarEyebrow");
@@ -465,13 +495,13 @@ function getDefaultWidgetSeed() {
   };
 }
 
-function getLastWidgetEditor() {
-  const editors = rulesList.querySelectorAll(".widget-editor");
+function getLastWidgetEditor(targetRulesList = rulesList) {
+  const editors = targetRulesList.querySelectorAll(".widget-editor");
   return editors.length ? editors[editors.length - 1] : null;
 }
 
-function getNextWidgetSeed() {
-  const previous = getLastWidgetEditor();
+function getNextWidgetSeed(targetRulesList = rulesList) {
+  const previous = getLastWidgetEditor(targetRulesList);
   if (!previous) {
     return getDefaultWidgetSeed();
   }
@@ -553,19 +583,19 @@ function applyPromoFormDefaults() {
   fields.secondaryButtonUrl.value = resolveSecondaryButtonUrl(fields.secondaryButtonUrl.value);
 }
 
-function applyPromoWebUrls(data) {
-  if (!data?.common) {
+function applyPromoWebUrls(block, editorFields = fields, targetRulesList = rulesList) {
+  if (!block) {
     return;
   }
 
-  const webPrimaryUrl = fields.primaryButtonWebUrl.value.trim();
+  const webPrimaryUrl = editorFields.primaryButtonWebUrl.value.trim();
   if (webPrimaryUrl) {
-    data.common.primaryButtonUrl = webPrimaryUrl;
+    block.primaryButtonUrl = webPrimaryUrl;
   }
 
-  const ruleNodes = [...rulesList.children];
+  const ruleNodes = [...targetRulesList.children];
   ruleNodes.forEach((ruleNode, ruleIndex) => {
-    const rule = data.common.rules?.[ruleIndex];
+    const rule = block.rules?.[ruleIndex];
     if (!rule?.widgets) {
       return;
     }
@@ -633,13 +663,11 @@ function makeCustomTemplateId(label) {
   return `custom:${slug || `template-${Date.now()}`}`;
 }
 
-function capturePromoFormState() {
-  const data = cloneData(buildJson());
-  const common = data.common || {};
-  common.primaryButtonAppUrl = fields.primaryButtonAppUrl.value.trim();
-  common.primaryButtonWebUrl = fields.primaryButtonWebUrl.value.trim();
+function capturePromoBlockState(common, editorFields, targetRulesList) {
+  common.primaryButtonAppUrl = editorFields.primaryButtonAppUrl.value.trim();
+  common.primaryButtonWebUrl = editorFields.primaryButtonWebUrl.value.trim();
 
-  const ruleNodes = [...rulesList.children];
+  const ruleNodes = [...targetRulesList.children];
   ruleNodes.forEach((ruleNode, ruleIndex) => {
     const rule = common.rules?.[ruleIndex];
     if (!rule?.widgets) {
@@ -656,7 +684,15 @@ function capturePromoFormState() {
       widget.webCardUrl = widgetNode.querySelector(".widget-web-card-url").value.trim();
     });
   });
+  return common;
+}
 
+function capturePromoFormState() {
+  const data = cloneData(buildJson());
+  capturePromoBlockState(data.common, fields, rulesList);
+  if (data.guest && data.guestContentMode === "custom") {
+    capturePromoBlockState(data.guest, guestFields, guestRulesList);
+  }
   return data;
 }
 
@@ -863,64 +899,93 @@ function loadTemplate(name) {
 
 function applyDataToForm(data, options = {}) {
   const common = data.common || {};
-  const promoHeader = common.promoHeader && typeof common.promoHeader === "object" ? common.promoHeader : {};
   const promoIds = Array.isArray(data.switcherByPromoId) ? data.switcherByPromoId : [];
-
   fields.promoIds.value = options.clearPromoIds ? "" : promoIds.join(", ");
-  setHeaderTypeInForm(common.headerType === "marketing1" ? "marketing1" : "marketing2");
-  fields.header.value = common.header || "";
-  fields.imageUrl.value = resolveMarketing1ImageUrl(common.imageUrl);
-  fields.content.value = htmlBreaksToText(common.content || "");
-  fields.promoHeaderTitle.value = promoHeader.title || common.header || "";
-  fields.promoHeaderBackgroundUrl.value = promoHeader.backgroundUrl || "";
-  fields.promoHeaderImageUrl.value = resolveBannerOverlayUrl(promoHeader.imageUrl);
-  fields.promoHeaderAnimationType.value = promoHeader.animationType === "rive" ? "rive" : "none";
-  fields.promoHeaderAnimationUrl.value = promoHeader.animationUrl || "";
-  fields.primaryButtonText.value = common.primaryButtonText || "";
-  fields.primaryButtonAppUrl.value = common.primaryButtonAppUrl || common.primaryButtonUrl || "";
-  fields.primaryButtonWebUrl.value = common.primaryButtonWebUrl || common.primaryButtonUrl || "";
-  fields.secondaryButtonText.value = common.secondaryButtonText || "";
-  fields.secondaryButtonUrl.value = resolveSecondaryButtonUrl(common.secondaryButtonUrl);
-  rulesList.innerHTML = "";
-  (Array.isArray(common.rules) ? common.rules : []).forEach((rule) => {
-    const safeRule = rule && typeof rule === "object" ? rule : {};
-    addRule({
-      ...safeRule,
-      content: htmlBreaksToText(safeRule.content || "")
-    });
-  });
+  fillPromoEditor(fields, rulesList, common);
+  fields.guestEnabled.checked = Boolean(data.guestEnabled);
+  fields.guestContentMode.value = data.guestContentMode === "custom" ? "custom" : "duplicate";
+  guestCustomInitialized = fields.guestEnabled.checked && fields.guestContentMode.value === "custom";
+  fillPromoEditor(guestFields, guestRulesList, guestCustomInitialized ? data.guest || common : common);
   syncPromoChromeFields();
   applyPromoFormDefaults();
   updateAll();
 }
 
+function fillPromoEditor(editorFields, targetRulesList, common) {
+  const promoHeader = common.promoHeader && typeof common.promoHeader === "object" ? common.promoHeader : {};
+  setHeaderTypeInForm(common.headerType === "marketing1" ? "marketing1" : "marketing2", editorFields);
+  editorFields.header.value = common.header || "";
+  editorFields.imageUrl.value = resolveMarketing1ImageUrl(common.imageUrl);
+  editorFields.content.value = htmlBreaksToText(common.content || "");
+  editorFields.promoHeaderTitle.value = promoHeader.title || common.header || "";
+  editorFields.promoHeaderBackgroundUrl.value = promoHeader.backgroundUrl || "";
+  editorFields.promoHeaderImageUrl.value = resolveBannerOverlayUrl(promoHeader.imageUrl);
+  editorFields.promoHeaderAnimationType.value = promoHeader.animationType === "rive" ? "rive" : "none";
+  editorFields.promoHeaderAnimationUrl.value = promoHeader.animationUrl || "";
+  editorFields.primaryButtonText.value = common.primaryButtonText || "";
+  editorFields.primaryButtonAppUrl.value = common.primaryButtonAppUrl || common.primaryButtonUrl || "";
+  editorFields.primaryButtonWebUrl.value = common.primaryButtonWebUrl || common.primaryButtonUrl || "";
+  editorFields.secondaryButtonText.value = common.secondaryButtonText || "";
+  editorFields.secondaryButtonUrl.value = resolveSecondaryButtonUrl(common.secondaryButtonUrl);
+  targetRulesList.innerHTML = "";
+  (Array.isArray(common.rules) ? common.rules : []).forEach((rule) => {
+    const safeRule = rule && typeof rule === "object" ? rule : {};
+    addRule({
+      ...safeRule,
+      content: htmlBreaksToText(safeRule.content || "")
+    }, targetRulesList);
+  });
+}
+
 function syncPromoChromeFields() {
-  const isMarketing2 = getHeaderTypeFromForm() === "marketing2";
-  const animationType = fields.promoHeaderAnimationType.value === "rive" ? "rive" : "none";
-  const isRive = animationType === "rive";
-  if (isRive && lastPromoHeaderAnimationType !== "rive" && !fields.promoHeaderAnimationUrl.value.trim()) {
-    fields.promoHeaderAnimationUrl.value = DEFAULT_RIVE_ANIMATION_URL;
+  syncPromoEditorChrome(fields, marketing1IntroFields, promoBannerPanel, promoHeaderAnimationFields, false);
+  syncPromoEditorChrome(guestFields, document.querySelector("#guestMarketing1IntroFields"), document.querySelector("#guestPromoBannerPanel"), document.querySelector("#guestPromoHeaderAnimationFields"), true);
+  const enabled = fields.guestEnabled.checked;
+  guestModeFields.classList.toggle("hidden", !enabled);
+  guestSection.classList.toggle("hidden", !enabled);
+  if (enabled && fields.guestContentMode.value === "custom" && !guestCustomInitialized) {
+    fillPromoEditor(guestFields, guestRulesList, capturePromoBlockState(cloneData(buildPromoBlock(fields, rulesList)), fields, rulesList));
+    guestCustomInitialized = true;
+    syncPromoEditorChrome(guestFields, document.querySelector("#guestMarketing1IntroFields"), document.querySelector("#guestPromoBannerPanel"), document.querySelector("#guestPromoHeaderAnimationFields"), true);
   }
-  lastPromoHeaderAnimationType = animationType;
-  fields.imageUrl.value = resolveMarketing1ImageUrl(fields.imageUrl.value);
-  marketing1IntroFields.classList.toggle("hidden", isMarketing2);
-  promoBannerPanel.classList.toggle("hidden", !isMarketing2);
-  promoHeaderAnimationFields.classList.toggle("hidden", !isRive);
+  const duplicate = fields.guestContentMode.value === "duplicate";
+  guestEditorFields.disabled = duplicate;
+  guestSectionHint.textContent = duplicate ? "Поля повторяют основной раздел." : "Настройте поля для гостевого раздела.";
+  if (enabled && duplicate) {
+    fillPromoEditor(guestFields, guestRulesList, capturePromoBlockState(cloneData(buildPromoBlock(fields, rulesList)), fields, rulesList));
+    syncPromoEditorChrome(guestFields, document.querySelector("#guestMarketing1IntroFields"), document.querySelector("#guestPromoBannerPanel"), document.querySelector("#guestPromoHeaderAnimationFields"), true);
+  }
 }
 
-function getHeaderTypeFromForm() {
-  return fields.headerTypeMarketing1.checked ? "marketing1" : "marketing2";
+function syncPromoEditorChrome(editorFields, introFields, bannerPanel, animationFields, isGuest) {
+  const isMarketing2 = getHeaderTypeFromForm(editorFields) === "marketing2";
+  const animationType = editorFields.promoHeaderAnimationType.value === "rive" ? "rive" : "none";
+  const isRive = animationType === "rive";
+  const lastType = isGuest ? lastGuestAnimationType : lastPromoHeaderAnimationType;
+  if (isRive && lastType !== "rive" && !editorFields.promoHeaderAnimationUrl.value.trim()) {
+    editorFields.promoHeaderAnimationUrl.value = DEFAULT_RIVE_ANIMATION_URL;
+  }
+  if (isGuest) lastGuestAnimationType = animationType;
+  else lastPromoHeaderAnimationType = animationType;
+  editorFields.imageUrl.value = resolveMarketing1ImageUrl(editorFields.imageUrl.value);
+  introFields.classList.toggle("hidden", isMarketing2);
+  bannerPanel.classList.toggle("hidden", !isMarketing2);
+  animationFields.classList.toggle("hidden", !isRive);
 }
 
-function setHeaderTypeInForm(headerType) {
+function getHeaderTypeFromForm(editorFields = fields) {
+  return editorFields.headerTypeMarketing1.checked ? "marketing1" : "marketing2";
+}
+
+function setHeaderTypeInForm(headerType, editorFields = fields) {
   const isMarketing1 = headerType === "marketing1";
-  fields.headerTypeMarketing1.checked = isMarketing1;
-  fields.headerTypeMarketing2.checked = !isMarketing1;
+  editorFields.headerTypeMarketing1.checked = isMarketing1;
+  editorFields.headerTypeMarketing2.checked = !isMarketing1;
 }
 
-function addRule(rule = { header: "", content: "" }) {
+function addRule(rule = { header: "", content: "" }, targetRulesList = rulesList) {
   const node = ruleTemplate.content.firstElementChild.cloneNode(true);
-  const index = rulesList.children.length + 1;
+  const index = targetRulesList.children.length + 1;
   node.querySelector("h3").textContent = `Раздел ${index}`;
   node.querySelector(".rule-header").value = rule.header || "";
   node.querySelector(".rule-content").value = rule.content || "";
@@ -944,12 +1009,12 @@ function addRule(rule = { header: "", content: "" }) {
   widgetEnabled.addEventListener("change", () => {
     widgetFields.classList.toggle("hidden", !widgetEnabled.checked);
     if (widgetEnabled.checked && !widgetsList.children.length) {
-      addWidgetCard(widgetsList, getNextWidgetSeed());
+      addWidgetCard(widgetsList, getNextWidgetSeed(targetRulesList));
     }
     updateAll();
   });
   node.querySelector(".add-widget").addEventListener("click", () => {
-    addWidgetCard(widgetsList, getNextWidgetSeed());
+    addWidgetCard(widgetsList, getNextWidgetSeed(targetRulesList));
     widgetEnabled.checked = true;
     widgetFields.classList.remove("hidden");
     updateAll();
@@ -970,13 +1035,13 @@ function addRule(rule = { header: "", content: "" }) {
   node.querySelector(".remove-rule").addEventListener("click", () => {
     animateRuleRemoval(node, () => {
       node.remove();
-      renumberRules();
+      renumberRules(targetRulesList);
       updateAll();
     });
   });
 
-  rulesList.append(node);
-  renumberRules();
+  targetRulesList.append(node);
+  renumberRules(targetRulesList);
 }
 
 function getWidgetProgressType(value) {
@@ -1171,8 +1236,8 @@ function renumberTerms(termsList) {
   });
 }
 
-function renumberRules() {
-  [...rulesList.children].forEach((node, index) => {
+function renumberRules(targetRulesList = rulesList) {
+  [...targetRulesList.children].forEach((node, index) => {
     node.querySelector("h3").textContent = `Раздел ${index + 1}`;
   });
 }
@@ -1522,8 +1587,10 @@ function normalizeImportedJsonData(value) {
 
   return {
     switcherByPromoId,
-    guestEnabled: false,
+    guestEnabled: Boolean(source.guestEnabled),
+    ...(source.guestEnabled ? { guestContentMode: source.guestContentMode === "custom" || (!source.guestContentMode && source.guest) ? "custom" : "duplicate" } : {}),
     common: normalizedCommon,
+    ...(source.guestEnabled && source.guest ? { guest: cloneData(source.guest) } : {})
   };
 }
 
@@ -1640,8 +1707,8 @@ function collectWidgets(node) {
   return [...node.querySelectorAll(".widgets-list .widget-editor")].map(collectWidgetFromNode);
 }
 
-function collectRules() {
-  return [...rulesList.children].map((node) => {
+function collectRules(targetRulesList = rulesList) {
+  return [...targetRulesList.children].map((node) => {
     const rule = {
       header: node.querySelector(".rule-header").value.trim(),
       content: node.querySelector(".rule-content").value
@@ -1674,46 +1741,54 @@ function stripCommonByHeaderType(common, headerType) {
   }
 }
 
-function buildPromoHeaderFromForm() {
+function buildPromoHeaderFromForm(editorFields = fields) {
   return makePromoHeader({
-    header: fields.promoHeaderTitle.value.trim() || fields.header.value.trim(),
-    imageUrl: resolveBannerOverlayUrl(fields.promoHeaderImageUrl.value),
-    backgroundUrl: fields.promoHeaderBackgroundUrl.value.trim(),
-    animationType: fields.promoHeaderAnimationType.value,
-    animationUrl: fields.promoHeaderAnimationUrl.value.trim()
+    header: editorFields.promoHeaderTitle.value.trim() || editorFields.header.value.trim(),
+    imageUrl: resolveBannerOverlayUrl(editorFields.promoHeaderImageUrl.value),
+    backgroundUrl: editorFields.promoHeaderBackgroundUrl.value.trim(),
+    animationType: editorFields.promoHeaderAnimationType.value,
+    animationUrl: editorFields.promoHeaderAnimationUrl.value.trim()
   });
 }
 
-function buildJson() {
-  const headerType = getHeaderTypeFromForm();
+function buildPromoBlock(editorFields, targetRulesList) {
+  const headerType = getHeaderTypeFromForm(editorFields);
   const common = {
     headerType,
     title: DEFAULT_PROMO_TITLE,
-    imageUrl: resolveMarketing1ImageUrl(fields.imageUrl.value.trim()),
-    header: fields.header.value.trim()
+    imageUrl: resolveMarketing1ImageUrl(editorFields.imageUrl.value.trim()),
+    header: editorFields.header.value.trim()
   };
 
   if (headerType === "marketing2") {
-    common.promoHeader = buildPromoHeaderFromForm();
+    common.promoHeader = buildPromoHeaderFromForm(editorFields);
   }
 
-  if (headerType === "marketing1" && fields.content.value.trim()) {
-    common.content = fields.content.value;
+  if (headerType === "marketing1" && editorFields.content.value.trim()) {
+    common.content = editorFields.content.value;
   }
 
-  common.rules = collectRules();
-  common.primaryButtonText = fields.primaryButtonText.value.trim();
-  common.primaryButtonUrl = fields.primaryButtonAppUrl.value.trim();
-  common.secondaryButtonText = fields.secondaryButtonText.value.trim();
-  common.secondaryButtonUrl = resolveSecondaryButtonUrl(fields.secondaryButtonUrl.value);
+  common.rules = collectRules(targetRulesList);
+  common.primaryButtonText = editorFields.primaryButtonText.value.trim();
+  common.primaryButtonUrl = editorFields.primaryButtonAppUrl.value.trim();
+  common.secondaryButtonText = editorFields.secondaryButtonText.value.trim();
+  common.secondaryButtonUrl = resolveSecondaryButtonUrl(editorFields.secondaryButtonUrl.value);
+  stripCommonByHeaderType(common, headerType);
+  return common;
+}
 
+function buildJson() {
+  const enabled = fields.guestEnabled.checked;
+  const common = buildPromoBlock(fields, rulesList);
   const data = {
     switcherByPromoId: parsePromoIds(fields.promoIds.value),
-    guestEnabled: false
+    guestEnabled: enabled
   };
-
+  if (enabled) data.guestContentMode = fields.guestContentMode.value;
   data.common = common;
-  stripCommonByHeaderType(data.common, headerType);
+  if (enabled) data.guest = fields.guestContentMode.value === "custom"
+    ? buildPromoBlock(guestFields, guestRulesList)
+    : cloneData(common);
 
   return normalizeJsonText(data);
 }
@@ -1742,7 +1817,14 @@ function applyWebLineBreaksToPromoBlock(block) {
 function buildWebJson() {
   const data = cloneData(buildJson());
   applyWebLineBreaksToPromoBlock(data.common);
-  applyPromoWebUrls(data);
+  applyPromoWebUrls(data.common, fields, rulesList);
+  if (data.guest) {
+    if (data.guestContentMode === "duplicate") data.guest = cloneData(data.common);
+    else {
+      applyWebLineBreaksToPromoBlock(data.guest);
+      applyPromoWebUrls(data.guest, guestFields, guestRulesList);
+    }
+  }
   return data;
 }
 
@@ -2410,6 +2492,10 @@ viewTabs.forEach((tab) => {
 });
 document.querySelector("#addRuleButton").addEventListener("click", () => {
   addRule();
+  updateAll();
+});
+document.querySelector("#guestAddRuleButton").addEventListener("click", () => {
+  addRule({ header: "", content: "" }, guestRulesList);
   updateAll();
 });
 document.querySelector("#addTournamentButton").addEventListener("click", () => {

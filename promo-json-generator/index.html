@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Генератор JSON акции</title>
-    <link rel="stylesheet" href="./styles.css?v=20260924a" />
+    <link rel="stylesheet" href="./styles.css?v=20260925a" />
   </head>
   <body>
     <main class="app-shell">
@@ -74,7 +74,7 @@
               </div>
             </section>
 
-            <section class="panel">
+            <section class="panel" data-promo-section>
               <div class="panel-heading">
                 <h2>Основное</h2>
               </div>
@@ -112,9 +112,20 @@
                 <textarea id="content" rows="3" placeholder="Короткое описание под заголовком"></textarea>
               </label>
               </div>
+              <label class="check-row">
+                <input id="guestEnabled" type="checkbox" />
+                Включить гостевой раздел
+              </label>
+              <label id="guestModeFields" class="hidden">
+                Режим гостевого раздела
+                <select id="guestContentMode">
+                  <option value="duplicate">duplicate — копия основного раздела</option>
+                  <option value="custom">custom — отдельный раздел</option>
+                </select>
+              </label>
             </section>
 
-            <section class="panel" id="promoBannerPanel">
+            <section class="panel" id="promoBannerPanel" data-promo-section>
               <div class="panel-heading">
                 <h2>Баннер</h2>
               </div>
@@ -147,7 +158,7 @@
               </div>
             </section>
 
-            <section class="panel">
+            <section class="panel" data-promo-section>
               <div class="panel-heading">
                 <h2>Разделы</h2>
               </div>
@@ -157,7 +168,7 @@
               </div>
             </section>
 
-            <section class="panel">
+            <section class="panel" data-promo-section>
               <div class="panel-heading">
                 <h2>Кнопки</h2>
               </div>
@@ -185,6 +196,16 @@
                 Secondary URL
                 <input id="secondaryButtonUrl" type="url" placeholder="" />
               </label>
+            </section>
+
+            <section class="guest-section hidden" id="guestSection">
+              <div class="guest-section-heading">
+                <h2>Гостевой раздел</h2>
+                <p id="guestSectionHint"></p>
+              </div>
+              <fieldset class="guest-editor-fields" id="guestEditorFields">
+                <div id="guestEditor"></div>
+              </fieldset>
             </section>
           </form>
 
@@ -473,7 +494,7 @@
       </article>
     </template>
 
-    <script src="./tournament-templates.js?v=20260924a"></script>
-    <script src="./app.js?v=20260924a"></script>
+    <script src="./tournament-templates.js?v=20260925a"></script>
+    <script src="./app.js?v=20260925a"></script>
   </body>
 </html>
