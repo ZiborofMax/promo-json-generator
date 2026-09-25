@@ -112,17 +112,6 @@
                 <textarea id="content" rows="3" placeholder="Короткое описание под заголовком"></textarea>
               </label>
               </div>
-              <label class="check-row">
-                <input id="guestEnabled" type="checkbox" />
-                Включить гостевой раздел
-              </label>
-              <label id="guestModeFields" class="hidden">
-                Режим гостевого раздела
-                <select id="guestContentMode">
-                  <option value="duplicate">duplicate — копия основного раздела</option>
-                  <option value="custom">custom — отдельный раздел</option>
-                </select>
-              </label>
             </section>
 
             <section class="panel" id="promoBannerPanel" data-promo-section>
@@ -198,9 +187,26 @@
               </label>
             </section>
 
+            <section class="panel">
+              <div class="panel-heading">
+                <h2>Гостевой раздел</h2>
+              </div>
+              <label class="check-row">
+                <input id="guestEnabled" type="checkbox" />
+                Включить гостевой раздел
+              </label>
+              <label id="guestModeFields" class="hidden">
+                Режим гостевого раздела
+                <select id="guestContentMode">
+                  <option value="duplicate">duplicate — копия основного раздела</option>
+                  <option value="custom">custom — отдельный раздел</option>
+                </select>
+              </label>
+            </section>
+
             <section class="guest-section hidden" id="guestSection">
               <div class="guest-section-heading">
-                <h2>Гостевой раздел</h2>
+                <h2>Настройки гостевого раздела</h2>
                 <p id="guestSectionHint"></p>
               </div>
               <fieldset class="guest-editor-fields" id="guestEditorFields">
