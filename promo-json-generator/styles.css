@@ -677,6 +677,35 @@ select:focus {
   display: none !important;
 }
 
+.guest-section {
+  margin-top: 18px;
+  padding-top: 24px;
+  border-top: 2px solid var(--line-strong);
+}
+
+.guest-section-heading {
+  margin-bottom: 20px;
+}
+
+.guest-section-heading h2 {
+  margin: 0 0 6px;
+}
+
+.guest-section-heading p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.guest-editor-fields {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.guest-editor-fields:disabled {
+  opacity: 0.7;
+}
+
 .widget-fields,
 .terms-fields {
   border: 1px solid var(--line);
