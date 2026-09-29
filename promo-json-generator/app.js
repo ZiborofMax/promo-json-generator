@@ -2595,6 +2595,7 @@ setActiveView("promo");
   const options = popup.querySelector(".attribute-options");
   const example = popup.querySelector(".attribute-example");
   let source = null;
+  let lastCampaignId = "CAMPAIGNID";
   let start = 0;
   let end = 0;
   let matches = [];
@@ -2652,7 +2653,7 @@ setActiveView("promo");
     start = caret - match[1].length - 1;
     end = caret;
     if (fresh) {
-      campaign.value = "CAMPAIGNID";
+      campaign.value = lastCampaignId;
       campaign.setCustomValidity("");
     }
     matches = attributes.filter(item => item.join(" ").toLocaleLowerCase().includes(query));
@@ -2678,7 +2679,12 @@ setActiveView("promo");
   document.addEventListener("click", event => {
     if (event.target.matches?.(textFields)) openFor(event.target);
   });
-  campaign.addEventListener("input", () => { campaign.setCustomValidity(""); refreshSelection(); });
+  campaign.addEventListener("input", () => {
+    campaign.setCustomValidity("");
+    const id = campaign.value.trim();
+    if (id && !/[\s{}.]/u.test(id)) lastCampaignId = id;
+    refreshSelection();
+  });
   popup.querySelector(".attribute-close").addEventListener("click", close);
   document.addEventListener("keydown", event => {
     if (!source || (event.target !== source && !popup.contains(event.target))) return;
