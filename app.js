@@ -2581,14 +2581,14 @@ setActiveView("promo");
     ["campaignResult", "Текущий прогресс"],
     ["campaignOutcome", "Награда"]
   ];
-  const textFields = ".rule-header, .rule-content, .term-header, .term-content, .widget-title, .widget-subtitle, .widget-progress-text, .widget-reward-text, .widget-rule-text, .widget-completed-text";
+  const textFields = 'textarea, input[type="text"], input[type="url"], input[type="search"], input[type="tel"], input:not([type])';
   const popup = document.createElement("div");
   popup.className = "attribute-picker hidden";
   popup.setAttribute("role", "dialog");
   popup.setAttribute("aria-label", "Вставить атрибут кампании");
   popup.innerHTML = `<div class="attribute-picker-heading"><strong>Атрибут кампании</strong><button type="button" class="attribute-close" aria-label="Закрыть">×</button></div>
-    <label>Campaign ID<input class="attribute-campaign" type="text" list="attribute-campaigns" placeholder="Например, VGD500_1KX4" autocomplete="off"></label>
-    <datalist id="attribute-campaigns"></datalist><div class="attribute-options"></div>
+    <label>Campaign ID<input class="attribute-campaign" type="text" value="CAMPAIGNID" placeholder="CAMPAIGNID" autocomplete="off"></label>
+    <div class="attribute-options"></div>
     <p class="attribute-example"></p><p class="attribute-help">↑ ↓ — выбрать · Enter — вставить · Esc — закрыть</p>`;
   document.body.append(popup);
   const campaign = popup.querySelector(".attribute-campaign");
@@ -2640,10 +2640,11 @@ setActiveView("promo");
     target.dispatchEvent(new Event("input", { bubbles: true }));
   }
   function openFor(target) {
-    if (!target.matches?.(textFields) || target.disabled || target.closest("fieldset:disabled")) return;
+    if (!target.matches?.(textFields) || popup.contains(target) || target.disabled || target.readOnly || target.closest("fieldset:disabled")) return;
+    if (target.selectionStart === null) return;
     if (target.selectionStart !== target.selectionEnd) return close();
     const caret = target.selectionStart;
-    const match = target.value.slice(0, caret).match(/(?:^|[\s(])@([^@\s{}]*)$/u);
+    const match = target.value.slice(0, caret).match(/@([^@\s{}]*)$/u);
     if (!match) return close();
     const query = match[1].toLocaleLowerCase();
     const fresh = source !== target || start !== caret - query.length - 1;
@@ -2651,15 +2652,8 @@ setActiveView("promo");
     start = caret - match[1].length - 1;
     end = caret;
     if (fresh) {
-      const editor = target.closest("#guestEditor") || form;
-      const ids = [...new Set([...editor.querySelectorAll(".widget-campaign-id")].map(input => input.value.trim()).filter(Boolean))];
-      const localId = target.closest(".widget-editor")?.querySelector(".widget-campaign-id")?.value.trim();
-      const ruleIds = [...new Set([...target.closest(".rule-card").querySelectorAll(".widget-campaign-id")].map(input => input.value.trim()).filter(Boolean))];
-      campaign.value = localId || (ruleIds.length === 1 ? ruleIds[0] : "");
+      campaign.value = "CAMPAIGNID";
       campaign.setCustomValidity("");
-      popup.querySelector("datalist").replaceChildren(...ids.map(id => {
-        const option = document.createElement("option"); option.value = id; return option;
-      }));
     }
     matches = attributes.filter(item => item.join(" ").toLocaleLowerCase().includes(query));
     selected = 0;
@@ -2677,11 +2671,11 @@ setActiveView("promo");
     refreshSelection();
     position();
   }
-  form.addEventListener("input", event => openFor(event.target));
-  form.addEventListener("keyup", event => {
+  document.addEventListener("input", event => openFor(event.target));
+  document.addEventListener("keyup", event => {
     if (["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) openFor(event.target);
   });
-  form.addEventListener("click", event => {
+  document.addEventListener("click", event => {
     if (event.target.matches?.(textFields)) openFor(event.target);
   });
   campaign.addEventListener("input", () => { campaign.setCustomValidity(""); refreshSelection(); });
