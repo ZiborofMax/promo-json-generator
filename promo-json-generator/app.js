@@ -2571,3 +2571,138 @@ loadTemplate("offer");
 fillTournamentTemplateSelect();
 updateAll();
 setActiveView("promo");
+
+// Attribute picker is delegated so it also works in newly added and guest cards.
+(() => {
+  const attributes = [
+    ["endDateUtc", "Дата окончания оффера пользователя"],
+    ["optedInDateUtc", "Дата включения в кампанию"],
+    ["campaignTarget", "Цель"],
+    ["campaignResult", "Текущий прогресс"],
+    ["campaignOutcome", "Награда"]
+  ];
+  const textFields = ".rule-header, .rule-content, .term-header, .term-content, .widget-title, .widget-subtitle, .widget-progress-text, .widget-reward-text, .widget-rule-text, .widget-completed-text";
+  const popup = document.createElement("div");
+  popup.className = "attribute-picker hidden";
+  popup.setAttribute("role", "dialog");
+  popup.setAttribute("aria-label", "Вставить атрибут кампании");
+  popup.innerHTML = `<div class="attribute-picker-heading"><strong>Атрибут кампании</strong><button type="button" class="attribute-close" aria-label="Закрыть">×</button></div>
+    <label>Campaign ID<input class="attribute-campaign" type="text" list="attribute-campaigns" placeholder="Например, VGD500_1KX4" autocomplete="off"></label>
+    <datalist id="attribute-campaigns"></datalist><div class="attribute-options"></div>
+    <p class="attribute-example"></p><p class="attribute-help">↑ ↓ — выбрать · Enter — вставить · Esc — закрыть</p>`;
+  document.body.append(popup);
+  const campaign = popup.querySelector(".attribute-campaign");
+  const options = popup.querySelector(".attribute-options");
+  const example = popup.querySelector(".attribute-example");
+  let source = null;
+  let start = 0;
+  let end = 0;
+  let matches = [];
+  let selected = 0;
+
+  function close() {
+    popup.classList.add("hidden");
+    source = null;
+  }
+  function position() {
+    if (!source) return;
+    const rect = source.getBoundingClientRect();
+    const width = Math.min(390, window.innerWidth - 24);
+    popup.style.width = `${width}px`;
+    popup.style.left = `${Math.max(12, Math.min(rect.left, window.innerWidth - width - 12))}px`;
+    const height = popup.offsetHeight;
+    const below = rect.bottom + 8;
+    popup.style.top = `${Math.max(12, below + height <= window.innerHeight - 12 ? below : rect.top - height - 8)}px`;
+  }
+  function refreshSelection() {
+    [...options.children].forEach((button, index) => {
+      button.classList.toggle("is-selected", index === selected);
+      button.setAttribute("aria-pressed", String(index === selected));
+    });
+    const id = campaign.value.trim();
+    const attribute = matches[selected];
+    example.textContent = attribute ? `{{${id || "CAMPAIGNID"}.${attribute[0]}}}` : "Нет подходящих атрибутов";
+  }
+  function insert(index) {
+    if (!source || !matches[index]) return;
+    const id = campaign.value.trim();
+    if (!id || /[\s{}.]/u.test(id)) {
+      campaign.setCustomValidity("Укажите Campaign ID без пробелов, точек и фигурных скобок");
+      campaign.reportValidity();
+      campaign.focus();
+      return;
+    }
+    const target = source;
+    const token = `{{${id}.${matches[index][0]}}}`;
+    target.focus();
+    target.setRangeText(token, start, end, "end");
+    close();
+    target.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+  function openFor(target) {
+    if (!target.matches?.(textFields) || target.disabled || target.closest("fieldset:disabled")) return;
+    if (target.selectionStart !== target.selectionEnd) return close();
+    const caret = target.selectionStart;
+    const match = target.value.slice(0, caret).match(/(?:^|[\s(])@([^@\s{}]*)$/u);
+    if (!match) return close();
+    const query = match[1].toLocaleLowerCase();
+    const fresh = source !== target || start !== caret - query.length - 1;
+    source = target;
+    start = caret - match[1].length - 1;
+    end = caret;
+    if (fresh) {
+      const editor = target.closest("#guestEditor") || form;
+      const ids = [...new Set([...editor.querySelectorAll(".widget-campaign-id")].map(input => input.value.trim()).filter(Boolean))];
+      const localId = target.closest(".widget-editor")?.querySelector(".widget-campaign-id")?.value.trim();
+      const ruleIds = [...new Set([...target.closest(".rule-card").querySelectorAll(".widget-campaign-id")].map(input => input.value.trim()).filter(Boolean))];
+      campaign.value = localId || (ruleIds.length === 1 ? ruleIds[0] : "");
+      campaign.setCustomValidity("");
+      popup.querySelector("datalist").replaceChildren(...ids.map(id => {
+        const option = document.createElement("option"); option.value = id; return option;
+      }));
+    }
+    matches = attributes.filter(item => item.join(" ").toLocaleLowerCase().includes(query));
+    selected = 0;
+    options.replaceChildren(...matches.map(([key, label], index) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "attribute-option";
+      const name = document.createElement("strong"); name.textContent = label;
+      const code = document.createElement("span"); code.textContent = key;
+      button.append(name, code);
+      button.addEventListener("click", () => insert(index));
+      return button;
+    }));
+    popup.classList.remove("hidden");
+    refreshSelection();
+    position();
+  }
+  form.addEventListener("input", event => openFor(event.target));
+  form.addEventListener("keyup", event => {
+    if (["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) openFor(event.target);
+  });
+  form.addEventListener("click", event => {
+    if (event.target.matches?.(textFields)) openFor(event.target);
+  });
+  campaign.addEventListener("input", () => { campaign.setCustomValidity(""); refreshSelection(); });
+  popup.querySelector(".attribute-close").addEventListener("click", close);
+  document.addEventListener("keydown", event => {
+    if (!source || (event.target !== source && !popup.contains(event.target))) return;
+    if (event.key === "Escape") { event.preventDefault(); const target = source; close(); target.focus(); }
+    else if (["ArrowDown", "ArrowUp"].includes(event.key) && matches.length) {
+      event.preventDefault();
+      selected = (selected + (event.key === "ArrowDown" ? 1 : -1) + matches.length) % matches.length;
+      refreshSelection();
+    } else if (event.key === "Enter" && (event.target === source || event.target === campaign || event.target.matches?.(".attribute-option"))) {
+      event.preventDefault(); insert(selected);
+    }
+  });
+  document.addEventListener("pointerdown", event => {
+    if (source && event.target !== source && !popup.contains(event.target)) close();
+  });
+  document.addEventListener("focusin", event => {
+    if (source && event.target !== source && !popup.contains(event.target)) close();
+  });
+  window.addEventListener("resize", position);
+  window.addEventListener("scroll", position, true);
+})();
